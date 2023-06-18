@@ -1,0 +1,131 @@
+﻿using System.Collections.Generic;
+
+namespace CadApp
+{
+    enum ENTITY { non, all, point, line, polyline, polygon, arc, ellipse, text, any }
+    enum OPERATION { non, loc, pic,
+        createPoint, createLine, createRect, createPolyline, createPolygon, 
+        createArc, createCircle, createEllipse, createText,
+        translate, rotate, mirror, copy, scaling, colorChange, thicknessChange, textChange, textSizeChange,
+        pointTypeChange, lineTypeChange,
+        measureDistance, measureAngle,
+        remove, removeAll,
+        changeProperty, color, thickness, textSize, gridSize, info, systemIinfo,
+        allClear, save, open, close, back, cancel, screenCopy
+    }
+    class Command
+    {
+        public string mainCommand;
+        public string subCommand;
+        public string parameter;
+        public OPERATION operation;
+        public ENTITY entity;
+
+        public Command(string mainCommand, string subCommand, string parameter, OPERATION operation, ENTITY entity)
+        {
+            this.mainCommand = mainCommand;
+            this.subCommand = subCommand;
+            this.parameter = parameter;
+            this.operation = operation;
+            this.entity = entity;
+        }
+    }
+
+    class CommandData
+    {
+        public List<Command> mCommandData = new List<Command>() {
+            //          main,       sub,            para,  operation,                 entity
+            new Command("作成",      "点",          "", OPERATION.createPoint,     ENTITY.point),
+            new Command("作成",      "線分",        "", OPERATION.createLine,      ENTITY.line),
+            new Command("作成",      "四角",        "", OPERATION.createRect,      ENTITY.line),
+            new Command("作成",      "ポリライン",  "", OPERATION.createPolyline,  ENTITY.polyline),
+            new Command("作成",      "ポリゴン",    "", OPERATION.createPolygon,   ENTITY.polygon),
+            new Command("作成",      "円弧",        "", OPERATION.createArc,       ENTITY.arc),
+            new Command("作成",      "円",          "", OPERATION.createCircle,    ENTITY.arc),
+            new Command("作成",      "楕円",        "", OPERATION.createEllipse,   ENTITY.ellipse),
+            new Command("作成",      "文字列",      "", OPERATION.createText,      ENTITY.text),
+            new Command("作成",      "戻る",        "", OPERATION.back,            ENTITY.non),
+            new Command("編集",      "移動",        "", OPERATION.translate,       ENTITY.any),
+            new Command("編集",      "回転",        "", OPERATION.rotate,          ENTITY.any),
+            new Command("編集",      "反転",        "", OPERATION.mirror,          ENTITY.any),
+            new Command("編集",      "複製",        "", OPERATION.copy,            ENTITY.any),
+            new Command("編集",      "拡大縮小",    "", OPERATION.scaling,         ENTITY.any),
+            new Command("編集",      "文字列",      "", OPERATION.textChange,      ENTITY.text),
+            new Command("編集",      "属性変更",    "", OPERATION.changeProperty,  ENTITY.any),
+            new Command("編集",      "戻る",        "", OPERATION.back,            ENTITY.non),
+            new Command("情報",      "要素",        "", OPERATION.info,            ENTITY.any),
+            new Command("情報",      "戻る",        "", OPERATION.back,            ENTITY.non),
+            new Command("測定",      "距離",        "", OPERATION.measureDistance, ENTITY.any),
+            new Command("測定",      "角度",        "", OPERATION.measureAngle,    ENTITY.line),
+            new Command("測定",      "戻る",        "", OPERATION.back,            ENTITY.non),
+            new Command("削除",      "削除",        "", OPERATION.remove,          ENTITY.any),
+            new Command("設定",      "システム設定","", OPERATION.systemIinfo,     ENTITY.non),
+            new Command("設定",      "戻る",        "", OPERATION.back,            ENTITY.non),
+            new Command("新規作成",  "新規作成",    "", OPERATION.allClear,        ENTITY.non),
+            new Command("開く",      "開く",        "", OPERATION.open,            ENTITY.non),
+            new Command("保存",      "保存",        "", OPERATION.save,            ENTITY.non),
+            new Command("画面コピー","画面コピー",  "", OPERATION.screenCopy,      ENTITY.non),
+            new Command("終了",      "終了",        "", OPERATION.close,           ENTITY.non),
+        };
+
+        public int mCommandLevel = 0;
+        public string mMain = "";
+        public string mSub = "";
+
+        /// <summary>
+        /// メインコマンドのリスト取得
+        /// </summary>
+        /// <returns>コマンドリスト</returns>
+        public List<string> getMainCommand()
+        {
+            List<string> main = new List<string>();
+            foreach (var cmd in mCommandData) {
+                if (!main.Contains(cmd.mainCommand) && cmd.mainCommand != "")
+                    main.Add(cmd.mainCommand);
+            }
+            return main;
+        }
+
+        /// <summary>
+        /// サブコマンドのリスト取得
+        /// </summary>
+        /// <param name="main">メインコマンド名</param>
+        /// <returns>コマンドリスト</returns>
+        public List<string> getSubCommand(string main)
+        {
+            List<string> sub = new List<string>();
+            foreach (var cmd in mCommandData) {
+                if (cmd.mainCommand == main || cmd.mainCommand == "") {
+                    if (!sub.Contains(cmd.subCommand))
+                        sub.Add(cmd.subCommand);
+                }
+            }
+            return sub;
+        }
+
+        /// <summary>
+        /// コマンドデータ取得
+        /// </summary>
+        /// <param name="main">メインコマンド名</param>
+        /// <param name="sub">サブコマンド名</param>
+        /// <param name="para">パラメータ名</param>
+        /// <returns>コマンドデータ</returns>
+        public Command getCommand(string main, string sub = "", string para = "")
+        {
+            if (sub == "" && para == "") {
+                foreach (var cmd in mCommandData)
+                    if (cmd.mainCommand == main)
+                        return cmd;
+            } else if (para == "") {
+                foreach (var cmd in mCommandData)
+                    if (cmd.mainCommand == main && cmd.subCommand == sub)
+                        return cmd;
+            } else {
+                foreach (var cmd in mCommandData)
+                    if (cmd.mainCommand == main && cmd.subCommand == sub && cmd.parameter == para)
+                        return cmd;
+            }
+            return new Command("","","",OPERATION.non, ENTITY.non);
+        }
+    }
+}

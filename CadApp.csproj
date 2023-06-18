@@ -1,0 +1,63 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net7.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>False</UseWindowsForms>
+    <ApplicationIcon>CadApp.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Icon\Highlighter.png" />
+    <None Remove="Icon\OpenFile.png" />
+    <None Remove="Icon\Pencil.png" />
+    <None Remove="Icon\Save.png" />
+    <None Remove="Icon\SaveAs.png" />
+    <None Remove="Icon\Zoom.png" />
+    <None Remove="Icon\ZoomIn.png" />
+    <None Remove="Icon\ZoomOriginalSize.png" />
+    <None Remove="Icon\ZoomOut.png" />
+    <None Remove="Icon\ZoomToFit.png" />
+    <None Remove="Icon\ZoomToWidth.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="CadApp.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CoreLib\CoreLib.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Icon\Highlighter.png" />
+    <Resource Include="Icon\OpenFile.png" />
+    <Resource Include="Icon\Pencil.png" />
+    <Resource Include="Icon\Save.png" />
+    <Resource Include="Icon\SaveAs.png" />
+    <Resource Include="Icon\Zoom.png" />
+    <Resource Include="Icon\ZoomIn.png" />
+    <Resource Include="Icon\ZoomOriginalSize.png" />
+    <Resource Include="Icon\ZoomOut.png" />
+    <Resource Include="Icon\ZoomToFit.png" />
+    <Resource Include="Icon\ZoomToWidth.png" />
+  </ItemGroup>
+
+</Project>

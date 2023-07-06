@@ -11,10 +11,14 @@
 
   <ItemGroup>
     <None Remove="Icon\Highlighter.png" />
+    <None Remove="Icon\MenuItem.png" />
     <None Remove="Icon\OpenFile.png" />
     <None Remove="Icon\Pencil.png" />
     <None Remove="Icon\Save.png" />
     <None Remove="Icon\SaveAs.png" />
+    <None Remove="Icon\Screenshot.png" />
+    <None Remove="Icon\SelectFrame.png" />
+    <None Remove="Icon\Settings.png" />
     <None Remove="Icon\Zoom.png" />
     <None Remove="Icon\ZoomIn.png" />
     <None Remove="Icon\ZoomOriginalSize.png" />
@@ -48,10 +52,14 @@
 
   <ItemGroup>
     <Resource Include="Icon\Highlighter.png" />
+    <Resource Include="Icon\MenuItem.png" />
     <Resource Include="Icon\OpenFile.png" />
     <Resource Include="Icon\Pencil.png" />
     <Resource Include="Icon\Save.png" />
     <Resource Include="Icon\SaveAs.png" />
+    <Resource Include="Icon\Screenshot.png" />
+    <Resource Include="Icon\SelectFrame.png" />
+    <Resource Include="Icon\Settings.png" />
     <Resource Include="Icon\Zoom.png" />
     <Resource Include="Icon\ZoomIn.png" />
     <Resource Include="Icon\ZoomOriginalSize.png" />

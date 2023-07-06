@@ -2,16 +2,18 @@
 
 namespace CadApp
 {
-    enum ENTITY { non, all, point, line, polyline, polygon, arc, ellipse, text, any }
-    enum OPERATION { non, loc, pic,
+    public enum ENTITY { non, all, point, line, polyline, polygon, arc, ellipse, text, any }
+    public enum OPERATION { non, loc, pic,
         createPoint, createLine, createRect, createPolyline, createPolygon, 
         createArc, createCircle, createEllipse, createText,
-        translate, rotate, mirror, copy, scaling, colorChange, thicknessChange, textChange, textSizeChange,
-        pointTypeChange, lineTypeChange,
+        translate, rotate, mirror, trim, divide, stretch, scaling,
+        copyTranslate, copyRotate, copyMirror,
+        colorChange, thicknessChange, textChange, textSizeChange, pointTypeChange, lineTypeChange,
         measureDistance, measureAngle,
         remove, removeAll,
         changeProperty, color, thickness, textSize, gridSize, info, systemIinfo,
-        allClear, save, open, close, back, cancel, screenCopy
+        allClear, save, saveAs, open, close, back, cancel, screenCopy,
+        undo, redo
     }
     class Command
     {
@@ -48,23 +50,30 @@ namespace CadApp
             new Command("編集",      "移動",        "", OPERATION.translate,       ENTITY.any),
             new Command("編集",      "回転",        "", OPERATION.rotate,          ENTITY.any),
             new Command("編集",      "反転",        "", OPERATION.mirror,          ENTITY.any),
-            new Command("編集",      "複製",        "", OPERATION.copy,            ENTITY.any),
+            new Command("編集",      "トリム",      "", OPERATION.trim,            ENTITY.any),
+            new Command("編集",      "分割",        "", OPERATION.divide,          ENTITY.any),
+            new Command("編集",      "ストレッチ",  "", OPERATION.stretch,         ENTITY.any),
             new Command("編集",      "拡大縮小",    "", OPERATION.scaling,         ENTITY.any),
             new Command("編集",      "文字列",      "", OPERATION.textChange,      ENTITY.text),
             new Command("編集",      "属性変更",    "", OPERATION.changeProperty,  ENTITY.any),
             new Command("編集",      "戻る",        "", OPERATION.back,            ENTITY.non),
+            new Command("コピー",    "移動",        "", OPERATION.copyTranslate,   ENTITY.any),
+            new Command("コピー",    "回転",        "", OPERATION.copyRotate,      ENTITY.any),
+            new Command("コピー",    "反転",        "", OPERATION.copyMirror,      ENTITY.any),
+            new Command("コピー",    "戻る",        "", OPERATION.back,            ENTITY.any),
             new Command("情報",      "要素",        "", OPERATION.info,            ENTITY.any),
             new Command("情報",      "戻る",        "", OPERATION.back,            ENTITY.non),
-            new Command("測定",      "距離",        "", OPERATION.measureDistance, ENTITY.any),
-            new Command("測定",      "角度",        "", OPERATION.measureAngle,    ENTITY.line),
+            new Command("測定",      "距離・角度",  "", OPERATION.measureDistance, ENTITY.any),
+            //new Command("測定",      "角度",        "", OPERATION.measureAngle,    ENTITY.line),
             new Command("測定",      "戻る",        "", OPERATION.back,            ENTITY.non),
             new Command("削除",      "削除",        "", OPERATION.remove,          ENTITY.any),
             new Command("設定",      "システム設定","", OPERATION.systemIinfo,     ENTITY.non),
             new Command("設定",      "戻る",        "", OPERATION.back,            ENTITY.non),
-            new Command("新規作成",  "新規作成",    "", OPERATION.allClear,        ENTITY.non),
-            new Command("開く",      "開く",        "", OPERATION.open,            ENTITY.non),
-            new Command("保存",      "保存",        "", OPERATION.save,            ENTITY.non),
-            new Command("画面コピー","画面コピー",  "", OPERATION.screenCopy,      ENTITY.non),
+            new Command("アンドゥ",  "アンドゥ",    "", OPERATION.undo,            ENTITY.non),
+            //new Command("リドゥ",    "リドゥ",      "", OPERATION.redo,            ENTITY.non),
+            //new Command("ファイル",  "上書き保存",  "", OPERATION.save,            ENTITY.non),
+            //new Command("ファイル",  "保存",        "", OPERATION.saveAs,          ENTITY.non),
+            //new Command("画面コピー","画面コピー",  "", OPERATION.screenCopy,      ENTITY.non),
             new Command("終了",      "終了",        "", OPERATION.close,           ENTITY.non),
         };
 

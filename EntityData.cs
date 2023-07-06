@@ -1,13 +1,17 @@
 ﻿using CoreLib;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Windows;
+using System.Windows.Automation.Text;
 using System.Windows.Media;
 
 namespace CadApp
 {
     public enum EntityId { 
-        Non, Point, Line, Arc, Circle, Ellipse, Oval, Polyline, Polygon, Text
+        Non, Link, Point, Line, Arc, Circle, Ellipse, Oval, Polyline, Polygon,
+        Text, Property
     }
     public enum PointType { Dot, Cross, Plus, Squre, Circle }
     public enum LineType {  Solid, Center, Dash }
@@ -23,6 +27,9 @@ namespace CadApp
         public Brush mColor = Brushes.Black;
         public double mThickness = 1.0;
         public int mType = 0;
+        public bool mRemove = false;
+        public int mRemoveLink = -1;
+        public int mOperationCount = -1;
         //  表示領域
         public Box mArea;
         //  ピック
@@ -116,6 +123,12 @@ namespace CadApp
         abstract public string toDataString();
 
         /// <summary>
+        /// 要素のコピーを作成
+        /// </summary>
+        /// <returns></returns>
+        abstract public Entity toCopy();
+
+        /// <summary>
         /// 要素情報を文字列に変換
         /// </summary>
         /// <param name="entNo">要素番号</param>
@@ -142,9 +155,228 @@ namespace CadApp
         abstract public void rotate(PointD cp, PointD mp);
 
         /// <summary>
+        /// 要素のミラー
+        /// </summary>
+        /// <param name="sp">始点座標</param>
+        /// <param name="ep">終点座標</param>
+        abstract public void mirror(PointD sp, PointD ep);
+
+        /// <summary>
+        /// 要素のトリム
+        /// </summary>
+        /// <param name="sp">始点座標</param>
+        /// <param name="ep">終点座標</param>
+        abstract public void trim(PointD sp, PointD ep);
+
+        /// <summary>
+        /// 要素分割
+        /// </summary>
+        /// <param name="dp">分割参照点</param>
+        /// <returns>要素リスト</returns>
+        abstract public List<Entity> divide(PointD dp);
+
+        /// <summary>
+        /// 要素のストレッチ
+        /// </summary>
+        /// <param name="vec">移動ベクトル</param>
+        /// <param name="pickPos">ピックした位置</param>
+        abstract public void stretch(PointD vec, PointD pickPos);
+
+        /// <summary>
+        /// 参照点に対する垂点を求める
+        /// </summary>
+        /// <param name="pos">参照点</param>
+        /// <returns>垂点</returns>
+        abstract public PointD onPoint(PointD pos);
+        
+        /// <summary>
+        /// 要素同士の交点を求める
+        /// </summary>
+        /// <param name="entity">要素データ</param>
+        /// <returns>交点リスト</returns>
+        abstract public List<PointD> intersection(Entity entity);
+
+        /// <summary>
+        /// 要素上の分割位置を求める
+        /// </summary>
+        /// <param name="divideNo">分割数</param>
+        /// <param name="pos">参照点</param>
+        /// <returns>分割点</returns>
+        abstract public PointD dividePos(int divideNo, PointD pos);
+
+        /// <summary>
         /// 表示範囲の更新
         /// </summary>
         abstract public void updateArea();
+    }
+
+    public class LinkEntity : Entity
+    {
+        public int mLinkNo = -1;
+
+        public LinkEntity()
+        {
+            mEntityId = EntityId.Link;
+        }
+
+        /// <summary>
+        /// 座標データの設定
+        /// </summary>
+        /// <param name="data">文字配列</param>
+        public override void setData(string[] data)
+        {
+
+        }
+
+        /// <summary>
+        /// 要素の描画
+        /// </summary>
+        /// <param name="ydraw"></param>
+        public override void draw(YWorldDraw ydraw)
+        {
+
+        }
+
+        /// <summary>
+        /// 座標データを文字列に変換
+        /// </summary>
+        /// <returns></returns>
+        public override string toDataString()
+        {
+            return "";
+        }
+
+        /// <summary>
+        /// 要素のコピーを作成
+        /// </summary>
+        /// <returns></returns>
+        public override Entity toCopy()
+        {
+            LinkEntity entity = new LinkEntity();
+            entity.mColor = mColor;
+            entity.mThickness = mThickness;
+            entity.mType = mType;
+            entity.mRemove = mRemove;
+            entity.mLinkNo = mLinkNo;
+            return entity;
+        }
+
+        /// <summary>
+        /// 要素情報を文字列に変換
+        /// </summary>
+        /// <param name="entNo">要素番号</param>
+        /// <returns></returns>
+        public override string entityInfo()
+        {
+            return "";
+        }
+
+        /// <summary>
+        /// 要素情報の要約を取得
+        /// </summary>
+        /// <returns></returns>
+        public override string getSummary()
+        {
+            return "";
+        }
+
+        /// <summary>
+        /// 要素を移動する
+        /// </summary>
+        /// <param name="vec">移動ベクトル</param>
+        public override void translate(PointD vec)
+        {
+
+        }
+
+        /// <summary>
+        /// 要素の回転
+        /// </summary>
+        /// <param name="cp">中心点</param>
+        /// <param name="mp">回転角座標</param>
+        public override void rotate(PointD cp, PointD mp)
+        {
+
+        }
+
+        /// <summary>
+        /// 要素のミラー
+        /// </summary>
+        /// <param name="sp">始点座標</param>
+        /// <param name="ep">終点座標</param>
+        public override void mirror(PointD sp, PointD ep)
+        {
+
+        }
+
+        /// <summary>
+        /// 要素のトリム
+        /// </summary>
+        /// <param name="sp">始点座標</param>
+        /// <param name="ep">終点座標</param>
+        public override void trim(PointD sp, PointD ep)
+        {
+
+        }
+
+        /// <summary>
+        /// 要素分割
+        /// </summary>
+        /// <param name="dp">分割参照点</param>
+        /// <returns>要素リスト</returns>
+        public override List<Entity> divide(PointD dp)
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// 要素のストレッチ
+        /// </summary>
+        /// <param name="vec">移動ベクトル</param>
+        /// <param name="pickPos">ピックした位置</param>
+        public override void stretch(PointD vec, PointD pickPos)
+        {
+
+        }
+
+        /// <summary>
+        /// 参照点に対する垂点を求める
+        /// </summary>
+        /// <param name="pos">参照点</param>
+        /// <returns>垂点</returns>
+        public override PointD onPoint(PointD pos)
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// 要素同士の交点を求める
+        /// </summary>
+        /// <param name="entity">要素データ</param>
+        /// <returns>交点リスト</returns>
+        public override List<PointD> intersection(Entity entity)
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// 要素上の分割位置を求める
+        /// </summary>
+        /// <param name="divideNo">分割数</param>
+        /// <param name="pos">参照点</param>
+        /// <returns>分割点</returns>
+        public override PointD dividePos(int divideNo, PointD pos)
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// 表示範囲の更新
+        /// </summary>
+        public override void updateArea()
+        {
+
+        }
     }
 
     /// <summary>
@@ -178,12 +410,13 @@ namespace CadApp
         /// コピーを作成
         /// </summary>
         /// <returns></returns>
-        public PointEntity toCopy()
+        public override Entity toCopy()
         {
             PointEntity point = new PointEntity(mPoint.toCopy());
             point.mColor = mColor;
             point.mThickness = mThickness;
             point.mType = mType;
+            point.mRemove = mRemove;
             return point;
         }
 
@@ -268,6 +501,107 @@ namespace CadApp
         }
 
         /// <summary>
+        /// ミラー
+        /// </summary>
+        /// <param name="sp">始点座標</param>
+        /// <param name="ep">終点座標</param>
+        public override void mirror(PointD sp, PointD ep)
+        {
+            mPoint.mirror(sp, ep);
+            mArea = new Box(mPoint);
+        }
+
+        /// <summary>
+        /// トリム(動作なし)
+        /// </summary>
+        /// <param name="sp">始点座標</param>
+        /// <param name="ep">終点座標</param>
+        public override void trim(PointD sp, PointD ep)
+        {
+
+        }
+
+        /// <summary>
+        /// 要素分割
+        /// </summary>
+        /// <param name="dp">分割参照点</param>
+        /// <returns>要素リスト</returns>
+        public override List<Entity> divide(PointD dp)
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// 要素のストレッチ
+        /// </summary>
+        /// <param name="vec">移動ベクトル</param>
+        /// <param name="pickPos">ピック位置</param>
+        public override void stretch(PointD vec, PointD pickPos)
+        {
+            mPoint.translate(vec);
+            mArea.offset(vec);
+        }
+
+        /// <summary>
+        /// 参照点に対する垂点を求める
+        /// </summary>
+        /// <param name="pos">参照点</param>
+        /// <returns>垂点</returns>
+        public override PointD onPoint(PointD pos)
+        {
+            return mPoint;
+        }
+
+        /// <summary>
+        /// 要素同士の交点を求める
+        /// </summary>
+        /// <param name="entity">要素データ</param>
+        /// <returns>交点リスト</returns>
+        public override List<PointD> intersection(Entity entity)
+        {
+            List<PointD> plist = new List<PointD>();
+            PointD ip = null;
+            switch (entity.mEntityId) {
+                case EntityId.Point:
+                    break;
+                case EntityId.Line:
+                    LineEntity line = (LineEntity)entity;
+                    ip = line.mLine.intersection(mPoint);
+                    plist.Add(ip);
+                    break;
+                case EntityId.Arc:
+                    ArcEntity arc = (ArcEntity)entity;
+                    ip = arc.mArc.intersection(mPoint);
+                    plist.Add(ip);
+                    break;
+                case EntityId.Polyline:
+                    PolylineEntity polyline = (PolylineEntity)entity;
+                    ip = polyline.mPolyline.nearPoint(mPoint);
+                    plist.Add(ip);
+                    break;
+                case EntityId.Polygon:
+                    PolygonEntity polygon = (PolygonEntity)entity;
+                    ip = polygon.mPolygon.nearPoint(mPoint);
+                    plist.Add(ip);
+                    break;
+                case EntityId.Text:
+                    break;
+            }
+            return plist;
+        }
+
+        /// <summary>
+        /// 要素上の分割位置を求める
+        /// </summary>
+        /// <param name="divideNo">分割数</param>
+        /// <param name="pos">参照点</param>
+        /// <returns>分割点</returns>
+        public override PointD dividePos(int divideNo, PointD pos)
+        {
+            return mPoint;
+        }
+
+        /// <summary>
         /// 表示範囲の更新
         /// </summary>
         public override void updateArea()
@@ -308,12 +642,13 @@ namespace CadApp
         /// コピーを作成
         /// </summary>
         /// <returns></returns>
-        public LineEntity toCopy()
+        public override Entity toCopy()
         {
             LineEntity line = new LineEntity(mLine);
             line.mColor = mColor;
             line.mThickness = mThickness;
             line.mType = mType;
+            line.mRemove = mRemove;
             return line;
         }
 
@@ -402,6 +737,120 @@ namespace CadApp
         }
 
         /// <summary>
+        /// ミラー
+        /// </summary>
+        /// <param name="sp">始点座標</param>
+        /// <param name="ep">終点座標</param>
+        public override void mirror(PointD sp, PointD ep)
+        {
+            mLine.mirror(sp, ep);
+            mArea = new Box(mLine);
+        }
+
+        /// <summary>
+        /// トリム
+        /// </summary>
+        /// <param name="sp">始点座標</param>
+        /// <param name="ep">終点座標</param>
+        public override void trim(PointD sp, PointD ep)
+        {
+            mLine.trim(sp, ep);
+            mArea = new Box(mLine);
+        }
+
+        /// <summary>
+        /// 要素のストレッチ
+        /// </summary>
+        /// <param name="vec">移動ベクトル</param>
+        /// <param name="pickPos">ピック位置</param>
+        public override void stretch(PointD vec, PointD pickPos)
+        {
+            mLine.stretch(vec, pickPos);
+            mArea = new Box(mLine);
+        }
+
+        /// <summary>
+        /// 要素を分割する
+        /// </summary>
+        /// <param name="dp">分割参照点</param>
+        /// <returns>要素リスト</returns>
+        public override List<Entity> divide(PointD dp)
+        {
+            List<Entity> entityList = new();
+            PointD mp =mLine.intersection(dp);
+            if (!mLine.onPoint(mp))
+                return null;
+            LineEntity lineEnt0 = (LineEntity)toCopy();
+            lineEnt0.mLine.pe = mp;
+            entityList.Add(lineEnt0);
+            LineEntity lineEnt1 = (LineEntity)toCopy();
+            lineEnt1.mLine.ps = mp;
+            entityList.Add(lineEnt1);
+            return entityList;
+        }
+
+        /// <summary>
+        /// 参照点に対する垂点を求める
+        /// </summary>
+        /// <param name="pos">参照点</param>
+        /// <returns>垂点</returns>
+        public override PointD onPoint(PointD pos)
+        {
+            return mLine.intersection(pos);
+        }
+
+        /// <summary>
+        /// 要素同士の交点を求める
+        /// </summary>
+        /// <param name="entity">要素データ</param>
+        /// <returns>交点リスト</returns>
+        public override List<PointD> intersection(Entity entity)
+        {
+            List<PointD> plist = new List<PointD>();
+            PointD ip = null;
+            switch (entity.mEntityId) {
+                case EntityId.Point:
+                    PointEntity point = (PointEntity)entity;
+                    ip = mLine.intersection(point.mPoint);
+                    plist.Add(ip);
+                    break;
+                case EntityId.Line:
+                    LineEntity line = (LineEntity)entity;
+                    ip = mLine.intersection(line.mLine);
+                    if (ip != null)
+                        plist.Add(ip);
+                    break;
+                case EntityId.Arc:
+                    ArcEntity arc = (ArcEntity)entity;
+                    plist = arc.mArc.intersection(mLine);
+                    break;
+                case EntityId.Polyline:
+                    PolylineEntity polyline = (PolylineEntity)entity;
+                    plist = polyline.mPolyline.intersection(mLine);
+                    break;
+                case EntityId.Polygon:
+                    PolygonEntity polygon = (PolygonEntity)entity;
+                    plist = polygon.mPolygon.intersection(mLine);
+                    break;
+                case EntityId.Text:
+                    break;
+            }
+            return plist;
+        }
+
+        /// <summary>
+        /// 要素上の分割位置を求める
+        /// </summary>
+        /// <param name="divideNo">分割数</param>
+        /// <param name="pos">参照点</param>
+        /// <returns>分割点</returns>
+        public override PointD dividePos(int divideNo, PointD pos)
+        {
+            List<PointD> plist = mLine.dividePoints(divideNo);
+            return plist.MinBy(p => p.length(pos));
+        }
+
+        /// <summary>
         /// 表示範囲の更新
         /// </summary>
         public override void updateArea()
@@ -416,7 +865,7 @@ namespace CadApp
     public class PolylineEntity : Entity
     {
         //  座標データ
-        public List<PointD> mPolyline;
+        public PolylineD mPolyline;
 
         /// <summary>
         /// コンストラクタ
@@ -424,31 +873,42 @@ namespace CadApp
         public PolylineEntity()
         {
             mEntityId = EntityId.Polyline;
-            mPolyline = new List<PointD>();
+            mPolyline = new PolylineD();
         }
 
         /// <summary>
         /// コンストラクタ(LineD設定)
         /// </summary>
         /// <param name="line"></param>
-        public PolylineEntity(List<PointD> polylines)
+        public PolylineEntity(List<PointD> polyline)
         {
             mEntityId = EntityId.Polyline;
-            mPolyline = new List<PointD>();
-            polylines.ForEach(p => mPolyline.Add(p));
-            mArea = new Box(mPolyline);
+            mPolyline = new PolylineD(polyline);
+            mArea = mPolyline.getBox();
+        }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="polyline"></param>
+        public PolylineEntity(PolylineD polyline)
+        {
+            mEntityId = EntityId.Polyline;
+            mPolyline = polyline.toCopy();
+            mArea = mPolyline.getBox();
         }
 
         /// <summary>
         /// コピーを作成
         /// </summary>
         /// <returns></returns>
-        public PolylineEntity toCopy()
+        public override Entity toCopy()
         {
             PolylineEntity polyline = new PolylineEntity(mPolyline);
             polyline.mColor = mColor;
             polyline.mThickness = mThickness;
             polyline.mType = mType;
+            polyline.mRemove = mRemove;
             return polyline;
         }
 
@@ -458,7 +918,7 @@ namespace CadApp
         /// <param name="data"></param>
         public override void setData(string[] data)
         {
-            mPolyline = new List<PointD>();
+            mPolyline = new PolylineD();
             if (2 < data.Length) {
                 for(int i= 0; i < data.Length - 1; i+=2) {
                     PointD ps = new PointD();
@@ -466,7 +926,7 @@ namespace CadApp
                     ps.y = double.Parse(data[i+1]);
                     mPolyline.Add(ps);
                 }
-                mArea = new Box(mPolyline);
+                mArea = mPolyline.getBox();
             }
         }
 
@@ -489,7 +949,7 @@ namespace CadApp
         public override string toDataString()
         {
             string buf = "";
-            foreach (PointD p in mPolyline) {
+            foreach (PointD p in mPolyline.mPolyline) {
                 buf += $"{p.x},{p.y},";
             }
             return buf.TrimEnd(',');
@@ -502,13 +962,13 @@ namespace CadApp
         public override string entityInfo()
         {
             double l = 0;
-            for (int i = 0; i < mPolyline.Count - 1; i++)
-                l += mPolyline[i].length(mPolyline[i + 1]);
+            for (int i = 0; i < mPolyline.mPolyline.Count - 1; i++)
+                l += mPolyline.mPolyline[i].length(mPolyline.mPolyline[i + 1]);
             string buf = "";
             buf += $"要素番号: {mNo}";
             buf += $"\n要素種別: ポリライン要素";
-            buf += $"\n始点 {mPolyline[0].ToString("f4")} 終点 {mPolyline[mPolyline.Count-1].ToString("f4")}";
-            buf += $"\n点数 {mPolyline.Count.ToString("f0")}";
+            buf += $"\n始点 {mPolyline.mPolyline[0].ToString("f4")} 終点 {mPolyline.mPolyline[mPolyline.mPolyline.Count-1].ToString("f4")}";
+            buf += $"\n点数 {mPolyline.mPolyline.Count.ToString("f0")}";
             buf += $"\n長さ {l.ToString("f4")}";
             buf += $"\nカラー: {getColorName(mColor)}";
             buf += $"\n太さ: {mThickness}";
@@ -522,7 +982,7 @@ namespace CadApp
         /// <returns></returns>
         public override string getSummary()
         {
-            return $"{mNo}:ポリライン{mPolyline[0].ToString("f1")} {mPolyline[mPolyline.Count - 1].ToString("f1")} {getColorName(mColor)}";
+            return $"{mNo}:ポリライン{mPolyline.mPolyline[0].ToString("f1")} {mPolyline.mPolyline[mPolyline.mPolyline.Count - 1].ToString("f1")} {getColorName(mColor)}";
         }
 
         /// <summary>
@@ -531,7 +991,7 @@ namespace CadApp
         /// <param name="vec">移動ベクトル</param>
         public override void translate(PointD vec)
         {
-            mPolyline.ForEach(p => p.offset(vec));
+            mPolyline.translate(vec);
             mArea.offset(vec);
         }
 
@@ -542,8 +1002,124 @@ namespace CadApp
         /// <param name="mp">回転角座標</param>
         public override void rotate(PointD cp, PointD mp)
         {
-            mPolyline.ForEach(p => p.rotate(cp, mp));
-            mArea = new Box(mPolyline);
+            mPolyline.rotate(cp, mp);
+            mArea = mPolyline.getBox();
+        }
+
+        /// <summary>
+        /// ミラー
+        /// </summary>
+        /// <param name="sp">始点座標</param>
+        /// <param name="ep">終点座標</param>
+        public override void mirror(PointD sp, PointD ep)
+        {
+            mPolyline.mirror(sp, ep);
+            mArea = mPolyline.getBox();
+        }
+
+        /// <summary>
+        /// トリム
+        /// </summary>
+        /// <param name="sp">始点座標</param>
+        /// <param name="ep">終点座標</param>
+        public override void trim(PointD sp, PointD ep)
+        {
+            mPolyline.trim(sp, ep);
+            mArea = mPolyline.getBox();
+        }
+
+        /// <summary>
+        /// 要素分割
+        /// </summary>
+        /// <param name="dp">分割参照点</param>
+        /// <returns>要素リスト</returns>
+        public override List<Entity> divide(PointD dp)
+        {
+            List<Entity> entityList = new();
+            PointD mp = mPolyline.nearPoint(dp);
+            if (mp == null)
+                return null;
+            int pos = mPolyline.nearPos(mp);
+            PolylineEntity polylineEnt0 = (PolylineEntity)toCopy();
+            int last = polylineEnt0.mPolyline.mPolyline.Count - 1;
+            polylineEnt0.mPolyline.mPolyline.RemoveRange(pos + 1, last - pos);
+            polylineEnt0.mPolyline.mPolyline.Add(mp);
+            entityList.Add(polylineEnt0);
+            PolylineEntity polylineEnt1 = (PolylineEntity)toCopy();
+            polylineEnt1.mPolyline.mPolyline.RemoveRange(0, pos + 1);
+            polylineEnt1.mPolyline.mPolyline.Insert(0, mp);
+            entityList.Add(polylineEnt1);
+            return entityList;
+        }
+
+        /// <summary>
+        /// 要素のストレッチ
+        /// </summary>
+        /// <param name="vec">移動ベクトル</param>
+        /// <param name="pickPos">ピック位置</param>
+        public override void stretch(PointD vec, PointD pickPos)
+        {
+            mPolyline.stretch(vec, pickPos);
+            mArea = mPolyline.getBox();
+        }
+
+        /// <summary>
+        /// 参照点に対する垂点を求める
+        /// </summary>
+        /// <param name="pos">参照点</param>
+        /// <returns>垂点</returns>
+        public override PointD onPoint(PointD pos)
+        {
+            return mPolyline.nearPoint(pos);
+        }
+
+        /// <summary>
+        /// 要素同士の交点を求める
+        /// </summary>
+        /// <param name="entity">要素データ</param>
+        /// <returns>交点リスト</returns>
+        public override List<PointD> intersection(Entity entity)
+        {
+            List<PointD> plist = new List<PointD>();
+            PointD ip = null;
+            switch (entity.mEntityId) {
+                case EntityId.Point:
+                    PointEntity point = (PointEntity)entity;
+                    plist = mPolyline.intersection(point.mPoint);
+                    break;
+                case EntityId.Line:
+                    LineEntity line = (LineEntity)entity;
+                    plist = mPolyline.intersection(line.mLine);
+                    break;
+                case EntityId.Arc:
+                    ArcEntity arc = (ArcEntity)entity;
+                    plist = mPolyline.intersection(arc.mArc);
+                    break;
+                case EntityId.Polyline:
+                    PolylineEntity polyline = (PolylineEntity)entity;
+                    plist = mPolyline.intersection(polyline.mPolyline);
+                    break;
+                case EntityId.Polygon:
+                    PolygonEntity polygon = (PolygonEntity)entity;
+                    plist = mPolyline.intersection(polygon.mPolygon);
+                    break;
+                case EntityId.Text:
+                    break;
+            }
+            return plist;
+        }
+
+        /// <summary>
+        /// 要素上の分割位置を求める
+        /// </summary>
+        /// <param name="divideNo">分割数</param>
+        /// <param name="pos">参照点</param>
+        /// <returns>分割点</returns>
+        public override PointD dividePos(int divideNo, PointD pos)
+        {
+            LineD line = mPolyline.nearLine(pos);
+            List<PointD> plist = line.dividePoints(divideNo);
+            return plist.MinBy(p => p.length(pos));
         }
 
         /// <summary>
@@ -551,7 +1127,7 @@ namespace CadApp
         /// </summary>
         public override void updateArea()
         {
-            mArea = new Box(mPolyline);
+            mArea = mPolyline.getBox();
         }
     }
 
@@ -561,7 +1137,7 @@ namespace CadApp
     public class PolygonEntity : Entity
     {
         //  座標データ
-        public List<PointD> mPolygon;
+        public PolygonD mPolygon;
 
         /// <summary>
         /// コンストラクタ
@@ -569,32 +1145,43 @@ namespace CadApp
         public PolygonEntity()
         {
             mEntityId = EntityId.Polygon;
-            mPolygon = new List<PointD>();
+            mPolygon = new PolygonD();
         }
 
         /// <summary>
         /// コンストラクタ(LineD設定)
         /// </summary>
         /// <param name="line"></param>
-        public PolygonEntity(List<PointD> polylines)
+        public PolygonEntity(List<PointD> polygon)
         {
             mEntityId = EntityId.Polygon;
-            mPolygon = new List<PointD>();
-            polylines.ForEach(p => mPolygon.Add(p));
-            mArea = new Box(mPolygon);
+            mPolygon = new PolygonD(polygon);
+            mArea = new Box(mPolygon.mPolygon);
+        }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="polygon"></param>
+        public PolygonEntity(PolygonD polygon)
+        {
+            mEntityId = EntityId.Polygon;
+            mPolygon = polygon.toCopy();
+            mArea = new Box(mPolygon.mPolygon);
         }
 
         /// <summary>
         /// コピーを作成
         /// </summary>
         /// <returns></returns>
-        public PolygonEntity toCopy()
+        public override Entity toCopy()
         {
-            PolygonEntity polyline = new PolygonEntity(mPolygon);
-            polyline.mColor = mColor;
-            polyline.mThickness = mThickness;
-            polyline.mType = mType;
-            return polyline;
+            PolygonEntity polygon = new PolygonEntity(mPolygon);
+            polygon.mColor = mColor;
+            polygon.mThickness = mThickness;
+            polygon.mType = mType;
+            polygon.mRemove = mRemove;
+            return polygon;
         }
 
         /// <summary>
@@ -603,7 +1190,7 @@ namespace CadApp
         /// <param name="data"></param>
         public override void setData(string[] data)
         {
-            mPolygon = new List<PointD>();
+            mPolygon = new PolygonD();
             if (2 < data.Length) {
                 for (int i = 0; i < data.Length - 1; i += 2) {
                     PointD ps = new PointD();
@@ -611,7 +1198,7 @@ namespace CadApp
                     ps.y = double.Parse(data[i + 1]);
                     mPolygon.Add(ps);
                 }
-                mArea = new Box(mPolygon);
+                mArea = new Box(mPolygon.mPolygon);
             }
         }
 
@@ -634,7 +1221,7 @@ namespace CadApp
         public override string toDataString()
         {
             string buf = "";
-            foreach (PointD p in mPolygon) {
+            foreach (PointD p in mPolygon.mPolygon) {
                 buf += $"{p.x},{p.y},";
             }
             return buf.TrimEnd(',');
@@ -647,13 +1234,13 @@ namespace CadApp
         public override string entityInfo()
         {
             double l = 0;
-            for (int i = 0; i < mPolygon.Count - 1; i++)
-                l += mPolygon[i].length(mPolygon[i + 1]);
+            for (int i = 0; i < mPolygon.mPolygon.Count - 1; i++)
+                l += mPolygon.mPolygon[i].length(mPolygon.mPolygon[i + 1]);
             string buf = "";
             buf += $"要素番号: {mNo}";
             buf += $"\n要素種別: ポリゴン要素";
-            buf += $"\n始点 {mPolygon[0].ToString("f4")} 終点 {mPolygon[mPolygon.Count - 1].ToString("f4")}";
-            buf += $"\n点数 {mPolygon.Count.ToString("f0")}";
+            buf += $"\n始点 {mPolygon.mPolygon[0].ToString("f4")} 終点 {mPolygon.mPolygon[mPolygon.mPolygon.Count - 1].ToString("f4")}";
+            buf += $"\n点数 {mPolygon.mPolygon.Count.ToString("f0")}";
             buf += $"\n長さ {l.ToString("f4")}";
             buf += $"\nカラー: {getColorName(mColor)}";
             buf += $"\n太さ: {mThickness}";
@@ -667,7 +1254,7 @@ namespace CadApp
         /// <returns></returns>
         public override string getSummary()
         {
-            return $"{mNo}:ポリゴン{mPolygon[0].ToString("f1")} {mPolygon[mPolygon.Count - 1].ToString("f1")} {getColorName(mColor)}";
+            return $"{mNo}:ポリゴン{mPolygon.mPolygon[0].ToString("f1")} {mPolygon.mPolygon[mPolygon.mPolygon.Count - 1].ToString("f1")} {getColorName(mColor)}";
         }
 
         /// <summary>
@@ -676,7 +1263,7 @@ namespace CadApp
         /// <param name="vec">移動ベクトル</param>
         public override void translate(PointD vec)
         {
-            mPolygon.ForEach(p => p.offset(vec));
+            mPolygon.translate(vec);
             mArea.offset(vec);
         }
 
@@ -687,8 +1274,108 @@ namespace CadApp
         /// <param name="mp">回転角座標</param>
         public override void rotate(PointD cp, PointD mp)
         {
-            mPolygon.ForEach(p => p.rotate(cp, mp));
-            mArea = new Box(mPolygon);
+            mPolygon.rotate(cp, mp);
+            mArea = new Box(mPolygon.mPolygon);
+        }
+
+        /// <summary>
+        /// ミラー
+        /// </summary>
+        /// <param name="sp">始点座標</param>
+        /// <param name="ep">終点座標</param>
+        public override void mirror(PointD sp, PointD ep)
+        {
+            mPolygon.mirror(sp, ep);
+            mArea = new Box(mPolygon.mPolygon);
+        }
+
+        /// <summary>
+        /// トリム
+        /// </summary>
+        /// <param name="sp">始点座標</param>
+        /// <param name="ep">終点座標</param>
+        public override void trim(PointD sp, PointD ep)
+        {
+        }
+
+        /// <summary>
+        /// 要素分割
+        /// </summary>
+        /// <param name="dp">分割参照点</param>
+        /// <returns>要素リスト</returns>
+        public override List<Entity> divide(PointD dp)
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// 要素のストレッチ
+        /// </summary>
+        /// <param name="vec">移動ベクトル</param>
+        /// <param name="pickPos">ピック位置</param>
+        public override void stretch(PointD vec, PointD pickPos)
+        {
+            mPolygon.stretch(vec, pickPos);
+            mArea = mPolygon.getBox();
+        }
+
+        /// <summary>
+        /// 参照点に対する垂点を求める
+        /// </summary>
+        /// <param name="pos">参照点</param>
+        /// <returns>垂点</returns>
+        public override PointD onPoint(PointD pos)
+        {
+            return mPolygon.nearPoint(pos);
+        }
+
+        /// <summary>
+        /// 要素同士の交点を求める
+        /// </summary>
+        /// <param name="entity">要素データ</param>
+        /// <returns>交点リスト</returns>
+        public override List<PointD> intersection(Entity entity)
+        {
+            List<PointD> plist = new List<PointD>();
+            PointD ip = null;
+            switch (entity.mEntityId) {
+                case EntityId.Point:
+                    PointEntity point = (PointEntity)entity;
+                    plist = mPolygon.intersection(point.mPoint);
+                    break;
+                case EntityId.Line:
+                    LineEntity line = (LineEntity)entity;
+                    plist = mPolygon.intersection(line.mLine);
+                    break;
+                case EntityId.Arc:
+                    ArcEntity arc = (ArcEntity)entity;
+                    plist = mPolygon.intersection(arc.mArc);
+                    break;
+                case EntityId.Polyline:
+                    PolylineEntity polyline = (PolylineEntity)entity;
+                    plist = mPolygon.intersection(polyline.mPolyline);
+                    break;
+                case EntityId.Polygon:
+                    PolygonEntity polygon = (PolygonEntity)entity;
+                    plist = mPolygon.intersection(polygon.mPolygon);
+                    break;
+                case EntityId.Text:
+                    break;
+            }
+            return plist;
+        }
+
+        /// <summary>
+        /// 要素上の分割位置を求める
+        /// </summary>
+        /// <param name="divideNo">分割数</param>
+        /// <param name="pos">参照点</param>
+        /// <returns>分割点</returns>
+        public override PointD dividePos(int divideNo, PointD pos)
+        {
+            LineD line = mPolygon.nearLine(pos);
+            List<PointD> plist = line.dividePoints(divideNo);
+            return plist.MinBy(p => p.length(pos));
         }
 
         /// <summary>
@@ -696,7 +1383,7 @@ namespace CadApp
         /// </summary>
         public override void updateArea()
         {
-            mArea = new Box(mPolygon);
+            mArea = new Box(mPolygon.mPolygon);
         }
     }
 
@@ -732,12 +1419,13 @@ namespace CadApp
         /// コピーを作成
         /// </summary>
         /// <returns></returns>
-        public ArcEntity toCopy()
+        public override Entity toCopy()
         {
             ArcEntity arc = new ArcEntity(mArc);
             arc.mColor = mColor;
             arc.mThickness = mThickness;
             arc.mType = mType;
+            arc.mRemove = mRemove;
             return arc;
         }
 
@@ -826,6 +1514,119 @@ namespace CadApp
         }
 
         /// <summary>
+        /// ミラー
+        /// </summary>
+        /// <param name="sp">始点座標</param>
+        /// <param name="ep">終点座標</param>
+        public override void mirror(PointD sp, PointD ep)
+        {
+            mArc.mirror(sp, ep);
+            mArea = new Box(mArc);
+        }
+
+        /// <summary>
+        /// トリム
+        /// </summary>
+        /// <param name="sp">始点座標</param>
+        /// <param name="ep">終点座標</param>
+        public override void trim(PointD sp, PointD ep)
+        {
+            mArc.trim(sp, ep);
+            mArea = new Box(mArc);
+        }
+
+        /// <summary>
+        /// 要素分割
+        /// </summary>
+        /// <param name="dp">分割参照点</param>
+        /// <returns>要素リスト</returns>
+        public override List<Entity> divide(PointD dp)
+        {
+            List<Entity> entityList = new();
+            PointD mp = mArc.intersection(dp);
+            if (!mArc.onPoint(mp))
+                return null;
+            double ang = mArc.getAngle(mp);
+            ArcEntity arcEnt0 = (ArcEntity)toCopy();
+            arcEnt0.mArc.mEa = ang;
+            entityList.Add(arcEnt0);
+            ArcEntity arcEnt1 = (ArcEntity)toCopy();
+            arcEnt1.mArc.mSa = ang;
+            entityList.Add(arcEnt1);
+            return entityList;
+        }
+
+        /// <summary>
+        /// 要素のストレッチ
+        /// </summary>
+        /// <param name="vec">移動ベクトル</param>
+        /// <param name="pickPos">ピック位置</param>
+        public override void stretch(PointD vec, PointD pickPos)
+        {
+            mArc.stretch(vec, pickPos);
+            mArea = new Box(mArc);
+        }
+
+        /// <summary>
+        /// 参照点に対する垂点を求める
+        /// </summary>
+        /// <param name="pos">参照点</param>
+        /// <returns>垂点</returns>
+        public override PointD onPoint(PointD pos)
+        {
+            return mArc.intersection(pos);
+        }
+
+        /// <summary>
+        /// 要素同士の交点を求める
+        /// </summary>
+        /// <param name="entity">要素データ</param>
+        /// <returns>交点リスト</returns>
+        public override List<PointD> intersection(Entity entity)
+        {
+            List<PointD> plist = new List<PointD>();
+            PointD ip = null;
+            switch (entity.mEntityId) {
+                case EntityId.Point:
+                    PointEntity point = (PointEntity)entity;
+                    ip = mArc.intersection(point.mPoint);
+                    plist.Add(ip);
+                    break;
+                case EntityId.Line:
+                    LineEntity line = (LineEntity)entity;
+                    plist = mArc.intersection(line.mLine);
+                    break;
+                case EntityId.Arc:
+                    ArcEntity arc = (ArcEntity)entity;
+                    plist = mArc.intersection(arc.mArc);
+                    break;
+                case EntityId.Polyline:
+                    PolylineEntity polyline = (PolylineEntity)entity;
+                    plist = mArc.intersection(polyline.mPolyline);
+                    break;
+                case EntityId.Polygon:
+                    PolygonEntity polygon = (PolygonEntity)entity;
+                    plist = mArc.intersection(polygon.mPolygon);
+                    break;
+                case EntityId.Text:
+                    break;
+            }
+            return plist;
+        }
+
+        /// <summary>
+        /// 要素上の分割位置を求める
+        /// </summary>
+        /// <param name="divideNo">分割数</param>
+        /// <param name="pos">参照点</param>
+        /// <returns>分割点</returns>
+        public override PointD dividePos(int divideNo, PointD pos)
+        {
+            List<PointD> plist = mArc.dividePoints(divideNo);
+            return plist.MinBy(p => p.length(pos));
+        }
+
+        /// <summary>
         /// 表示範囲の更新
         /// </summary>
         public override void updateArea()
@@ -866,12 +1667,13 @@ namespace CadApp
         /// 複製を作成
         /// </summary>
         /// <returns></returns>
-        public TextEntity toCopy()
+        public override Entity toCopy()
         {
             TextEntity text = new TextEntity(mText.toCopy());
             text.mColor = mColor;
             text.mThickness = mThickness;
             text.mType = mType;
+            text.mRemove = mRemove;
             return text;
         }
 
@@ -960,6 +1762,94 @@ namespace CadApp
             mText.rotate(cp, mp);
             mArea = mText.getBox();
         }
+        /// <summary>
+        /// ミラー
+        /// </summary>
+        /// <param name="sp">始点座標</param>
+        /// <param name="ep">終点座標</param>
+        public override void mirror(PointD sp, PointD ep)
+        {
+            mText.mirror(sp, ep);
+            mArea = mText.getBox();
+        }
+
+        /// <summary>
+        /// トリム
+        /// </summary>
+        /// <param name="sp">始点座標</param>
+        /// <param name="ep">終点座標</param>
+        public override void trim(PointD sp, PointD ep)
+        {
+        }
+
+        /// <summary>
+        /// 要素分割
+        /// </summary>
+        /// <param name="dp">分割参照点</param>
+        /// <returns>要素リスト</returns>
+        public override List<Entity> divide(PointD dp)
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// 要素のストレッチ
+        /// </summary>
+        /// <param name="vec">移動ベクトル</param>
+        /// <param name="pickPos">ピック位置</param>
+        public override void stretch(PointD vec, PointD pickPos)
+        {
+
+        }
+
+        /// <summary>
+        /// 参照点に対する垂点を求める
+        /// </summary>
+        /// <param name="pos">参照点</param>
+        /// <returns>垂点</returns>
+        public override PointD onPoint(PointD pos)
+        {
+            return mText.nearPoint(pos);
+        }
+
+        /// <summary>
+        /// 交点を求める
+        /// </summary>
+        /// <param name="entity">要素データ</param>
+        /// <returns>交点リスト</returns>
+        public override List<PointD> intersection(Entity entity)
+        {
+            List<PointD> plist = new List<PointD>();
+            PointD ip = null;
+            switch (entity.mEntityId) {
+                case EntityId.Point:
+                    break;
+                case EntityId.Line:
+                    break;
+                case EntityId.Arc:
+                    break;
+                case EntityId.Polyline:
+                    break;
+                case EntityId.Polygon:
+                    break;
+                case EntityId.Text:
+                    break;
+            }
+            return plist;
+        }
+
+        /// <summary>
+        /// 要素上の分割位置を求める
+        /// </summary>
+        /// <param name="divideNo">分割数</param>
+        /// <param name="pos">参照点</param>
+        /// <returns>分割点</returns>
+        public override PointD dividePos(int divideNo, PointD pos)
+        {
+            LineD line = mText.nearLine(pos);
+            List<PointD> plist = line.dividePoints(divideNo);
+            return plist.MinBy(p => p.length(pos));
+        }
 
         /// <summary>
         /// 表示範囲の更新
@@ -970,13 +1860,21 @@ namespace CadApp
         }
     }
 
+    /// <summary>
+    /// 要素データクラス
+    /// </summary>
     public class EntityData
     {
         public List<Entity> mEntityList;        //  要素リスト
         public Brush mColor = Brushes.Black;    //  デフォルトカラー
+        public int mPointType = 0;              //  点種
+        public int mLineType = 0;               //  点種/線種
         public double mThickness = 1.0;         //  デフォルト線太さ
-        public int mType = 0;                   //  点種/線種
+        public double mPointSize = 1;           //  点の大きさ
         public Box mArea;                       //  要素領域
+        public int mOperationCouunt = 0;
+
+        private double mEps = 1E-8;
 
         private YLib ylib = new YLib();
 
@@ -985,6 +1883,42 @@ namespace CadApp
         /// </summary>
         public EntityData() { 
             mEntityList = new List<Entity>();
+        }
+
+        /// <summary>
+        /// 要素データ情報
+        /// </summary>
+        /// <returns></returns>
+        public string getDataInfo()
+        {
+            string buf = "";
+            buf += "要素数 : " + mEntityList.Count;
+            buf += "\nデータ領域 : " + mArea.ToString("f2");
+            return buf;
+        }
+
+        /// <summary>
+        /// プロパティ設定値を文字列に変換
+        /// </summary>
+        /// <returns></returns>
+        public string propertyToString()
+        {
+            return $"{mColor},{mPointType},{mPointSize},{mLineType},{mThickness}";
+        }
+
+        /// <summary>
+        /// 文字列配列をプロパティ設定値に変換
+        /// </summary>
+        /// <param name="data"></param>
+        public void setPropertyData(string[] data)
+        {
+            if (4 < data.Length) {
+                mColor = ylib.getColor(data[0]);
+                mPointType = int.Parse(data[1]);
+                mPointSize = double.Parse(data[2]);
+                mLineType = int.Parse(data[3]);
+                mThickness = double.Parse(data[4]);
+            }
         }
 
         /// <summary>
@@ -1003,7 +1937,7 @@ namespace CadApp
         public int addPoint(PointD p)
         {
             Entity pointEnt = new PointEntity(p);
-            pointEnt.setProperty(mColor, mThickness, mType);
+            pointEnt.setProperty(mColor, mPointSize, mPointType);
             mEntityList.Add(pointEnt);
             if (mArea == null) {
                 mArea = pointEnt.mArea;
@@ -1011,6 +1945,7 @@ namespace CadApp
                 mArea.extension(pointEnt.mArea);
             }
             pointEnt.mNo = mEntityList.Count - 1;
+            pointEnt.mOperationCount = mOperationCouunt;
             return pointEnt.mNo;
         }
 
@@ -1019,7 +1954,7 @@ namespace CadApp
         /// </summary>
         /// <param name="sp">始点</param>
         /// <param name="ep">終点</param>
-        /// <returns></returns>
+        /// <returns>要素No</returns>
         public int addLine(PointD sp, PointD ep)
         {
             return addLine(new LineD(sp, ep));
@@ -1032,8 +1967,10 @@ namespace CadApp
         /// <returns></returns>
         public int addLine(LineD pline)
         {
+            if (pline == null || pline.length() < mEps)
+                return -1;
             Entity lineEnt = new LineEntity(pline);
-            lineEnt.setProperty(mColor, mThickness, mType);
+            lineEnt.setProperty(mColor, mThickness, mLineType);
             mEntityList.Add(lineEnt);
             if (mArea == null) {
                 mArea = lineEnt.mArea.toCopy();
@@ -1041,6 +1978,7 @@ namespace CadApp
                 mArea.extension(lineEnt.mArea);
             }
             lineEnt.mNo = mEntityList.Count - 1;
+            lineEnt.mOperationCount = mOperationCouunt;
             return lineEnt.mNo;
         }
 
@@ -1052,6 +1990,8 @@ namespace CadApp
         /// <returns></returns>
         public int addRect(PointD sp, PointD ep)
         {
+            if (sp == null || ep == null || sp.length(ep) < mEps)
+                return -1;
             Box b = new Box(sp, ep);
             List<PointD> plist = b.ToPointDList();
             return addPolygon(plist);
@@ -1064,8 +2004,10 @@ namespace CadApp
         /// <returns></returns>
         public int addPolyline(List<PointD> polyline)
         {
+            if (polyline == null || polyline.Count < 2)
+                return -1;
             Entity polylineEnt = new PolylineEntity(polyline);
-            polylineEnt.setProperty(mColor, mThickness, mType);
+            polylineEnt.setProperty(mColor, mThickness, mLineType);
             mEntityList.Add(polylineEnt);
             if (mArea == null) {
                 mArea = polylineEnt.mArea.toCopy();
@@ -1073,6 +2015,7 @@ namespace CadApp
                 mArea.extension(polylineEnt.mArea);
             }
             polylineEnt.mNo = mEntityList.Count - 1;
+            polylineEnt.mOperationCount = mOperationCouunt;
             return polylineEnt.mNo;
         }
 
@@ -1083,8 +2026,10 @@ namespace CadApp
         /// <returns></returns>
         public int addPolygon(List<PointD> polygon)
         {
+            if (polygon == null || polygon.Count < 3) 
+                return -1;
             Entity polygonEnt = new PolygonEntity(polygon);
-            polygonEnt.setProperty(mColor, mThickness, mType);
+            polygonEnt.setProperty(mColor, mThickness, mLineType);
             mEntityList.Add(polygonEnt);
             if (mArea == null) {
                 mArea = polygonEnt.mArea.toCopy();
@@ -1092,6 +2037,7 @@ namespace CadApp
                 mArea.extension(polygonEnt.mArea);
             }
             polygonEnt.mNo = mEntityList.Count - 1;
+            polygonEnt.mOperationCount = mOperationCouunt;
             return polygonEnt.mNo;
         }
 
@@ -1102,8 +2048,10 @@ namespace CadApp
         /// <returns></returns>
         public int addArc(ArcD arc)
         {
+            if (arc == null || arc.mR < mEps || arc.mEa - arc.mSa < mEps)
+                return -1;
             Entity arcEnt = new ArcEntity(arc);
-            arcEnt.setProperty(mColor, mThickness, mType);
+            arcEnt.setProperty(mColor, mThickness, mLineType);
             mEntityList.Add(arcEnt);
             if (mArea == null) {
                 mArea = arcEnt.mArea;
@@ -1111,6 +2059,7 @@ namespace CadApp
                 mArea.extension(arcEnt.mArea);
             }
             arcEnt.mNo = mEntityList.Count - 1;
+            arcEnt.mOperationCount = mOperationCouunt;
             return arcEnt.mNo;
         }
 
@@ -1121,8 +2070,10 @@ namespace CadApp
         /// <returns></returns>
         public int addText(TextD text)
         {
+            if (text == null || text.mText.Length == 0 || text.mTextSize < 1)
+                return -1;
             Entity textEnt = new TextEntity(text);
-            textEnt.setProperty(mColor, mThickness, mType);
+            textEnt.setProperty(mColor, mThickness, mLineType);
             mEntityList.Add(textEnt);
             if (mArea == null) {
                 mArea = textEnt.mArea;
@@ -1130,22 +2081,8 @@ namespace CadApp
                 mArea.extension(textEnt.mArea);
             }
             textEnt.mNo = mEntityList.Count - 1;
+            textEnt.mOperationCount = mOperationCouunt;
             return textEnt.mNo;
-        }
-
-        /// <summary>
-        /// 指定要素を削除する
-        /// </summary>
-        /// <param name="entNoList">要素番号リスト</param>
-        /// <returns></returns>
-        public bool removeEnt(List<int> entNoList)
-        {
-            entNoList.Sort((x, y) => y - x);
-            foreach (int entNo in entNoList) {
-                mEntityList.RemoveAt(entNo);
-            }
-            updateData();
-            return true;
         }
 
         /// <summary>
@@ -1153,11 +2090,16 @@ namespace CadApp
         /// </summary>
         /// <param name="entNoList">要素リスト</param>
         /// <param name="offset">移動量</param>
+        /// <param name="copy">コピー作成</param>
         /// <returns></returns>
-        public bool translate(List<int> entNoList, PointD offset)
+        public bool translate(List<(int no, PointD pos)> entNoList, PointD offset, bool copy = false)
         {
-            foreach (int entNo in entNoList) {
-                mEntityList[entNo].translate(offset);
+            foreach ((int no, PointD pos) entNo in entNoList) {
+                mEntityList.Add(mEntityList[entNo.no].toCopy());
+                mEntityList[mEntityList.Count - 1].translate(offset);
+                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
+                if (!copy)
+                    removeEnt(entNo.no);
             }
             updateData();
             return true;
@@ -1169,14 +2111,151 @@ namespace CadApp
         /// <param name="entNoList">要素リスト</param>
         /// <param name="cp">中心点</param>
         /// <param name="mp">回転角座標</param>
+        /// <param name="copy">コピー作成</param>
         /// <returns></returns>
-        public bool rotate(List<int> entNoList, PointD cp, PointD mp)
+        public bool rotate(List<(int no, PointD pos)> entNoList, PointD cp, PointD mp, bool copy = false)
         {
-            foreach (int entNo in entNoList) {
-                mEntityList[entNo].rotate(cp, mp);
+            foreach ((int no, PointD pos) entNo in entNoList) {
+                mEntityList.Add(mEntityList[entNo.no].toCopy());
+                mEntityList[mEntityList.Count - 1].rotate(cp, mp);
+                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
+                if (!copy)
+                    removeEnt(entNo.no);
             }
             updateData();
             return true;
+        }
+
+        /// <summary>
+        /// 要素をミラーする
+        /// </summary>
+        /// <param name="entNoList">要素リスト</param>
+        /// <param name="sp">始点座標</param>
+        /// <param name="ep">終点座標</param>
+        /// <param name="copy">コピー作成</param>
+        /// <returns></returns>
+        public bool mirror(List<(int no, PointD pos)> entNoList, PointD sp, PointD ep, bool copy = false)
+        {
+            foreach ((int no, PointD pos) entNo in entNoList) {
+                mEntityList.Add(mEntityList[entNo.no].toCopy());
+                mEntityList[mEntityList.Count - 1].mirror(sp, ep);
+                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
+                if (!copy)
+                    removeEnt(entNo.no);
+            }
+            updateData();
+            return true;
+        }
+
+        /// <summary>
+        /// 要素をトリムする
+        /// </summary>
+        /// <param name="entNoList">要素リスト</param>
+        /// <param name="sp">始点座標</param>
+        /// <param name="ep">終点座標</param>
+        /// <returns></returns>
+        public bool trim(List<(int no, PointD pos)> entNoList, PointD sp, PointD ep)
+        {
+            foreach ((int no, PointD pos) entNo in entNoList) {
+                mEntityList.Add(mEntityList[entNo.no].toCopy());
+                mEntityList[mEntityList.Count - 1].trim(sp, ep);
+                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
+                removeEnt(entNo.no);
+            }
+            updateData();
+            return true;
+        }
+
+        /// <summary>
+        /// 要素を分割する
+        /// </summary>
+        /// <param name="entNoList">要素リスト</param>
+        /// <param name="dp">分割参照点</param>
+        /// <returns></returns>
+        public bool divide(List<(int no, PointD pos)> entNoList, PointD dp)
+        {
+            foreach ((int no, PointD pos) entNo in entNoList) {
+                List<Entity> entityList = mEntityList[entNo.no].divide(dp);
+                if (entityList == null)
+                    continue;
+                foreach(Entity ent in entityList) {
+                    ent.mOperationCount = mOperationCouunt;
+                    mEntityList.Add(ent);
+                }
+                removeEnt(entNo.no);
+            }
+            updateData();
+            return true;
+        }
+
+        /// <summary>
+        /// 要素をストレッチする
+        /// </summary>
+        /// <param name="entNoList">要素リスト</param>
+        /// <param name="vec">移動ベクトル</param>
+        /// <param name="pickPos">ピック位置</param>
+        /// <returns></returns>
+        public bool stretch(List<(int no, PointD pos)> entNoList, PointD vec)
+        {
+            foreach ((int no, PointD pos) entNo in entNoList) {
+                mEntityList.Add(mEntityList[entNo.no].toCopy());
+                mEntityList[mEntityList.Count - 1].stretch(vec, entNo.pos);
+                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
+                removeEnt(entNo.no);
+            }
+            updateData();
+            return true;
+        }
+
+        /// <summary>
+        /// 指定要素を削除する
+        /// </summary>
+        /// <param name="entNoList">要素番号リスト</param>
+        /// <returns></returns>
+        public bool removeEnt(List<(int, PointD)> entNoList)
+        {
+            foreach ((int no, PointD pos) entNo in entNoList) {
+                removeEnt(entNo.no);
+            }
+            updateData();
+            return true;
+        }
+
+        /// <summary>
+        /// 指定要素を削除
+        /// 要素の削除はアンドゥできるように指定要素の削除フラグをたて
+        /// そのリンク要素を最終要素に追加する
+        /// </summary>
+        /// <param name="entNo"></param>
+        public void removeEnt(int entNo)
+        {
+            mEntityList[entNo].mRemove = true;
+            LinkEntity link = new LinkEntity();
+            link.mRemove = true;
+            link.mLinkNo = entNo;
+            link.mOperationCount = mOperationCouunt;
+            mEntityList.Add(link);
+        }
+
+        /// <summary>
+        /// アンドゥ処理
+        /// 最終要素がリンク要素であればリンク先要素の削除フラグを解除してから採取要素を削除
+        /// リンク要素でなければそのまま削除
+        /// </summary>
+        public void undo()
+        {
+            if (0 < mEntityList.Count) {
+                int entNo = mEntityList.Count - 1;
+                int opeNo = mEntityList[entNo].mOperationCount;
+                while (0 <= opeNo && opeNo == mEntityList[entNo].mOperationCount) {
+                    if (mEntityList[entNo].mEntityId == EntityId.Link) {
+                        LinkEntity linkEnt = (LinkEntity)mEntityList[entNo];
+                        mEntityList[linkEnt.mLinkNo].mRemove = false;
+                    }
+                    mEntityList.RemoveAt(entNo);
+                    entNo--;
+                }
+            }
         }
 
         /// <summary>
@@ -1184,11 +2263,15 @@ namespace CadApp
         /// </summary>
         public void updateData()
         {
-            mArea = mEntityList[0].mArea.toCopy();
-            for (int i = 0; i < mEntityList.Count; i++) {
-                mEntityList[i].updateArea();
-                mArea.extension(mEntityList[i].mArea);
-                mEntityList[i].mNo = i;
+            if (mEntityList != null && 0 < mEntityList.Count) {
+                mArea = mEntityList[0].mArea.toCopy();
+                for (int i = 0; i < mEntityList.Count; i++) {
+                    if (!mEntityList[i].mRemove && mEntityList[i].mEntityId != EntityId.Link) {
+                        mEntityList[i].updateArea();
+                        mArea.extension(mEntityList[i].mArea);
+                        mEntityList[i].mNo = i;
+                    }
+                }
             }
         }
 
@@ -1201,14 +2284,45 @@ namespace CadApp
         {
             List<int> picks = new List<int>();
             for (int i = 0; i < mEntityList.Count; i++) {
+                if (mEntityList[i].mRemove || mEntityList[i].mEntityId == EntityId.Non)
+                    continue;
                 if (b.insideChk(mEntityList[i].mArea))      //  Boxの内側
                     picks.Add(i);
                 if (b.outsideChk(mEntityList[i].mArea))     //  Boxの外側
                     continue;
-                if (interSection(mEntityList[i], b))        //  Boxと交点あり
+                if (intersection(mEntityList[i], b))        //  Boxと交点あり
                     picks.Add(i);
             }
             return picks;
+        }
+
+        /// <summary>
+        /// 要素同士の交点のうち最も近い点を求める
+        /// </summary>
+        /// <param name="entNo1">要素1</param>
+        /// <param name="entNo2">要素２</param>
+        /// <param name="pos">参照点</param>
+        /// <returns>交点(ない場合はnull)</returns>
+        public PointD intersection(int entNo1, int entNo2, PointD pos)
+        {
+            List<PointD> plist = intersection(entNo1, entNo2);
+            if (plist.Count == 0)
+                return null;
+            else
+                return plist.MinBy(p => p.length(pos));
+        }
+
+        /// <summary>
+        /// 要素同士の交点を求める
+        /// </summary>
+        /// <param name="entNo1">要素1</param>
+        /// <param name="entNo2">要素２</param>
+        /// <returns>交点リスト</returns>
+        public List<PointD> intersection(int entNo1, int entNo2)
+        {
+            Entity ent1 = mEntityList[entNo1];
+            Entity ent2 = mEntityList[entNo2];
+            return ent1.intersection(ent2);
         }
 
         /// <summary>
@@ -1217,7 +2331,7 @@ namespace CadApp
         /// <param name="ent">要素</param>
         /// <param name="b">検索Box</param>
         /// <returns>判定</returns>
-        public bool interSection(Entity ent, Box b)
+        public bool intersection(Entity ent, Box b)
         {
             bool result = false;
             List<PointD> plist;
@@ -1233,12 +2347,12 @@ namespace CadApp
                     break;
                 case EntityId.Polyline:
                     PolylineEntity polyline = (PolylineEntity) ent;
-                    plist = b.intersection(polyline.mPolyline, false, true);
+                    plist = b.intersection(polyline.mPolyline.mPolyline, false, true);
                     result = 0 < plist.Count;
                     break;
                 case EntityId.Polygon:
                     PolygonEntity polygon = (PolygonEntity)ent;
-                    plist = b.intersection(polygon.mPolygon, true, true);
+                    plist = b.intersection(polygon.mPolygon.mPolygon, true, true);
                     result = 0 < plist.Count;
                     break;
                 case EntityId.Arc:
@@ -1266,8 +2380,10 @@ namespace CadApp
         public void saveData(string path)
         {
             string buf = "";
+            buf += EntityId.Property.ToString() + "\n";
+            buf += propertyToString() + "\n";
             foreach (Entity entity in mEntityList) {
-                if (entity != null) {
+                if (entity != null && !entity.mRemove && entity.mEntityId != EntityId.Non) {
                     buf += entity.toString() + "\n";
                     buf += entity.toDataString() + "\n";
                 }
@@ -1346,6 +2462,13 @@ namespace CadApp
                             textEntity.setData(dataStr);
                             i++;
                             mEntityList.Add(textEntity);
+                        }
+                    } else if (0 <= entityStr[0].IndexOf(EntityId.Property.ToString())) {
+                        //  システムプロパティ情報
+                        if (i + 1 < dataList.Length) {
+                            string[] dataStr = dataList[i + 1].Split(new char[] { ',' });
+                            setPropertyData(dataStr);
+                            i++;
                         }
                     }
                     if (0 < mEntityList.Count)

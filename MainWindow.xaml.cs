@@ -1,18 +1,22 @@
-﻿using CoreLib;
+﻿//#define MYTEST
+
+using CoreLib;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
+using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace CadApp
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
+    /// 
+    /// CadApp メイン
     /// </summary>
     public partial class MainWindow : Window
     {
@@ -36,50 +40,44 @@ namespace CadApp
         private List<string> mLineTypeMenu = new List<string>() {
             "実線", "破線", "一点鎖線", "二点鎖線"
         };
-
-        private Box mDispArea = new Box(-50, 100, 100, -50);//  表示領域
-        private Brush mBackColor = Brushes.White;           //  背景色
+        private List<string> mLocMenu = new List<string>() {
+            "座標入力", "相対座標入力"
+        };
+        private List<string> mLocSelectMenu = new List<string>() {
+            "端点・中間点",　"3分割点", "4分割点", "8分割点", "16分割点", "垂点"
+        };
+        private List<string> mSystemSetMenu = new List<string>() {
+            "データフォルダ"
+        };
         private Point mPrevPosition;                        //  マウスの前回位置(画面スクロール)
         private bool mMouseLeftButtonDown = false;          //  マウス左ボタン状態
         private BitmapSource mBitmapSource;                 //  画像データ(描画データのバッファリング)
         private int mPickBoxSize = 10;                      //  ピック領域サイズ
         private int mScrollSize = 19;                       //  キーによるスクロール単位
-        private int mGridMinmumSize = 10;                   //  グリッドの最小表示スクリーンサイズ
-        private double mGridSize = 1.0;                     //  マウス座標の丸め値
-        private List<PointD> mLocPos = new List<PointD>();  //  マウス指定点
-        private List<int> mPickEnt = new List<int>();       //  ピックした要素リスト
-        private Brush mDraggingColor = Brushes.Blue;        //  ドラッギング時の色
-
-        //private int mPointType = 0;                         //  点種
-        //private int mLineType = 0;                          //  線種
-        //private double mEntSize = 1;                        //  線の太さ
-        //private double mPointSize = 1;                      //  点の大きさ
-        //private double mTextSize = 12;                      //  文字サイズ
-        //private double mTextRotate = 0;                     //  文字列の回転角
-        //private HorizontalAlignment mHa = HorizontalAlignment.Left; //  水平アライメント
-        //private VerticalAlignment mVa = VerticalAlignment.Top;      //  垂直アライメント
-        //private Brush mCreateColor = Brushes.Black;         //  要素の色
+        private Brush mDraggingColor = Brushes.Green;       //  ドラッギング時の色
 
         private EntityData mEntityData;                     //  要素データ
 
+        public enum OPEMODE { non, pick, loc }
         private CommandOpe mCommandOpe;
         private CommandData mCommandData = new CommandData();
         private OPERATION mOperation = OPERATION.non;
-        private bool mLocMode = false;
+        private OPEMODE mLocMode = OPEMODE.pick;            //  マウスのLocモードとPickモード
 
-        private YWorldDraw ydraw;
+        private FileData mFileData;
+        private DataDrawing mDataDrawing;
         private YLib ylib = new YLib();
 
         public MainWindow()
         {
             InitializeComponent();
 
-            WindowFormLoad();
-
-            ydraw = new YWorldDraw(cvCanvas);
+            mDataDrawing = new DataDrawing(cvCanvas, this);
             mEntityData = new EntityData();
-            mCommandOpe = new CommandOpe(mEntityData);
-            mCommandOpe.mWindow = this;
+            mCommandOpe = new CommandOpe(mEntityData, cvCanvas, this);
+            mFileData = new FileData(this);
+
+            WindowFormLoad();
         }
 
         /// <summary>
@@ -91,15 +89,33 @@ namespace CadApp
         {
             //  コントロール初期設定
             lbCommand.ItemsSource     = mCommandData.getMainCommand();
-            cbColor.DataContext       = ydraw.mColorList;
+            cbColor.DataContext       = ylib.mColorList;
             cbGridSize.ItemsSource    = mGridSizeMenu;
             cbPointType.ItemsSource   = mPointTypeMenu;
+            cbPointSize.ItemsSource   = mEntSizeMenu;
             cbLineType.ItemsSource    = mLineTypeMenu;
             cbEntSize.ItemsSource     = mEntSizeMenu;
             cbTextSize.ItemsSource    = mTextSizeMenu;
             setSystemProperty();
 
-            initDraw();
+            mFileData.setBaseDataFolder();
+
+            cbGenre.ItemsSource = mFileData.getGenreList();
+            int index = cbGenre.Items.IndexOf(mFileData.mGenreName);
+            if (0 <= index) {
+                cbGenre.SelectedIndex = index;
+                index = lbCategoryList.Items.IndexOf(mFileData.mCategoryName);
+                if (0 <= index) {
+                    lbCategoryList.SelectedIndex = index;
+                    index = lbItemList.Items.IndexOf(mFileData.mDataName);
+                    if (0 <= index) {
+                        lbItemList.SelectedIndex = index;
+                    }
+                }
+            }
+
+            mDataDrawing.initDraw(mCommandOpe.mDispArea);
+            dispMode();
         }
 
         /// <summary>
@@ -125,8 +141,8 @@ namespace CadApp
             }
             mWindowState = WindowState;
 
-            initDraw();
-            disp();
+            mDataDrawing.initDraw(mCommandOpe.mDispArea);
+            disp(mEntityData);
         }
 
         /// <summary>
@@ -136,6 +152,8 @@ namespace CadApp
         /// <param name="e"></param>
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            mCommandOpe.saveFile(true);
+
             WindowFormSave();
         }
 
@@ -157,6 +175,12 @@ namespace CadApp
                 Width  = Properties.Settings.Default.MainWindowWidth;
                 Height = Properties.Settings.Default.MainWindowHeight;
             }
+            string baseDataFolder = Properties.Settings.Default.BaseDataFolder;
+            mFileData.mBaseDataFolder = baseDataFolder == "" ? Path.GetFullPath("Zumen") : baseDataFolder;
+            mFileData.mGenreName = Properties.Settings.Default.GenreName;
+            mFileData.mCategoryName = Properties.Settings.Default.CategoryName;
+            mFileData.mDataName = Properties.Settings.Default.DataName;
+
         }
 
         /// <summary>
@@ -164,6 +188,11 @@ namespace CadApp
         /// </summary>
         private void WindowFormSave()
         {
+            //  図面分類の保存
+            Properties.Settings.Default.BaseDataFolder = mFileData.mBaseDataFolder;
+            Properties.Settings.Default.GenreName = mFileData.mGenreName;
+            Properties.Settings.Default.CategoryName = mFileData.mCategoryName;
+            Properties.Settings.Default.DataName = mFileData.mDataName;
             //  Windowの位置とサイズを保存(登録項目をPropeties.settingsに登録して使用する)
             Properties.Settings.Default.MainWindowTop    = Top;
             Properties.Settings.Default.MainWindowLeft   = Left;
@@ -204,10 +233,18 @@ namespace CadApp
         private void Window_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             mMouseLeftButtonDown = true;
-            if ((Keyboard.Modifiers & ModifierKeys.Control) != ModifierKeys.Control) {
-                //  要素作成
-                addCommand(ydraw.cnvScreen2World(new PointD(e.GetPosition(cvCanvas))));
+            if (!onControlKey()) {
+                //  要素追加
+                PointD wp = mDataDrawing.cnvScreen2World(new PointD(e.GetPosition(cvCanvas)));
+                wp.round(Math.Abs(mCommandOpe.mGridSize));
+                mCommandOpe.mLocPos.Add(wp);
+                mCommandOpe.mTextString = tbTextString.Text;
+                if (mOperation != OPERATION.createPolyline && mOperation != OPERATION.createPolygon) {
+                    if (mCommandOpe.entityCommand(mOperation, mCommandOpe.mLocPos, mCommandOpe.mPickEnt))
+                        commandClear();
+                }
             }
+            dispMode();
         }
 
         /// <summary>
@@ -219,30 +256,51 @@ namespace CadApp
         private void Window_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             mPrevPosition = e.GetPosition(cvCanvas);
-            PointD pickPos = ydraw.cnvScreen2World(new PointD(e.GetPosition(cvCanvas)));
+            PointD pickPos = mDataDrawing.cnvScreen2World(new PointD(e.GetPosition(cvCanvas)));
             List<int> picks = getPickNo(pickPos);
-            if (0 < mLocPos.Count && 
-                (mOperation == OPERATION.createPolyline || mOperation == OPERATION.createPolygon)) {
-                if (!pickEndMenu(picks)) {
-                    //  要素登録(Polyline<Polygon)
-                    mCommandOpe.mTextString = tbTextString.Text;
-                    mCommandOpe.createData(mLocPos, mOperation);
-                    disp();
-                    mLocPos.Clear();
-                    return;
+            if (mLocMode == OPEMODE.loc) {
+                //  ロケイト処理
+                if (0 < mCommandOpe.mLocPos.Count &&
+                    (mOperation == OPERATION.createPolyline || mOperation == OPERATION.createPolygon)) {
+                    //  ロケイト数不定の要素作成(ポリライン、ポリゴン)
+                    if (!pickEndMenu(picks)) {
+                        //  要素追加(Polyline<Polygon)
+                        if (mCommandOpe.entityCommand(mOperation, mCommandOpe.mLocPos, mCommandOpe.mPickEnt))
+                            commandClear();
+                        return;
+                    }
+                }
+                if (0 < picks.Count) {
+                    PointD wp = null;
+                    if (onControlKey()) {
+                        //  メニューで位置を選定
+                        wp = locSelect(pickPos, picks);
+                    } else {
+                        if (picks.Count == 1) {
+                            //  ピックされているときは位置を自動判断
+                            wp = autoLoc(pickPos, picks[0]);
+                        } else if (2 <= picks.Count) {
+                            //  2要素の時は交点位置
+                            wp = mEntityData.intersection(picks[0], picks[1], pickPos);
+                        }
+                    }
+                    if (wp != null)
+                        mCommandOpe.mLocPos.Add(wp);
+                }
+                if (mCommandOpe.entityCommand(mOperation, mCommandOpe.mLocPos, mCommandOpe.mPickEnt))
+                    commandClear();
+            } else {
+                //  ピック処理
+                if (0 < picks.Count) {
+                    int pickNo = pickSelect(picks);
+                    if (0 <= pickNo) {
+                        //  ピック要素の登録
+                        mCommandOpe.mPickEnt.Add((pickNo, pickPos));
+                        mDataDrawing.pickDisp(mEntityData, mCommandOpe.mPickEnt);
+                    }
                 }
             }
-            if (0 < picks.Count) {
-                int pickNo = pickSelect(picks);
-                if (mLocMode) {
-                    //  要素の登録または編集
-                    addCommand(autoLoc(pickPos, pickNo));
-                } else if(0 <= pickNo) {
-                    //  ピック要素の登録
-                    mPickEnt.Add(pickNo);
-                    pickDisp(mPickEnt);
-                }
-            }
+            dispMode();
         }
 
         /// <summary>
@@ -265,8 +323,8 @@ namespace CadApp
             Point point = e.GetPosition(cvCanvas);
             if (point == mPrevPosition)
                 return;
-            PointD wp = ydraw.cnvScreen2World(new PointD(point));
-            wp.round(Math.Abs(mGridSize));
+            PointD wp = mDataDrawing.cnvScreen2World(new PointD(point));
+            wp.round(Math.Abs(mCommandOpe.mGridSize));
             tbPosition.Text = $"{wp.x.ToString("F2")},{wp.y.ToString("F2")}";   //  マウス座標表示
             if (mMouseLeftButtonDown && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control) {
                 //  画面の移動(Ctrl + 左ボタン)
@@ -275,12 +333,13 @@ namespace CadApp
                 } else {
                     return;
                 }
-            } else if ((0 < mLocPos.Count && mOperation != OPERATION.non) ||
-                (0 == mLocPos.Count && (mOperation == OPERATION.createPoint || mOperation == OPERATION.createText))) {
+            } else if ((0 < mCommandOpe.mLocPos.Count && mOperation != OPERATION.non) ||
+                (0 == mCommandOpe.mLocPos.Count && (mOperation == OPERATION.createPoint || mOperation == OPERATION.createText))) {
                 //  ドラッギング表示
-                mLocPos.Add(wp);
-                dragging(mLocPos, mOperation);
-                mLocPos.RemoveAt(mLocPos.Count - 1);
+                mCommandOpe.mLocPos.Add(wp);
+                mDataDrawing.setEntityProperty(mCommandOpe.mCreateColor, mCommandOpe.mPointType, mCommandOpe.mPointSize, mCommandOpe.mLineType, mCommandOpe.mEntSize);
+                mDataDrawing.dragging(mEntityData, mCommandOpe.mLocPos, mCommandOpe.mPickEnt, mOperation);
+                mCommandOpe.mLocPos.RemoveAt(mCommandOpe.mLocPos.Count - 1);
             } else {
             }
             mPrevPosition = point;
@@ -296,9 +355,196 @@ namespace CadApp
             if (0 != e.Delta) {
                 double scaleStep = e.Delta > 0 ? 1.1 : 1 / 1.1;
                 Point point = e.GetPosition(cvCanvas);
-                PointD wp = ydraw.cnvScreen2World(new PointD(point));
-                ydraw.mWorld.zoom(wp, scaleStep, true);
-                disp();
+                PointD wp = mDataDrawing.cnvScreen2World(new PointD(point));
+                mDataDrawing.setWorldZoom(wp, scaleStep, true);
+                disp(mEntityData);
+            }
+        }
+
+        /// <summary>
+        /// [ジャンル]の選択
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void cbGenre_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            int index = cbGenre.SelectedIndex;
+            if (0 <= index) {
+                mFileData.setGenreFolder(cbGenre.SelectedItem.ToString());
+                lbCategoryList.ItemsSource = mFileData.getCategoryList();
+            }
+        }
+
+        /// <summary>
+        /// [ジャンル選択]のコンテキストメニュー
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void cbGenreMenu_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem menuItem = (MenuItem)e.Source;
+            if (menuItem.Name.CompareTo("cbGenreAddMenu") == 0) {
+                //  大分類(Genre)の追加
+                string genre = mFileData.addGenre();
+                if (0 < genre.Length) {
+                    cbGenre.ItemsSource = mFileData.getGenreList();
+                    int index = cbGenre.Items.IndexOf(genre);
+                    if (0 <= index)
+                        cbGenre.SelectedIndex = index;
+                }
+            } else if (menuItem.Name.CompareTo("cbGenreRenameMenu") == 0) {
+                //  大分類名の変更
+                string genre = mFileData.renameGenre(cbGenre.SelectedItem.ToString());
+                if (0 < genre.Length) {
+                    cbGenre.ItemsSource = mFileData.getGenreList();
+                    int index = cbGenre.Items.IndexOf(genre);
+                    if (0 <= index)
+                        cbGenre.SelectedIndex = index;
+                }
+            } else if (menuItem.Name.CompareTo("cbGenreRemoveMenu") == 0) {
+                //  大分類名の削除
+                if (mFileData.removeGenre(cbGenre.SelectedItem.ToString())) {
+                    cbGenre.ItemsSource = mFileData.getGenreList();
+                    if (0 < cbGenre.Items.Count)
+                        cbGenre.SelectedIndex = 0;
+                }
+            }
+        }
+
+        /// <summary>
+        /// [カテゴリ]の選択
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void lbCategoryList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            int index = lbCategoryList.SelectedIndex;
+            if (0 <= index) {
+                mFileData.setCategoryFolder(lbCategoryList.SelectedItem.ToString());
+                lbItemList.ItemsSource = mFileData.getItemFileList();
+            }
+        }
+
+        /// <summary>
+        /// [カテゴリ選択]のコンテキストメニュー
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void lbCategoryMenu_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem menuItem = (MenuItem)e.Source;
+            string category = null;
+            if (0 <= lbCategoryList.SelectedIndex)
+                category = lbCategoryList.SelectedItem.ToString();
+
+            if (menuItem.Name.CompareTo("lbCategoryAddMenu") == 0) {
+                //  分類(Category)の追加
+                category = mFileData.addCategory();
+                if (0 < category.Length) {
+                    lbCategoryList.ItemsSource = mFileData.getCategoryList();
+                    int index = lbCategoryList.Items.IndexOf(category);
+                    if (0 <= index)
+                        lbCategoryList.SelectedIndex = index;
+                }
+            } else if (menuItem.Name.CompareTo("lbCategoryRenameMenu") == 0) {
+                //  分類名の変更
+                category = mFileData.renameCategory(category);
+                if (0 < category.Length) {
+                    lbCategoryList.SelectedIndex = -1;
+                    lbCategoryList.ItemsSource = mFileData.getCategoryList();
+                    int index = lbCategoryList.Items.IndexOf(category);
+                    if (0 <= index)
+                        lbCategoryList.SelectedIndex = index;
+                }
+            } else if (menuItem.Name.CompareTo("lbCategoryRemoveMenu") == 0) {
+                //  分類の削除
+                if (mFileData.removeCategory(lbCategoryList.SelectedItem.ToString())) {
+                    lbCategoryList.SelectedIndex = -1;
+                    lbCategoryList.ItemsSource = mFileData.getCategoryList();
+                    if (0 < lbCategoryList.Items.Count)
+                        lbCategoryList.SelectedIndex = 0;
+                }
+            } else if (menuItem.Name.CompareTo("lbCategoryCopyMenu") == 0) {
+                //  分類のコピー
+                mFileData.copyCategory(category);
+            } else if (menuItem.Name.CompareTo("lbCategoryMoveMenu") == 0) {
+                //  分類の移動
+                if (mFileData.copyCategory(category, true)) {
+                    lbCategoryList.SelectedIndex = -1;
+                    lbCategoryList.ItemsSource = mFileData.getCategoryList();
+                    if (0 < lbCategoryList.Items.Count)
+                        lbCategoryList.SelectedIndex = 0;
+                }
+            }
+        }
+
+        /// <summary>
+        /// [図面]の選択
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void lbItemList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            int index = lbItemList.SelectedIndex;
+            if (0 <= index) {
+                mCommandOpe.saveFile(true);
+                if (mCommandOpe.openFile(mFileData.getItemFilePath(lbItemList.Items[index].ToString()))) {
+                    mFileData.mDataName = lbItemList.Items[index].ToString();
+                    Title = lbItemList.Items[index].ToString();
+                    dispFit();
+                }
+            }
+        }
+
+        /// <summary>
+        /// [図面選択]のコンテキストメニュー
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void lbItemMenu_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem menuItem = (MenuItem)e.Source;
+            string itemName = null;
+            if (0 <= lbItemList.SelectedIndex)
+                itemName = lbItemList.SelectedItem.ToString();
+
+            if (menuItem.Name.CompareTo("lbItemAddMenu") == 0) {
+                //  図面(Item)の追加
+                itemName = mFileData.addItem();
+                if (0 < itemName.Length) {
+                    mCommandOpe.newData(mFileData.getItemFilePath(itemName));
+                    lbItemList.ItemsSource = mFileData.getItemFileList();
+                    lbItemList.SelectedIndex = lbItemList.Items.IndexOf(itemName);
+                }
+            } else if (menuItem.Name.CompareTo("lbItemRenameMenu") == 0 && itemName != null) {
+                //  図面名の変更
+                itemName = mFileData.renameItem(itemName);
+                if (0 < itemName.Length) {
+                    lbItemList.ItemsSource = mFileData.getItemFileList();
+                    lbItemList.SelectedIndex = lbItemList.Items.IndexOf(itemName);
+                }
+            } else if (menuItem.Name.CompareTo("lbItemRemoveMenu") == 0 && itemName != null) {
+                //  図面の削除
+                if (mFileData.removeItem(itemName)) {
+                    mCommandOpe.mCurFilePath = "";
+                    lbItemList.ItemsSource = mFileData.getItemFileList();
+                    if (0 < lbItemList.Items.Count)
+                        lbItemList.SelectedIndex = 0;
+                }
+            } else if (menuItem.Name.CompareTo("lbItemCopyMenu") == 0 && itemName != null) {
+                //  図面のコピー
+                mFileData.copyItem(itemName);
+            } else if (menuItem.Name.CompareTo("lbItemMoveMenu") == 0 && itemName != null) {
+                //  図面の移動
+                if (mFileData.copyItem(itemName, true)) {
+                    lbItemList.ItemsSource = mFileData.getItemFileList();
+                    if (0 < lbItemList.Items.Count)
+                        lbItemList.SelectedIndex = 0;
+                }
+            } else if (menuItem.Name.CompareTo("lbItemPropertyMenu") == 0 && itemName != null) {
+                //  図面のプロパティ
+                string buf = mFileData.getItemFileProperty(itemName);
+                MessageBox.Show(buf, "ファイルプロパティ");
             }
         }
 
@@ -311,7 +557,7 @@ namespace CadApp
         {
             int index = cbColor.SelectedIndex;
             if (0 <= index)
-                mCommandOpe.mCreateColor = ydraw.mColorList[index].brush; ;
+                mCommandOpe.mCreateColor = ylib.mColorList[index].brush; ;
         }
 
         /// <summary>
@@ -323,9 +569,9 @@ namespace CadApp
         {
             int index = cbGridSize.SelectedIndex;
             if (0 <= index) {
-                mGridSize = mGridSizeMenu[index];
-                dispGrid(mGridSize);
-                disp();
+                mCommandOpe.mGridSize = mGridSizeMenu[index];
+                mDataDrawing.dispGrid(mCommandOpe.mGridSize);
+                disp(mEntityData);
             }
         }
 
@@ -340,6 +586,18 @@ namespace CadApp
             if (0 <= index) {
                 mCommandOpe.mPointType = index;
             }
+        }
+
+        /// <summary>
+        /// 点サイズの設定
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void cbPointSize_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            int index = cbPointSize.SelectedIndex;
+            if (0 <= index)
+                mCommandOpe.mPointSize = mEntSizeMenu[index];
         }
 
         /// <summary>
@@ -380,13 +638,23 @@ namespace CadApp
         }
 
         /// <summary>
+        /// ロケイトメニュー
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btMenu_Click(object sender, RoutedEventArgs e)
+        {
+                locMenu();
+        }
+
+        /// <summary>
         /// 再表示
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void btZoomOriginal_Click(object sender, RoutedEventArgs e)
         {
-            disp();
+            disp(mEntityData);
         }
 
         /// <summary>
@@ -396,8 +664,8 @@ namespace CadApp
         /// <param name="e"></param>
         private void btZoomIn_Click(object sender, RoutedEventArgs e)
         {
-            ydraw.mWorld.zoom(2);
-            disp();
+            mDataDrawing.setWorldZoom(2);
+            disp(mEntityData);
         }
 
         /// <summary>
@@ -407,8 +675,8 @@ namespace CadApp
         /// <param name="e"></param>
         private void btZoomOut_Click(object sender, RoutedEventArgs e)
         {
-            ydraw.mWorld.zoom(0.5);
-            disp();
+            mDataDrawing.setWorldZoom(0.5);
+            disp(mEntityData);
         }
 
         /// <summary>
@@ -428,7 +696,9 @@ namespace CadApp
         /// <param name="e"></param>
         private void btOpen_Click(object sender, RoutedEventArgs e)
         {
-            executeCmd(OPERATION.open);
+            mOperation = OPERATION.open;
+            mLocMode = mCommandOpe.executeCmd(mOperation);
+            dispMode();
         }
 
         /// <summary>
@@ -438,7 +708,29 @@ namespace CadApp
         /// <param name="e"></param>
         private void btSave_Click(object sender, RoutedEventArgs e)
         {
-            executeCmd(OPERATION.save);
+            mOperation = OPERATION.save;
+            mLocMode = mCommandOpe.executeCmd(mOperation);
+            dispMode();
+        }
+
+        /// <summary>
+        /// [画面コピー]ボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btScreenCopy_Click(object sender, RoutedEventArgs e)
+        {
+            screenCopy();
+        }
+
+        /// <summary>
+        /// [Setting] 設定ボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btSetting_Click(object sender, RoutedEventArgs e)
+        {
+            systemMenu();
         }
 
         /// <summary>
@@ -450,32 +742,47 @@ namespace CadApp
         {
             if (control) {
                 switch (key) {
-                    case Key.F1:    mGridSize *= -1; disp(); break;        //  グリッド表示反転
-                    case Key.Left:  scroll(-mScrollSize, 0); break;
-                    case Key.Right: scroll(mScrollSize, 0); break;
-                    case Key.Up:    scroll(0, -mScrollSize); break;
-                    case Key.Down:  scroll(0, mScrollSize); break;
+                    case Key.F1:    mCommandOpe.mGridSize *= -1; disp(mEntityData); break;        //  グリッド表示反転
+                    case Key.Left:  mDataDrawing.scroll(mEntityData, -mScrollSize, 0); break;
+                    case Key.Right: mDataDrawing.scroll(mEntityData, mScrollSize, 0); break;
+                    case Key.Up:    mDataDrawing.scroll(mEntityData, 0, -mScrollSize); break;
+                    case Key.Down:  mDataDrawing.scroll(mEntityData, 0, mScrollSize); break;
+                    case Key.S:     mCommandOpe.saveFile(); break;
+                    case Key.Z:     mEntityData.undo(); disp(mEntityData); break;
                 }
             } else {
                 switch (key) {
                     case Key.Escape: commandClear(); break;             //  ESCキーでキャンセル
                     case Key.Return:
                         if (mCommandOpe.keyCommand(tbCommand.Text))
-                            disp();
+                            disp(mEntityData);
                         break;
-                    case Key.F1: disp(); break;                         //  再表示
+                    case Key.F1: disp(mEntityData); break;              //  再表示
                     case Key.F3: dispFit(); break;                      //  全体表示
-                    case Key.F4: ydraw.mWorld.zoom(2); disp(); break;   //  拡大表示
-                    case Key.F5: ydraw.mWorld.zoom(0.5); disp(); break; //  縮小表示
+                    case Key.F4: mDataDrawing.setWorldZoom(2); disp(mEntityData); break;   //  拡大表示
+                    case Key.F5: mDataDrawing.setWorldZoom(0.5); disp(mEntityData); break; //  縮小表示
+                    case Key.F11: tbTextString.Focus(); break;          //  テキスト入力ボックスにフォーカス
+                    case Key.F12: tbCommand.Focus(); break;             //  コマンド入力ボックスにフォーカス
                     case Key.Back:                                      //  ロケイト点を一つ戻す
-                        if (0 < mLocPos.Count) {
-                            mLocPos.RemoveAt(mLocPos.Count - 1);
-                            disp();
+                        if (0 < mCommandOpe.mLocPos.Count) {
+                            mCommandOpe.mLocPos.RemoveAt(mCommandOpe.mLocPos.Count - 1);
+                            disp(mEntityData);
                         }
                         break;
+                    case Key.Apps: locMenu(); break;                    //  コンテキストメニューキー
                 }
             }
         }
+
+        /// <summary>
+        /// コントロールキーの確認
+        /// </summary>
+        /// <returns></returns>
+        private bool onControlKey()
+        {
+            return (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control;
+        }
+
 
         /// <summary>
         /// ピックした要素Noを求める
@@ -484,7 +791,7 @@ namespace CadApp
         /// <returns>要素No</returns>
         private List<int> getPickNo(PointD pickPos)
         {
-            double xd = ydraw.screen2worldXlength(mPickBoxSize);    //  ピック領域
+            double xd = mDataDrawing.screen2worldXlength(mPickBoxSize);    //  ピック領域
             Box b = new Box(pickPos, xd);
             return mEntityData.findIndex(b);
         }
@@ -507,328 +814,33 @@ namespace CadApp
                 } else {
                     //  メインコマンド処理
                     Command cmd = mCommandData.getCommand(mCommandData.mMain);
-                    executeCmd(cmd.operation);
+                    mOperation = cmd.operation;
+                    mLocMode = mCommandOpe.executeCmd(cmd.operation);
                 }
             } else if (mCommandData.mCommandLevel == 1) {
                 //  サブコマンド処理
                 mCommandData.mSub = command;
                 Command cmd = mCommandData.getCommand(mCommandData.mMain, mCommandData.mSub);
-                executeCmd(cmd.operation);
+                mOperation = cmd.operation;
+                mLocMode = mCommandOpe.executeCmd(mOperation);
             }
-        }
-
-        /// <summary>
-        /// コマンド処理
-        /// </summary>
-        /// <param name="command"></param>
-        private void executeCmd(OPERATION operation)
-        {
-            mOperation = operation;
-            bool result = false;
-            mLocMode = false;
-
-            switch (operation) {
-                case OPERATION.createPoint:
-                case OPERATION.createLine:
-                case OPERATION.createRect:
-                case OPERATION.createPolyline:
-                case OPERATION.createPolygon:
-                case OPERATION.createArc:
-                case OPERATION.createCircle:
-                case OPERATION.createEllipse:
-                case OPERATION.createText:
-                    mLocMode = true;
-                    result = false;
-                    break;
-                case OPERATION.back:
-                    result = true;
-                    break;
-                case OPERATION.remove:
-                    result = mEntityData.removeEnt(mPickEnt);
-                    break;
-                case OPERATION.translate:
-                case OPERATION.rotate:
-                case OPERATION.mirror:
-                    mLocMode = true;
-                    result = false;
-                     break;
-                case OPERATION.copy:
-                    break;
-                case OPERATION.scaling:
-                    break;
-                case OPERATION.textChange:
-                    result = mCommandOpe.changeText(mPickEnt);
-                    break;
-                case OPERATION.changeProperty:
-                    result = mCommandOpe.changeProperty(mPickEnt);
-                    break;
-                case OPERATION.measureDistance:
-                    break;
-                case OPERATION.measureAngle:
-                    break;
-                case OPERATION.info:
-                    result = mCommandOpe.infoEntity(mPickEnt);
-                    break;
-                case OPERATION.systemIinfo:
-                    if (mCommandOpe.systemProperty())
-                        setSystemProperty();
-                    break;
-                case OPERATION.allClear:
-                    result = allClear();
-                    break;
-                case OPERATION.open:
-                    if (mCommandOpe.openFile()) {
-                        mDispArea = mEntityData.mArea.toCopy();
-                        mDispArea.normalize();
-                        initDraw();
-                        disp();
-                    }
-                    result = true;
-                    break;
-                case OPERATION.save:
-                    mCommandOpe.saveAsFile();
-                    result = true;
-                    break;
-                case OPERATION.close:
-                    Close();
-                    break;
-                case OPERATION.cancel:
-                    cancel();
-                    break;
-                case OPERATION.gridSize:
-                    gridSet();
-                    result = true;
-                    break;
-                case OPERATION.screenCopy:
-                    BitmapSource bitmapSource = canvas2Bitmap(cvCanvas);
-                    Clipboard.SetImage(bitmapSource);
-                    result = true;
-                    break;
-            }
-            if (result) {
-                commandClear();
-            }
+            dispMode();
         }
 
         /// <summary>
         /// コマンドデータをクリアする
         /// </summary>
-        private void commandClear()
+        public void commandClear()
         {
             //  メインコマンドに戻る
-            mLocPos.Clear();
-            mPickEnt.Clear();
-            mLocMode = false;
+            mCommandOpe.mPickEnt.Clear();
+            mCommandOpe.mLocPos.Clear();
+            mLocMode = OPEMODE.pick;
             mCommandData.mCommandLevel = 0;
             mOperation = OPERATION.non;
             lbCommand.ItemsSource = mCommandData.getMainCommand();
             lbCommand.SelectedIndex = -1;
-            disp();
-        }
-
-        /// <summary>
-        /// 要素追加コマンド
-        /// </summary>
-        /// <param name="pos">座標(World座標)</param>
-        private void addCommand(PointD wp)
-        {
-            wp.round(Math.Abs(mGridSize));
-            mLocPos.Add(wp);
-            if (mOperation == OPERATION.createPoint || mOperation == OPERATION.createLine
-                || mOperation == OPERATION.createRect || mOperation == OPERATION.createArc
-                || mOperation == OPERATION.createCircle || mOperation == OPERATION.createText) {
-                //  要素の追加 (Ctrlキーなし)
-                mCommandOpe.mTextString = tbTextString.Text;
-                if (mCommandOpe.createData(mLocPos, mOperation)) {
-                    disp();
-                    mLocPos.Clear();
-                }
-            } else if (mLocPos.Count == 2 && 
-                (mOperation == OPERATION.translate || mOperation == OPERATION.rotate || mOperation == OPERATION.mirror)) {
-                if (mCommandOpe.changeData(mLocPos, mPickEnt, mOperation)) {
-                    commandClear();
-                }
-            }
-        }
-
-
-        /// <summary>
-        /// ドラッギング処理
-        /// </summary>
-        /// <param name="points">ロケイト点リスト</param>
-        /// <param name="operation">操作</param>
-        private void dragging(List<PointD> points, OPERATION operation)
-        {
-            cvCanvas.Children.Clear();
-            imScreen.Source = mBitmapSource;
-            cvCanvas.Children.Add(imScreen);
-            //ylib.setCanvasBitmapImage(cvCanvas, ylib.bitmapSource2BitmapImage(mBitmapSource),0 , 0, mBitmapSource.Width, mBitmapSource.Height);
-            ydraw.mBrush     = mCommandOpe.mCreateColor;
-            ydraw.mTextColor = mCommandOpe.mCreateColor;
-            ydraw.mThickness = mCommandOpe.mEntSize;
-            ydraw.mLineType  = mCommandOpe.mLineType;
-            ydraw.mPointType = mCommandOpe.mPointType;
-            ydraw.mPointSize = mCommandOpe.mPointSize;
-            switch (operation) {
-                case OPERATION.createPoint:
-                    ydraw.drawWPoint(points[0]);
-                    break;
-                case OPERATION.createLine:
-                    ydraw.drawWLine(points[0], points[1]);
-                    break;
-                case OPERATION.createRect:
-                    Box b = new Box(points[0], points[1]);
-                    List<PointD> plist = b.ToPointDList();
-                    ydraw.drawWPolygon(plist);
-                    break;
-                case OPERATION.createPolyline:
-                    ydraw.drawWPolyline(points);
-                    break;
-                case OPERATION.createPolygon:
-                    ydraw.drawWPolygon(points, false);
-                    break;
-                case OPERATION.createArc:
-                    if (points.Count == 2) {
-                        ydraw.drawWLine(points[0], points[1]);
-                    } else if (points.Count == 3) {
-                        ArcD arc = new ArcD(points[0], points[1], points[2]);
-                        ydraw.drawWArc(arc, false);
-                    }
-                    break;
-                case OPERATION.createCircle:
-                    ydraw.drawWCircle(points[0], points[0].length(points[1]));
-                    break;
-                case OPERATION.createText:
-                    TextD text = new TextD(tbTextString.Text, points[0], mCommandOpe.mTextSize, mCommandOpe.mTextRotate, mCommandOpe.mHa, mCommandOpe.mVa);
-                    ydraw.drawWText(text);
-                    break;
-                case OPERATION.translate:
-                    translateDragging(points);
-                    break;
-                case OPERATION.rotate:
-                    rotateDragging(points);
-                    break;
-                default:
-                    return;
-            }
-            // ロケイト点表示
-            if (operation != OPERATION.createPoint) {
-                ydraw.mPointType = 2;
-                ydraw.mPointSize = 3;
-                for (int i = 0; i < points.Count; i++) {
-                    ydraw.drawWPoint(points[i]);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 移動ドラッギング
-        /// </summary>
-        /// <param name="loc">ロケイト点配列</param>
-        private void translateDragging(List<PointD> loc)
-        {
-            if (loc.Count <  2) return;
-
-            ydraw.mBrush = mDraggingColor;
-            PointD vec = loc[0].vector(loc[loc.Count - 1]);
-
-            foreach (int entNo in mPickEnt) {
-                Entity ent = mEntityData.mEntityList[entNo];
-                //ydraw.mBrush = ent.mColor;
-                ydraw.mThickness = ent.mThickness;
-                switch (ent.mEntityId) {
-                    case EntityId.Point:
-                        PointEntity pointEnt = (PointEntity) ent;
-                        PointD point = pointEnt.mPoint.toCopy();
-                        point.offset(vec);
-                        ydraw.mPointType = pointEnt.mType;
-                        ydraw.mPointSize = pointEnt.mThickness;
-                        ydraw.drawWPoint(point);
-                        break;
-                    case EntityId.Line:
-                        LineEntity lineEnt = (LineEntity) ent;
-                        LineD line = lineEnt.mLine.toCopy();
-                        line.offset(vec);
-                        ydraw.drawWLine(line);
-                        break;
-                    case EntityId.Arc:
-                        ArcEntity arcEnt = (ArcEntity) ent;
-                        ArcD arc = arcEnt.mArc.toCopy();
-                        arc.mCp.offset(vec);
-                        ydraw.drawWArc(arc, false);
-                        break;
-                    case EntityId.Text:
-                        TextEntity textEnt = (TextEntity) ent;
-                        TextD text = textEnt.mText.toCopy();
-                        text.mPos.offset(vec);
-                        ydraw.drawWText(text);
-                        break;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 回転ドラッギング
-        /// </summary>
-        /// <param name="loc">ロケイト点配列</param>
-        private void rotateDragging(List<PointD> loc)
-        {
-            if (loc.Count < 2) return;
-
-            ydraw.mBrush = mDraggingColor;
-
-            foreach (int entNo in mPickEnt) {
-                Entity ent = mEntityData.mEntityList[entNo];
-                //ydraw.mBrush = ent.mColor;
-                ydraw.mThickness = ent.mThickness;
-                switch (ent.mEntityId) {
-                    case EntityId.Point:
-                        PointEntity pointEnt = (PointEntity)ent;
-                        PointD point = pointEnt.mPoint.toCopy();
-                        point.rotate(loc[0], loc[1]);
-                        ydraw.mPointType = pointEnt.mType;
-                        ydraw.mPointSize = pointEnt.mThickness;
-                        ydraw.drawWPoint(point);
-                        break;
-                    case EntityId.Line:
-                        LineEntity lineEnt = (LineEntity)ent;
-                        LineD line = lineEnt.mLine.toCopy();
-                        line.rotate(loc[0], loc[1]); ;
-                        ydraw.drawWLine(line);
-                        break;
-                    case EntityId.Arc:
-                        ArcEntity arcEnt = (ArcEntity)ent;
-                        ArcD arc = arcEnt.mArc.toCopy();
-                        arc.rotate(loc[0], loc[1]);
-                        ydraw.drawWArc(arc, false);
-                        break;
-                    case EntityId.Text:
-                        TextEntity textEnt = (TextEntity)ent;
-                        TextD text = textEnt.mText.toCopy();
-                        text.rotate(loc[0], loc[1]);
-                        ydraw.drawWText(text);
-                        break;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 要素をピックした時ピック色にして表示
-        /// </summary>
-        /// <param name="entNo"></param>
-        private void pickDisp(List<int> pickList)
-        {
-            if (pickList.Count == 0)
-                return;
-            imScreen.Source = mBitmapSource;
-            cvCanvas.Children.Clear();
-            cvCanvas.Children.Add(imScreen);
-            foreach (int entNo in pickList) {
-                Entity ent = mEntityData.mEntityList[entNo];
-                ent.mPick = true;
-                ent.draw(ydraw);
-                ent.mPick = false;
-            }
+            disp(mEntityData);
         }
 
         /// <summary>
@@ -841,26 +853,37 @@ namespace CadApp
         {
             if (entNo < 0)
                 return p;
+            PointD pos = new PointD(p);
             Entity ent = mEntityData.mEntityList[entNo];
             switch (ent.mEntityId) {
                 case EntityId.Point:
                     PointEntity point = (PointEntity)ent;
-                    p = point.mPoint;
+                    pos = point.mPoint;
                     break;
                 case EntityId.Line:
                     LineEntity line = (LineEntity)ent;
-                    p = line.mLine.nearPoints(p, 4);
+                    pos = line.mLine.nearPoint(p, 4);
+                    break;
+                case EntityId.Polyline:
+                    PolylineEntity polyline = (PolylineEntity)ent;
+                    LineD pl = polyline.mPolyline.nearLine(p);
+                    pos = pl.nearPoint(p, 4);
+                    break;
+                case EntityId.Polygon:
+                    PolygonEntity polygon = (PolygonEntity)ent;
+                    LineD pgl = polygon.mPolygon.nearLine(p);
+                    pos = pgl.nearPoint(p, 4);
                     break;
                 case EntityId.Arc:
                     ArcEntity arc = (ArcEntity)ent;
-                    p = arc.mArc.nearPoints(p, 8);
+                    pos = arc.mArc.nearPoints(p, Math.PI * 2 <= arc.mArc.mOpenAngle ? 8 : 4);
                     break;
                 case EntityId.Text:
                     TextEntity text = (TextEntity)ent;
-                    p = text.mText.nearPoints(p);
+                    pos = text.mText.nearPeakPoint(p);
                     break;
             }
-            return p;
+            return pos;
         }
 
         /// <summary>
@@ -894,11 +917,14 @@ namespace CadApp
         {
             if (picks.Count == 1)
                 return picks[0];
+            List<int> sqeezePicks = picks.Distinct().ToList();
             List<string> menu = new List<string>();
-            for (int i = 0; i < picks.Count; i++) {
-                Entity ent = mEntityData.mEntityList[picks[i]];
+            for (int i = 0; i < sqeezePicks.Count; i++) {
+                Entity ent = mEntityData.mEntityList[sqeezePicks[i]];
                 menu.Add(ent.getSummary());
             }
+            if (mLocMode == OPEMODE.loc)
+                menu.Add("交点");
             MenuDialog dlg = new MenuDialog();
             dlg.mMainWindow = this;
             dlg.mHorizontalAliment = 1;
@@ -906,35 +932,226 @@ namespace CadApp
             dlg.mOneClick = true;
             dlg.mMenuList = menu;
             dlg.ShowDialog();
-            return ylib.string2int(dlg.mResultMenu);
+            if (dlg.mResultMenu == "")
+                return -1;
+            else if (dlg.mResultMenu == "交点")
+                return -2;
+            else
+                return ylib.string2int(dlg.mResultMenu);
         }
 
         /// <summary>
-        /// 描画領域の初期設定
+        /// ピックした要素の分割点を求めるメニュー
         /// </summary>
-        private void initDraw()
+        /// <param name="pos">ピック点</param>
+        /// <param name="picks">ピック要素リスト</param>
+        /// <returns>ロケイト点</returns>
+        private PointD locSelect(PointD pos, List<int> picks)
         {
-            ydraw.setViewArea(0, 0, cvCanvas.ActualWidth, cvCanvas.ActualHeight);
-            ydraw.mAspectFix = true;
-            ydraw.mClipping = true;
-            ydraw.setWorldWindow(mDispArea);
-            System.Diagnostics.Debug.WriteLine($"View: {ydraw.mView}");
-            System.Diagnostics.Debug.WriteLine($"World: {ydraw.mWorld.ToString("f2")}");
+            if (picks.Count == 0) return pos;
+            List<string> locMenu = new();
+            locMenu.AddRange(mLocSelectMenu);
+            Entity ent = mEntityData.mEntityList[picks[0]];
+            if (picks.Count == 1) {
+                if (ent.mEntityId == EntityId.Arc)
+                    locMenu.Add("中心点");
+            } else if (1 < picks.Count) {
+                locMenu.Add("交点");
+            }
+            MenuDialog dlg = new MenuDialog();
+            dlg.Title = "ロケイトメニュー";
+            dlg.Owner = this;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.mMenuList = locMenu;
+            dlg.ShowDialog();
+            if (0 < dlg.mResultMenu.Length) {
+                pos = getLocSelectPos(dlg.mResultMenu, pos, picks);
+            }
+
+            return pos;
+        }
+
+        /// <summary>
+        /// メニュー選択されたロケイト点を求める
+        /// </summary>
+        /// <param name="selectMenu">選択メニュー</param>
+        /// <param name="pos">ピック点</param>
+        /// <param name="picks">ピック要素番号リスト</param>
+        /// <returns>ロケイト点</returns>
+        private PointD getLocSelectPos(string selectMenu, PointD pos, List<int> picks)
+        {
+            Entity ent = mEntityData.mEntityList[picks[0]];
+            switch (selectMenu) {
+                case "端点・中間点": pos = ent.dividePos(2, pos); break;
+                case "3分割点": pos = ent.dividePos(3, pos); break;
+                case "4分割点": pos = ent.dividePos(4, pos); break;
+                case "8分割点": pos = ent.dividePos(8, pos); break;
+                case "16分割点": pos = ent.dividePos(16, pos); break;
+                case "垂点":
+                    PointD lastLoc = mCommandOpe.mLocPos[mCommandOpe.mLocPos.Count - 1];
+                    pos = ent.onPoint(lastLoc);
+                    break;
+                case "中心点":
+                    if (ent.mEntityId == EntityId.Arc) {
+                        ArcEntity arcEnt = (ArcEntity)ent;
+                        pos = arcEnt.mArc.mCp;
+                    }
+                    break;
+                case "交点":
+                    if (2 <= picks.Count) {
+                        List<PointD> plist = mEntityData.intersection(picks[0], picks[1]);
+                        pos = plist.MinBy(p => p.length(pos));
+                    }
+                    break;
+            }
+            return pos;
+        }
+
+        /// <summary>
+        /// ロケイトメニューの表示
+        /// </summary>
+        private void locMenu()
+        {
+            if (mLocMode == OPEMODE.loc) {
+                List<string> locMenu = new List<string>();
+                locMenu.AddRange(mLocMenu);
+                if (mOperation == OPERATION.translate || mOperation == OPERATION.copyTranslate) {
+                    locMenu.Add("平行距離");
+                    locMenu.Add("スライド距離");
+                } else if (mOperation == OPERATION.rotate || mOperation == OPERATION.copyRotate) {
+                    locMenu.Add("回転角");
+                }
+                MenuDialog dlg = new MenuDialog();
+                dlg.Title = "ロケイトメニュー";
+                dlg.Owner = this;
+                dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                dlg.mMenuList = locMenu;
+                dlg.ShowDialog();
+                if (0 < dlg.mResultMenu.Length) {
+                    getInputLoc(dlg.mResultMenu);
+                }
+            }
+        }
+
+        /// <summary>
+        /// ロケイトメニューの処理
+        /// </summary>
+        /// <param name="title"></param>
+        private void getInputLoc(string title)
+        {
+            InputBox dlg = new InputBox();
+            dlg.Owner = this;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.Title = title;
+            if (dlg.ShowDialog() == true) {
+                string[] valstr;
+                double val;
+                PointD wp;
+                Entity entity;
+                switch (title) {
+                    case "座標入力":
+                        //  xxx,yyy で入力
+                        valstr = dlg.mEditText.Split(',');
+                        if (1 < valstr.Length) {
+                            wp = new PointD(ylib.string2double(valstr[0]), ylib.string2double(valstr[1]));
+                            mCommandOpe.mLocPos.Add(wp);
+                            if (mCommandOpe.entityCommand(mOperation, mCommandOpe.mLocPos, mCommandOpe.mPickEnt))
+                                commandClear();
+                        }
+                        break;
+                    case "相対座標入力":
+                        //  xxx,yyy で入力
+                        valstr = dlg.mEditText.Split(',');
+                        if (1 < valstr.Length) {
+                            wp = new PointD(ylib.string2double(valstr[0]), ylib.string2double(valstr[1]));
+                            if (0 < mCommandOpe.mLocPos.Count) {
+                                wp += mCommandOpe.mLocPos[mCommandOpe.mLocPos.Count - 1];
+                            }
+                            mCommandOpe.mLocPos.Add(wp);
+                            if (mCommandOpe.entityCommand(mOperation, mCommandOpe.mLocPos, mCommandOpe.mPickEnt))
+                                commandClear();
+                        }
+                        break;
+                    case "平行距離":
+                        //  移動またはコピー移動の時のみ
+                        valstr = dlg.mEditText.Split(',');
+                        val = ylib.string2double(valstr[0]);
+                        entity = mEntityData.mEntityList[mCommandOpe.mPickEnt[mCommandOpe.mPickEnt.Count - 1].Item1];
+                        if (entity.mEntityId == EntityId.Line) {
+                            LineD line = ((LineEntity)entity).mLine;
+                            wp = line.getVectorAngle(Math.PI / 2, val);
+                            if (0 == mCommandOpe.mLocPos.Count)
+                                mCommandOpe.mLocPos.Add(new PointD());
+                            wp += mCommandOpe.mLocPos[mCommandOpe.mLocPos.Count - 1];
+                            mCommandOpe.mLocPos.Add(wp);
+                            if (mCommandOpe.entityCommand(mOperation, mCommandOpe.mLocPos, mCommandOpe.mPickEnt))
+                                commandClear();
+                        }
+                        break;
+                    case "スライド距離":
+                        //  移動またはコピー移動の時のみ
+                        valstr = dlg.mEditText.Split(',');
+                        val = ylib.string2double(valstr[0]);
+                        entity = mEntityData.mEntityList[mCommandOpe.mPickEnt[mCommandOpe.mPickEnt.Count - 1].Item1];
+                        if (entity.mEntityId == EntityId.Line) {
+                            LineD line = ((LineEntity)entity).mLine;
+                            wp = line.getVectorAngle(0, val);
+                            if (0 == mCommandOpe.mLocPos.Count)
+                                mCommandOpe.mLocPos.Add(new PointD());
+                            wp += mCommandOpe.mLocPos[mCommandOpe.mLocPos.Count - 1];
+                            mCommandOpe.mLocPos.Add(wp);
+                            if (mCommandOpe.entityCommand(mOperation, mCommandOpe.mLocPos, mCommandOpe.mPickEnt))
+                                commandClear();
+                        }
+                        break;
+                    case "回転角":
+                        valstr = dlg.mEditText.Split(',');
+                        val = ylib.string2double(valstr[0]);
+                        PointD vec = new PointD(1, 0);
+                        vec.rotate(ylib.D2R(val));
+                        if (0 < mCommandOpe.mLocPos.Count)
+                            wp = mCommandOpe.mLocPos[mCommandOpe.mLocPos.Count - 1] + vec;
+                        else
+                            wp = vec;
+                        mCommandOpe.mLocPos.Add(wp);
+                        if (mCommandOpe.entityCommand(mOperation, mCommandOpe.mLocPos, mCommandOpe.mPickEnt))
+                            commandClear();
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// システム設定
+        /// </summary>
+        private void systemMenu()
+        {
+            MenuDialog dlg = new MenuDialog();
+            dlg.Owner = this;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.Title = "システム設定";
+            dlg.mMenuList = mSystemSetMenu;
+            dlg.ShowDialog();
+            switch (dlg.mResultMenu) {
+                case "データフォルダ":
+                    mFileData.mBaseDataFolder = ylib.folderSelect("データフォルダ", mFileData.mBaseDataFolder);
+                    mFileData.setBaseDataFolder(mFileData.mBaseDataFolder);
+                    cbGenre.SelectedIndex = -1;
+                    cbGenre.ItemsSource = mFileData.getGenreList();
+                    lbCategoryList.Items.Clear();
+                    lbItemList.Items.Clear();
+                    if (0 < cbGenre.Items.Count)
+                        cbGenre.SelectedIndex = 0;
+                    break;
+            }
         }
 
         /// <summary>
         /// データ表示
         /// </summary>
-        private void disp()
+        private void disp(EntityData entyityData)
         {
-            ydraw.setBackColor(mBackColor);
-            ydraw.clear();
-            dispGrid(mGridSize);
-            foreach (var entity in mEntityData.mEntityList) {
-                entity.draw(ydraw);
-            }
-            mBitmapSource = canvas2Bitmap(cvCanvas);
-            dispAreaInfo();
+            mDataDrawing.disp(entyityData, mCommandOpe.mBackColor, mCommandOpe.mGridSize);
         }
 
         /// <summary>
@@ -946,93 +1163,8 @@ namespace CadApp
         {
             double dx = pe.X - ps.X;
             double dy = pe.Y - ps.Y;
-            scroll(dx, dy);
-        }
-
-        /// <summary>
-        /// 画面スクロール
-        /// スクロールはビットマップを移動する形で移動によりできた空白部分だけを再描画する
-        /// </summary>
-        /// <param name="dx">移動量X(screen)</param>
-        /// <param name="dy">移動量Y(screen)</param>
-        private void scroll(double dx, double dy)
-        {
-
-            //  状態を保存
-            PointD v = new PointD(ydraw.screen2worldXlength(dx), ydraw.screen2worldYlength(dy));
-            ydraw.mWorld.offset(v.inverse());
-            Rect tmpView = ydraw.mView;
-            Box tmpWorld = ydraw.mWorld.toCopy();
-
-            ydraw.clear();
-
-            //  移動した位置にBitmapの貼付け
-            moveImage(mBitmapSource, dx, dy);
-
-            //  横空白部分を描画
-            if (0 > dx) {
-                ydraw.mView.X = tmpView.Width + dx;
-                ydraw.mView.Width = -dx;
-                ydraw.mWorld.Left = tmpWorld.Right + v.x;
-                ydraw.mWorld.Width = -v.x;
-            } else if (0 < dx) {
-                ydraw.mView.Width = dx;
-                ydraw.mWorld.Width = v.x;
-            }
-            if (dx != 0) {
-                dispGrid(mGridSize);
-                foreach (var entity in mEntityData.mEntityList) {
-                    entity.draw(ydraw);
-                }
-            }
-
-            //  縦空白部分を描画
-            ydraw.mView = tmpView;
-            ydraw.mWorld = tmpWorld.toCopy();
-            if (0 > dy) {
-                ydraw.mView.Y = tmpView.Height + dy;
-                ydraw.mView.Height = -dy; ;
-                ydraw.mWorld.Top -= tmpWorld.Height - v.y;
-                ydraw.mWorld.Height = v.y;
-            } else if (0 < dy) {
-                ydraw.mView.Height = dy; ;
-                ydraw.mWorld.Height = -v.y;
-            }
-            if (dy != 0) {
-                dispGrid(mGridSize);
-                foreach (var entity in mEntityData.mEntityList) {
-                    entity.draw(ydraw);
-                }
-            }
-
-            //  Windowの設定を元に戻す
-            ydraw.mView = tmpView;
-            ydraw.mWorld = tmpWorld.toCopy();
-            mBitmapSource = canvas2Bitmap(cvCanvas);
-            dispAreaInfo();
-
-            //  全体再描画
-            //PointD v = new PointD(ydraw.screen2worldXlength(dx), ydraw.screen2worldYlength(dy));
-            //ydraw.mWorld.offset(v.inverse());
-            //disp();
-        }
-
-        /// <summary>
-        /// Bitmap 図形を移動させる
-        /// </summary>
-        /// <param name="bitmapSource">Bitmap</param>
-        /// <param name="dx">移動量</param>
-        /// <param name="dy">移動量う</param>
-        private void moveImage(BitmapSource bitmapSource, double dx, double dy)
-        {
-            System.Drawing.Bitmap bitmap = ylib.cnvBitmapSource2Bitmap(mBitmapSource);
-            double width = bitmap.Width - Math.Abs(dx);
-            double height = bitmap.Height - Math.Abs(dy);
-            Point sp = new Point(dx > 0 ? 0 : -dx, dy > 0 ? 0 : -dy);
-            Point ep = new Point(sp.X + width, sp.Y + height);
-            System.Drawing.Bitmap moveBitmap = ylib.trimingBitmap(bitmap, sp, ep);
-            BitmapImage bitmapImage = ylib.cnvBitmap2BitmapImage(moveBitmap);
-            ylib.setCanvasBitmapImage(cvCanvas, bitmapImage, dx > 0 ? dx : 0, dy > 0 ? dy : 0, width, height);
+            //scroll(dx, dy);
+            mDataDrawing.scroll(mEntityData, dx, dy);
         }
 
         /// <summary>
@@ -1041,114 +1173,42 @@ namespace CadApp
         private void dispFit()
         {
             if (mEntityData.mArea != null) {
-                mDispArea = mEntityData.mArea.toCopy();
-                mDispArea.normalize();
-                initDraw();
-                disp();
+                mCommandOpe.setDispArea(mEntityData.mArea);
+                //initDraw();
+                mDataDrawing.initDraw(mCommandOpe.mDispArea);
+                disp(mEntityData);
             }
         }
 
         /// <summary>
-        /// キャンセルコマンド
+        /// ロケイト/ピックモードとロケイト数、ピック数の表示
         /// </summary>
-        private void cancel()
+        private void dispMode()
         {
-            mOperation = OPERATION.non;
-            mLocPos.Clear();
-            disp();
-            lbCommand.SelectedIndex = -1;
-        }
-
-        /// <summary>
-        /// グリッドの表示
-        /// グリッド10個おきに大玉を表示
-        /// </summary>
-        /// <param name="size">グリッドの間隔</param>
-        private void dispGrid(double size)
-        {
-            if (0 < size && size < 1000) {
-                ydraw.mBrush = ydraw.getColor("Black");
-                ydraw.mThickness = 1.0;
-                ydraw.mPointType = 0;
-                while (mGridMinmumSize > ydraw.world2screenXlength(size)) {
-                    size *= 10;
-                }
-                if (mGridMinmumSize <= ydraw.world2screenXlength(size)) {
-                    //  グリッド間隔(mGridMinmumSize)dot以上を表示
-                    double y = ydraw.mWorld.Bottom - size;
-                    y = Math.Floor(y / size) * size;
-                    while (y < ydraw.mWorld.Top) {
-                        double x = ydraw.mWorld.Left;
-                        x = Math.Floor(x / size) * size;
-                        while (x < ydraw.mWorld.Right) {
-                            PointD p = new PointD(x, y);
-                            if (x % (size * 10) == 0 && y % (size * 10) == 0) {
-                                ydraw.mPointSize = 2;
-                                ydraw.drawWPoint(p);
-                            } else {
-                                ydraw.mPointSize = 1;
-                                ydraw.drawWPoint(p);
-                            }
-                            x += size;
-                        }
-                        y += size;
-                    }
-                }
-            }
-            //  原点(0,0)表示
-            ydraw.mBrush = ydraw.getColor("Red");
-            ydraw.mPointType = 2;
-            ydraw.mPointSize = 5;
-            ydraw.drawWPoint(new PointD(0, 0));
-        }
-
-        /// <summary>
-        /// 表示領域(WorldWindow)の情報表示
-        /// </summary>
-        private void dispAreaInfo()
-        {
-            Box worldArea = ydraw.mWorld.toCopy();
-            worldArea.normalize();
-            tbArea.Text = worldArea.BottomLeft.ToString("f2") + "," + worldArea.TopRight.ToString("f2");
+            tbMode.Text = $"Mode:{mLocMode} Loc:{mCommandOpe.mLocPos.Count} Pick:{mCommandOpe.mPickEnt.Count}";
         }
 
         /// <summary>
         /// コントロールバーのシステム属性を設定する
         /// </summary>
-        private void setSystemProperty()
+        public void setSystemProperty()
         {
-            cbColor.SelectedIndex = ydraw.mColorList.FindIndex(p => p.brush == mCommandOpe.mCreateColor);
+            cbColor.SelectedIndex = ylib.mColorList.FindIndex(p => p.brush == mCommandOpe.mCreateColor);
             cbGridSize.SelectedIndex = mGridSizeMenu.FindIndex(mCommandOpe.mGridSize);
             cbPointType.SelectedIndex = mCommandOpe.mPointType;
+            cbPointSize.SelectedIndex = mEntSizeMenu.FindIndex(p => mCommandOpe.mPointSize <= p);
             cbLineType.SelectedIndex = mCommandOpe.mLineType;
             cbEntSize.SelectedIndex = mEntSizeMenu.FindIndex(p => mCommandOpe.mEntSize <= p);
             cbTextSize.SelectedIndex = mTextSizeMenu.FindIndex((p) => mCommandOpe.mTextSize <= p);
         }
 
         /// <summary>
-        /// グリッドのサイズ(座標の丸め)の設定
+        /// CAD画面をクリップボードにコピー
         /// </summary>
-        private void gridSet()
+        public void screenCopy()
         {
-            InputBox dlg = new InputBox();
-            dlg.mMainWindow = this;
-            dlg.Title = "グリッドのサイズの設定";
-            dlg.mEditText = Math.Abs(mGridSize).ToString();
-            if (dlg.ShowDialog() == true) {
-                mGridSize = ylib.string2double(dlg.mEditText);
-                disp();
-            }
-        }
-
-        /// <summary>
-        /// 全データ消去
-        /// </summary>
-        /// <returns></returns>
-        private bool allClear()
-        {
-            mEntityData.mEntityList.Clear();
-            disp();
-            return true;
+            BitmapSource bitmapSource = canvas2Bitmap(cvCanvas);
+            Clipboard.SetImage(bitmapSource);
         }
 
         /// <summary>
@@ -1159,8 +1219,8 @@ namespace CadApp
         /// <returns></returns>
         private BitmapSource canvas2Bitmap(Canvas canvas)
         {
-            //  CanvasのVisaulOffset値が直接取れないので
-            Point preLoc = new Point(lbCommand.ActualWidth, tbToolbarTray.ActualHeight);
+            //  位置は CanvasのVisaulOffset値を設定したいが直接取れないので
+            Point preLoc = new Point(lbCommand.ActualWidth + 10, 0);
             // レイアウトを再計算させる
             var size = new Size(canvas.ActualWidth, canvas.ActualHeight);
             canvas.Measure(size);

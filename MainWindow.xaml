@@ -12,11 +12,23 @@
         <DockPanel >
             <ToolBarTray x:Name="tbToolbarTray" DockPanel.Dock="Top" >
                 <ToolBar Height="25" >
+                    <ComboBox Name="cbGenre" Width="80" ToolTip="大分類" SelectionChanged="cbGenre_SelectionChanged" >
+                        <ComboBox.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Name="cbGenreAddMenu" Header="追加" Click="cbGenreMenu_Click" />
+                                <MenuItem Name="cbGenreRenameMenu" Header="名前の変更" Click="cbGenreMenu_Click" />
+                                <MenuItem Name="cbGenreRemoveMenu" Header="削除" Click="cbGenreMenu_Click" />
+                            </ContextMenu>
+                        </ComboBox.ContextMenu>
+                    </ComboBox>
                     <Button x:Name="btOpen" ToolTip="データ読出" Width="25" Height="25" Click="btOpen_Click" >
                         <Image Source="Icon\OpenFIle.png" ></Image>
                     </Button>
                     <Button x:Name="btSave" ToolTip="データ保存" Width="25" Height="25" Click="btSave_Click" >
                         <Image Source="Icon\Save.png" ></Image>
+                    </Button>
+                    <Button x:Name="btScreenCopy" ToolTip="画面コピー" Width="25" Height="25" Click="btScreenCopy_Click"  >
+                        <Image Source="Icon\ScreenShot.png" ></Image>
                     </Button>
                 </ToolBar>
                 <ToolBar Height="25" >
@@ -32,9 +44,12 @@
                     <Button x:Name="btZoomFit" Width="25" Height="25" Click="btZoomFit_Click" >
                         <Image Source="Icon\ZoomToFit.png" ></Image>
                     </Button>
+                    <Button x:Name="btMenu" Width="25" Height="25" Click="btMenu_Click"  >
+                        <Image Source="Icon\MenuItem.png" ></Image>
+                    </Button>
                 </ToolBar>
                 <ToolBar Height="25" >
-                    <TextBlock Text="色" FontSize="10" VerticalAlignment="Center"/>
+                    <TextBlock Text="色" FontSize="11" VerticalAlignment="Center"/>
                     <ComboBox Name="cbColor" Width="80" ItemsSource="{Binding}" 
                               ToolTip="要素の色設定" SelectionChanged="cbColor_SelectionChanged" >
                         <ComboBox.ItemTemplate>
@@ -48,41 +63,86 @@
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
-                    <TextBlock Text="点種" FontSize="10" VerticalAlignment="Center"/>
+                    <TextBlock Text="点種" FontSize="11" VerticalAlignment="Center"/>
                     <ComboBox Name="cbPointType" Width="50" ToolTip="点種設定"
                               SelectionChanged="cbPointType_SelectionChanged" />
-                    <TextBlock Text="線種" FontSize="10" VerticalAlignment="Center"/>
+                    <TextBlock Text="サイズ" FontSize="11" VerticalAlignment="Center"/>
+                    <ComboBox Name="cbPointSize" Width="30" ToolTip="点の大きさ/線の太さ"
+                              SelectionChanged="cbPointSize_SelectionChanged"  />
+                    <TextBlock Text="線種" FontSize="11" VerticalAlignment="Center"/>
                     <ComboBox Name="cbLineType" Width="50" ToolTip="線種設定"
                               SelectionChanged="cbLineType_SelectionChanged" />
-                    <TextBlock Text="サイズ" FontSize="10" VerticalAlignment="Center"/>
+                    <TextBlock Text="太さ" FontSize="11" VerticalAlignment="Center"/>
                     <ComboBox Name="cbEntSize" Width="30" ToolTip="点の大きさ/線の太さ"
                               SelectionChanged="cbEntSize_SelectionChanged"  />
-                    <TextBlock Text="グリッド" FontSize="10" VerticalAlignment="Center"/>
+                    <TextBlock Text="グリッド" FontSize="11" VerticalAlignment="Center"/>
                     <ComboBox Name="cbGridSize" Width="30" ToolTip="グリッドのサイズ"
                               SelectionChanged="cbGridSize_SelectionChanged" />
                 </ToolBar>
             </ToolBarTray>
             <StackPanel DockPanel.Dock="Bottom" Height="50">
                 <StatusBar Height="25" >
+                    <TextBlock x:Name="tbMode" />
                     <TextBlock x:Name="tbPosition" Width="100" />
                     <TextBox x:Name="tbTextString" Width="200" />
-                    <TextBlock Text="文字サイズ" FontSize="10"/>
+                    <TextBlock Text="文字サイズ" FontSize="11"/>
                     <ComboBox Name="cbTextSize" Width="40" ToolTip="テキストサイズ" SelectionChanged="cbTextSize_SelectionChanged" />
                     <StatusBarItem HorizontalAlignment="Right">
                         <TextBlock x:Name="tbArea" Width="180"  />
                     </StatusBarItem>
                 </StatusBar>
                 <StatusBar Height="25" >
-                    <TextBlock Text="コマンド" FontSize="10"/>
+                    <Button x:Name="btSetting" Width="20" Height="20" Click="btSetting_Click" >
+                        <Image Source="Icon\Settings.png" ></Image>
+                    </Button>
+                    <TextBlock Text="コマンド" FontSize="11"/>
                     <TextBox x:Name="tbCommand" Width="400" />
                 </StatusBar>
             </StackPanel>
-            <ListBox x:Name="lbCommand" Width="100" SelectionChanged="lbCommand_SelectionChanged" >
-                
-            </ListBox>
-            <Canvas Name="cvCanvas" >
-                <Image x:Name="imScreen" Margin="0" />
-            </Canvas>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="10*" />
+                    <ColumnDefinition Width="10*" />
+                    <ColumnDefinition Width="5" />
+                    <ColumnDefinition Width="100*" />
+                </Grid.ColumnDefinitions>
+                <ListBox x:Name="lbCategoryList" Grid.Column="0" SelectionChanged="lbCategoryList_SelectionChanged" >
+                    <ListBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Name="lbCategoryAddMenu" Header="追加" Click="lbCategoryMenu_Click" />
+                            <MenuItem Name="lbCategoryRenameMenu" Header="名前の変更" Click="lbCategoryMenu_Click" />
+                            <MenuItem Name="lbCategoryRemoveMenu" Header="削除" Click="lbCategoryMenu_Click" />
+                            <MenuItem Name="lbCategoryCopyMenu" Header="コピー" Click="lbCategoryMenu_Click" />
+                            <MenuItem Name="lbCategoryMoveMenu" Header="移動" Click="lbCategoryMenu_Click" />
+                        </ContextMenu>
+                    </ListBox.ContextMenu>
+                </ListBox>
+                <ListBox x:Name="lbItemList" Grid.Column="1" SelectionChanged="lbItemList_SelectionChanged" >
+                    <ListBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Name="lbItemAddMenu" Header="追加" Click="lbItemMenu_Click" />
+                            <MenuItem Name="lbItemRenameMenu" Header="名前の変更" Click="lbItemMenu_Click" />
+                            <MenuItem Name="lbItemRemoveMenu" Header="削除" Click="lbItemMenu_Click" />
+                            <MenuItem Name="lbItemCopyMenu" Header="コピー" Click="lbItemMenu_Click" />
+                            <MenuItem Name="lbItemMoveMenu" Header="移動" Click="lbItemMenu_Click" />
+                            <MenuItem Name="lbItemPropertyMenu" Header="プロパティ" Click="lbItemMenu_Click" />
+                        </ContextMenu>
+                    </ListBox.ContextMenu>
+                </ListBox>
+                <GridSplitter Grid.Column="2" HorizontalAlignment="Stretch" />
+                <Grid Grid.Column="3">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="10*" />
+                        <ColumnDefinition Width="5" />
+                        <ColumnDefinition Width="100*" />
+                    </Grid.ColumnDefinitions>
+                    <ListBox x:Name="lbCommand" Grid.Column="0" SelectionChanged="lbCommand_SelectionChanged" />
+                    <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" />
+                    <Canvas Name="cvCanvas" Grid.Column="2"  >
+                        <Image x:Name="imScreen" Margin="0" />
+                    </Canvas>
+                </Grid>
+            </Grid>
         </DockPanel>
     </Grid>
 </Window>

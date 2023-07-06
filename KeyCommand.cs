@@ -11,6 +11,8 @@ namespace CadApp
     /// </summary>
     public class KeyCommand
     {
+        public EntityData mEntityData;                              //  要素データ
+
         public int mPointType = 0;                                  //  点種
         public int mLineType = 0;                                   //  線種
         public double mEntSize = 1;                                 //  線の太さ
@@ -24,12 +26,14 @@ namespace CadApp
 
         private List<string> mMainCmd = new List<string>() {
             "point", "line", "rect", "polyline", "polygon", "arc", "circle", "text",
+            "translate", "rotate", "mirror", "trim", "stretch", "copy", "scaling",
             "color", "linetype", "thickness", "pointtype", "pointsize", "textsize", "ha", "va"
         };
 
         public string mCommandStr = "";
 
         private List<PointD> mPoints = new List<PointD>();
+        private List<int> mPickEnt = new List<int>();
         private double mRadius = 0;
         private double mSa = 0;
         private double mEa = Math.PI * 2;
@@ -46,80 +50,156 @@ namespace CadApp
         /// コマンド文字列の設定
         /// </summary>
         /// <param name="command"></param>
-        public void setCommand(string command)
+        public bool setCommand(string command)
         {
-            mCommandStr = command;
+            if (0 < command.Length) {
+                mCommandStr = command;
+                return getEntity();
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 作成要素の登録
+        /// </summary>
+        /// <param name="entity">要素データ</param>
+        /// <returns></returns>
+        private bool createEntity(Entity entity)
+        {
+            if (entity != null) {
+                entity.mOperationCount = mEntityData.mOperationCouunt;
+                mEntityData.mEntityList.Add(entity);
+                mEntityData.updateData();
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
         /// コマンド文字列から要素を作成
         /// </summary>
         /// <returns></returns>
-        public Entity getEntity()
+        public bool getEntity()
         {
             getCommandParameter(mCommandStr);
             Entity entity = null;
-            switch (mCommandNo) {
-                case 0:         //  point
+            switch (mMainCmd[mCommandNo]) {
+                case "point":           //  point
                     if (0 < mPoints.Count) {
                         entity = new PointEntity(mPoints[0]);
+                        return createEntity(entity);
                     }
                     break;
-                case 1:         //  line
-                    if (1 < mPoints.Count) {
+                case "line":            //  line
+                    if (1 < mPoints.Count&& 0 < mPoints[0].length(mPoints[1])) {
                         LineD line = new LineD(mPoints[0], mPoints[1]);
                         entity = new LineEntity(line);
+                        return createEntity(entity);
                     }
                     break;
-                case 2:         //  rect
+                case "rect":            //  rect
                     if (1 < mPoints.Count) {
                         Box b = new Box(mPoints[0], mPoints[1]);
                         entity = new PolygonEntity(b.ToPointDList());
+                        return createEntity(entity);
                     }
                     break;
-                case 3:         //  polyline
+                case "polyline":        //  polyline
                     if (1 < mPoints.Count) {
                         entity = new PolylineEntity(mPoints);
+                        return createEntity(entity);
                     }
                     break;
-                case 4:         //  polygon
+                case "polygon":         //  polygon
                     if (1 < mPoints.Count) {
                         entity = new PolygonEntity(mPoints);
+                        return createEntity(entity);
                     }
                     break;
-                case 5:         //  arc
-                case 6:         //  circle
-                    if (0 < mPoints.Count) {
+                case "arc":             //  arc
+                    if (0 < mPoints.Count && 0 < mRadius && 0 < mEa - mSa) {
                         ArcD arc = new ArcD(mPoints[0], mRadius, mSa, mEa);
                         entity = new ArcEntity(arc);
+                        return createEntity(entity);
                     }
                     break;
-                case 7:         //  text
+                case "circle":          //  circle
+                    if (0 < mPoints.Count && 0 < mRadius) {
+                        ArcD arc = new ArcD(mPoints[0], mRadius, 0, Math.PI * 2);
+                        entity = new ArcEntity(arc);
+                        return createEntity(entity);
+                    }
+                    break;
+                case "text":         //  text
                     if (0 < mValString.Length && 0 < mPoints.Count) {
                         TextD text = new TextD(mValString, mPoints[0]);
                         entity = new TextEntity(text);
+                        return createEntity(entity);
                     }
                     break;
-                case 8:         //  color
+                case "translate":
+                    if (0 < mPickEnt.Count && 1 < mPoints.Count) {
+                        PointD vec = mPoints[0].vector(mPoints[1]);
+                        foreach (int entNo in mPickEnt) {
+                            mEntityData.mEntityList[entNo].translate(vec);
+                        }
+                        mEntityData.updateData();
+                        return true;
+                    }
+                    break;
+                case "rotate":
+                    if (0 < mPickEnt.Count && 1 < mPoints.Count) {
+                        foreach (int entNo in mPickEnt) {
+                            mEntityData.mEntityList[entNo].rotate(mPoints[0], mPoints[1]);
+                        }
+                        mEntityData.updateData();
+                        return true;
+                    }
+                    break;
+                case "mirror":
+                    if (0 < mPickEnt.Count && 1 < mPoints.Count) {
+                        foreach (int entNo in mPickEnt) {
+                            mEntityData.mEntityList[entNo].rotate(mPoints[0], mPoints[1]);
+                        }
+                        mEntityData.updateData();
+                        return true;
+                    }
+                    break;
+                case "trim":
+                    if (0 < mPickEnt.Count && 1 < mPoints.Count) {
+                        foreach (int entNo in mPickEnt) {
+                            mEntityData.mEntityList[entNo].trim(mPoints[0], mPoints[1]);
+                        }
+                        mEntityData.updateData();
+                        return true;
+                    }
+                    break;
+                case "stretch":
+                    break;
+                case "copy":
+                    break;
+                case "scaling":
+                    break;
+                case "color":         //  color
                     mCreateColor = ylib.mColorList.Find(p => p.colorTitle == mValString).brush;
                     break;
-                case 9:         //  linetype
+                case "linetype":         //  linetype
                     mLineType = (int)mValue;
                     break;
-                case 10:        //  thickness
+                case "thickness":        //  thickness
                     mEntSize = mValue;
                     break;
-                case 11:        //  pointtype
+                case "pointtype":        //  pointtype
                     mPointType = (int)mValue;
                     break;
-                case 12:        //  pointsize
+                case "pointsize":        //  pointsize
                     mPointSize = mValue;
                     break;
-                case 13:        //  textsize
+                case "textsize":        //  textsize
                     mTextSize = mValue;
                     break;
             }
-            return entity;
+            return false;
         }
 
         /// <summary>
@@ -134,6 +214,7 @@ namespace CadApp
             mEa = 0;
             mValue = 0;
             mValString = "";
+            mPickEnt.Clear();
             mPoints.Clear();
             List<string> cmd = commandSplit(command);
             for (int i = 0; i < cmd.Count; i++) {
@@ -146,6 +227,8 @@ namespace CadApp
                     PointD dp = getPoint(cmd[i], "dx", "dy");       //  相対座標
                     dp.offset(mPoints[mPoints.Count - 1]);
                     mPoints.Add(dp);
+                } else if (0 == cmd[i].IndexOf("p")) {
+                    mPickEnt.Add(getIntPara(cmd[i], "p"));          //  要素番号
                 } else if (0 == cmd[i].IndexOf("x")) {
                     mPoints.Add(getPoint(cmd[i]));                  //  座標
                 } else if (0 == cmd[i].IndexOf("r")) {
@@ -192,6 +275,19 @@ namespace CadApp
             int rn = paraStr.IndexOf(para);
             double r = ylib.string2double(paraStr.Substring(rn + 1));
             return r;
+        }
+
+        /// <summary>
+        /// パラメータ文字列から整数値に変換
+        /// </summary>
+        /// <param name="paraStr">パラメータ文字列</param>
+        /// <param name="para">パラメータの種類</param>
+        /// <returns>パラメータ値</returns>
+        private int getIntPara(string paraStr, string para)
+        {
+            int pn = paraStr.IndexOf(para);
+            int n = ylib.string2int(paraStr.Substring(pn + 1));
+            return n;
         }
 
         /// <summary>

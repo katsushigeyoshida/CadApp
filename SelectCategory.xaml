@@ -9,7 +9,7 @@
     <Grid>
         <ComboBox Name="cbGenre" Height="20" VerticalAlignment="Top" SelectionChanged="cbGenre_SelectionChanged" />
         <ListBox Name="lbCategory" Margin="0,20,0,20" />
-        <Button x:Name="btOK" Content="OK" Width="40" Height="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,50,0" Click="btOK_Click" />
-        <Button x:Name="btCancel" Content="Cancel" Width="40" Height="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,5,0" Click="btCancel_Click" />
+        <Button x:Name="btOK" Content="OK" IsDefault="True" Width="40" Height="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,50,0" Click="btOK_Click" />
+        <Button x:Name="btCancel" Content="Cancel" IsCancel="True" Width="40" Height="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,5,0" Click="btCancel_Click" />
     </Grid>
 </Window>

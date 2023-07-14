@@ -7,7 +7,8 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="700"  Loaded="Window_Loaded" Closing="Window_Closing"
         MouseLeftButtonDown="Window_MouseLeftButtonDown" MouseMove="Window_MouseMove" LayoutUpdated="Window_LayoutUpdated"
-        MouseLeftButtonUp="Window_MouseLeftButtonUp" MouseWheel="Window_MouseWheel" MouseRightButtonDown="Window_MouseRightButtonDown" PreviewKeyDown="Window_PreviewKeyDown" >
+        MouseLeftButtonUp="Window_MouseLeftButtonUp" MouseWheel="Window_MouseWheel" MouseRightButtonDown="Window_MouseRightButtonDown"
+        PreviewKeyDown="Window_PreviewKeyDown" >
     <Grid>
         <DockPanel >
             <ToolBarTray x:Name="tbToolbarTray" DockPanel.Dock="Top" >
@@ -32,19 +33,24 @@
                     </Button>
                 </ToolBar>
                 <ToolBar Height="25" >
-                    <Button x:Name="btZoomOriginal" Width="25" Height="25" Click="btZoomOriginal_Click" >
+                    <Button x:Name="btZoomOriginal" Width="25" Height="25" Click="btZoomOriginal_Click"
+                            ToolTip="再表示 F1" >
                         <Image Source="Icon\ZoomOriginalSize.png" ></Image>
                     </Button>
-                    <Button x:Name="btZoomIn" Width="25" Height="25" Click="btZoomIn_Click" >
+                    <Button x:Name="btZoomIn" Width="25" Height="25" Click="btZoomIn_Click"
+                            ToolTip="拡大表示 F4" >
                         <Image Source="Icon\ZoomIn.png" ></Image>
                     </Button>
-                    <Button x:Name="btZoomOut" Width="25" Height="25" Click="btZoomOut_Click" >
+                    <Button x:Name="btZoomOut" Width="25" Height="25" Click="btZoomOut_Click"
+                            ToolTip="首相表示 F5" >
                         <Image Source="Icon\ZoomOut.png" ></Image>
                     </Button>
-                    <Button x:Name="btZoomFit" Width="25" Height="25" Click="btZoomFit_Click" >
+                    <Button x:Name="btZoomFit" Width="25" Height="25" Click="btZoomFit_Click"
+                            ToolTip="全体表示 F3" >
                         <Image Source="Icon\ZoomToFit.png" ></Image>
                     </Button>
-                    <Button x:Name="btMenu" Width="25" Height="25" Click="btMenu_Click"  >
+                    <Button x:Name="btMenu" Width="25" Height="25" Click="btMenu_Click" 
+                            ToolTip="ロケイトメニュー">
                         <Image Source="Icon\MenuItem.png" ></Image>
                     </Button>
                 </ToolBar>
@@ -80,23 +86,25 @@
                               SelectionChanged="cbGridSize_SelectionChanged" />
                 </ToolBar>
             </ToolBarTray>
-            <StackPanel DockPanel.Dock="Bottom" Height="50">
+            <StackPanel DockPanel.Dock="Bottom" Height="55">
                 <StatusBar Height="25" >
-                    <TextBlock x:Name="tbMode" />
-                    <TextBlock x:Name="tbPosition" Width="100" />
-                    <TextBox x:Name="tbTextString" Width="200" />
+                    <TextBlock Text="文字入力" FontSize="11"/>
+                    <TextBox x:Name="tbTextString" Width="400" />
                     <TextBlock Text="文字サイズ" FontSize="11"/>
-                    <ComboBox Name="cbTextSize" Width="40" ToolTip="テキストサイズ" SelectionChanged="cbTextSize_SelectionChanged" />
+                    <ComboBox Name="cbTextSize" Width="60" ToolTip="テキストサイズ" SelectionChanged="cbTextSize_SelectionChanged" />
                     <StatusBarItem HorizontalAlignment="Right">
-                        <TextBlock x:Name="tbArea" Width="180"  />
+                        <TextBlock x:Name="tbStatusInfo" />
                     </StatusBarItem>
                 </StatusBar>
-                <StatusBar Height="25" >
+                <StatusBar Height="30" >
                     <Button x:Name="btSetting" Width="20" Height="20" Click="btSetting_Click" >
                         <Image Source="Icon\Settings.png" ></Image>
                     </Button>
                     <TextBlock Text="コマンド" FontSize="11"/>
-                    <TextBox x:Name="tbCommand" Width="400" />
+                    <ComboBox x:Name="cbCommand" Width="400" IsEditable="True" />
+                    <StatusBarItem HorizontalAlignment="Right">
+                        <TextBlock x:Name="tbPosition" />
+                    </StatusBarItem>
                 </StatusBar>
             </StackPanel>
             <Grid>

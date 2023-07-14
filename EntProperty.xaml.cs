@@ -31,12 +31,16 @@ namespace CadApp
         public EntityId mEntityId = EntityId.Non;
         public string mColorName = "Black";
         public Brush mColor = Brushes.Black;
-        public int mType = 0;
+        //public int mPointType = 0;
+        public int mLineType = 0;
+        //public double mPointSize = 1;
         public double mThickness = 1;
         public double mTextSize = 12;
         public HorizontalAlignment mHa = HorizontalAlignment.Left;
         public VerticalAlignment mVa = VerticalAlignment.Top;
-        public double mTextRotate = 12;
+        public double mTextRotate = 0;
+        public double mArrowSize = 5;
+        public double mArrowAngle = 0.523598775599;
 
         YDraw ydraw = new YDraw();
         YLib ylib = new YLib();
@@ -50,34 +54,66 @@ namespace CadApp
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            cbColor.SelectedIndex = ydraw.mColorList.FindIndex(p => p.brush == mColor);
             cbType.ItemsSource = mEntityId == EntityId.Point ? mPointTypeMenu : mLineTypeMenu;
-            cbThickness.ItemsSource = mEntityId == EntityId.Text ? mTextSizeMenu : mEntSizeMenu;
+            cbThickness.ItemsSource = mEntSizeMenu;
             lbTypeTitle.Content = mEntityId == EntityId.Point ? "点種" : "線種";
-            lbSizeTitle.Content = mEntityId == EntityId.Point ? "点サイズ" : (mEntityId == EntityId.Text ? "文字サイズ" : "太さ");
+            lbSizeTitle.Content = mEntityId == EntityId.Point ? "点サイズ" : "太さ";
             cbHorizontal.ItemsSource = mHorizontalAlignmentMenu;
             cbVertical.ItemsSource = mVerticalAlignmentMenu;
-            cbTextRotate.ItemsSource = mTextRotateMenu;
 
-            cbColor.SelectedIndex = ydraw.mColorList.FindIndex(p => p.brush == mColor);
-            cbType.SelectedIndex = mType;
+            cbType.SelectedIndex = mLineType;
+            cbThickness.SelectedIndex = mTextSizeMenu.FindIndex(p => p >= mThickness);
+            tbTextSize.Text = mTextSize.ToString();
+            tbTextRotate.Text = ylib.R2D(mTextRotate).ToString();
             cbHorizontal.SelectedIndex = mHa == HorizontalAlignment.Left ? 0 :
                                          mHa == HorizontalAlignment.Center ? 1 : 2;
             cbVertical.SelectedIndex = mVa == VerticalAlignment.Top ? 0 :
                                        mVa == VerticalAlignment.Center ? 1 : 2;
+            tbArrowSize.Text = mArrowSize.ToString();
+            tbArrowAngle.Text = ylib.double2StrZeroSup(ylib.R2D(mArrowAngle),"F8");
 
+            lbAlimentTitle.IsEnabled = false;
+            cbHorizontal.IsEnabled = false;
+            lbVATitle.IsEnabled = false;
+            cbVertical.IsEnabled = false;
+            lbRotateTitle.IsEnabled = false;
+            tbTextRotate.IsEnabled = false;
+
+            lbTextSizeTitle.IsEnabled = false;
+            tbTextSize.IsEnabled = false;
+            lbRotateTitle.IsEnabled = false;
+            tbTextSize.IsEnabled = false;
+            lbArrowSizeTitle.IsEnabled = false;
+            tbArrowSize.IsEnabled = false;
+            lbArrowAngleTitle.IsEnabled = false;
+            tbArrowAngle.IsEnabled = false;
+
+            if (mEntityId == EntityId.Text || mEntityId == EntityId.Parts) {
+                lbTextSizeTitle.IsEnabled = true;
+                tbTextSize.IsEnabled = true;
+            }
             if (mEntityId == EntityId.Text) {
                 lbTypeTitle.IsEnabled = false;
                 cbType.IsEnabled = false;
-                cbThickness.SelectedIndex = mTextSizeMenu.FindIndex(p => p >= mThickness);
-                cbTextRotate.Text = ylib.R2D(mTextRotate).ToString();
-            } else {
+                lbSizeTitle.IsEnabled = false;
+                cbThickness.IsEnabled = false;
+                lbAlimentTitle.IsEnabled = true;
+                cbHorizontal.IsEnabled = true;
+                lbVATitle.IsEnabled = true;
+                cbVertical.IsEnabled = true;
+                lbRotateTitle.IsEnabled = true;
+                tbTextRotate.IsEnabled = true;
+            } else if (mEntityId == EntityId.Parts) {
+                lbTypeTitle.IsEnabled = true;
                 cbType.IsEnabled = true;
+                lbSizeTitle.IsEnabled = true;
+                cbThickness.IsEnabled = true;
                 cbThickness.SelectedIndex = mEntSizeMenu.FindIndex(p => p >= mThickness);
-                lbAlimentTitle.Visibility = Visibility.Hidden;
-                cbHorizontal.Visibility   = Visibility.Hidden;
-                cbVertical.Visibility     = Visibility.Hidden;
-                lbRotateTitle.Visibility = Visibility.Hidden;
-                cbTextRotate.Visibility   = Visibility.Hidden;
+                lbArrowSizeTitle.IsEnabled = true;
+                tbArrowSize.IsEnabled = true;
+                lbArrowAngleTitle.IsEnabled = true;
+                tbArrowAngle.IsEnabled = true;
             }
         }
 
@@ -88,19 +124,21 @@ namespace CadApp
                 mColorName = ydraw.mColorList[cbColor.SelectedIndex].colorTitle;
             }
             if (0 <= cbType.SelectedIndex)
-                mType = cbType.SelectedIndex;
+                mLineType = cbType.SelectedIndex;
             if (0 <= cbThickness.SelectedIndex) {
                 if (mEntityId == EntityId.Text) {
-                    mThickness = mTextSizeMenu[cbThickness.SelectedIndex];
                     mHa = cbHorizontal.SelectedIndex == 0 ? HorizontalAlignment.Left :
                           cbHorizontal.SelectedIndex == 1 ? HorizontalAlignment.Center : HorizontalAlignment.Right;
                     mVa = cbVertical.SelectedIndex == 0 ? VerticalAlignment.Top :
                           cbVertical.SelectedIndex == 1 ? VerticalAlignment.Center : VerticalAlignment.Bottom;
-                    mTextRotate = ylib.D2R(ylib.string2double(cbTextRotate.Text));
                 } else {
                     mThickness = mEntSizeMenu[cbThickness.SelectedIndex];
                 }
             }
+            mTextSize = ylib.string2double(tbTextSize.Text);
+            mTextRotate = ylib.D2R(ylib.string2double(tbTextRotate.Text));
+            mArrowSize = ylib.string2double(tbArrowSize.Text);
+            mArrowAngle = ylib.D2R(ylib.string2double(tbArrowAngle.Text));
 
             DialogResult = true;
             Close();

@@ -166,5 +166,149 @@ namespace CadApp.Properties {
                 this["SelectCategoryLeft"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public double WorldWindowLeft {
+            get {
+                return ((double)(this["WorldWindowLeft"]));
+            }
+            set {
+                this["WorldWindowLeft"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public double WorldWindowBottom {
+            get {
+                return ((double)(this["WorldWindowBottom"]));
+            }
+            set {
+                this["WorldWindowBottom"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100")]
+        public double WorldWindowRight {
+            get {
+                return ((double)(this["WorldWindowRight"]));
+            }
+            set {
+                this["WorldWindowRight"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100")]
+        public double WorldWindowTop {
+            get {
+                return ((double)(this["WorldWindowTop"]));
+            }
+            set {
+                this["WorldWindowTop"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("3")]
+        public double PointSize {
+            get {
+                return ((double)(this["PointSize"]));
+            }
+            set {
+                this["PointSize"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public int PointType {
+            get {
+                return ((int)(this["PointType"]));
+            }
+            set {
+                this["PointType"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public double Thickness {
+            get {
+                return ((double)(this["Thickness"]));
+            }
+            set {
+                this["Thickness"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int LineType {
+            get {
+                return ((int)(this["LineType"]));
+            }
+            set {
+                this["LineType"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("12")]
+        public double TextSize {
+            get {
+                return ((double)(this["TextSize"]));
+            }
+            set {
+                this["TextSize"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("5")]
+        public double ArrowSize {
+            get {
+                return ((double)(this["ArrowSize"]));
+            }
+            set {
+                this["ArrowSize"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.523598775598299")]
+        public double ArrowAngle {
+            get {
+                return ((double)(this["ArrowAngle"]));
+            }
+            set {
+                this["ArrowAngle"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public double GridSize {
+            get {
+                return ((double)(this["GridSize"]));
+            }
+            set {
+                this["GridSize"] = value;
+            }
+        }
     }
 }

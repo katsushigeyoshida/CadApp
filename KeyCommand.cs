@@ -41,6 +41,7 @@ namespace CadApp
         private string mValString = "";
         private int mCommandNo = -1;
 
+        private YCalc ycalc = new YCalc();
         private YLib ylib = new YLib();
 
         public KeyCommand() { 
@@ -117,7 +118,8 @@ namespace CadApp
                     }
                     break;
                 case "arc":             //  arc
-                    if (0 < mPoints.Count && 0 < mRadius && 0 < mEa - mSa) {
+                    if (0 < mPoints.Count && 0 < mRadius) {
+                        if (mEa <= mSa) mEa += Math.PI * 2;
                         ArcD arc = new ArcD(mPoints[0], mRadius, mSa, mEa);
                         entity = new ArcEntity(arc);
                         return createEntity(entity);
@@ -259,8 +261,10 @@ namespace CadApp
             double x = 0, y = 0;
             int xn =xy.IndexOf(a);
             int yn =xy.IndexOf(b);
-            x = ylib.string2double(xy.Substring(xn + a.Length));
-            y = ylib.string2double(xy.Substring(yn + b.Length));
+            x = ycalc.expression(xy.Substring(xn + a.Length));
+            y = ycalc.expression(xy.Substring(yn + b.Length));
+            //x = ylib.string2double(xy.Substring(xn + a.Length));
+            //y = ylib.string2double(xy.Substring(yn + b.Length));
             return new PointD(x, y);
         }
 
@@ -273,7 +277,8 @@ namespace CadApp
         private double getPara(string paraStr, string para)
         {
             int rn = paraStr.IndexOf(para);
-            double r = ylib.string2double(paraStr.Substring(rn + 1));
+            double r = ycalc.expression(paraStr.Substring(rn + 1));
+            //double r = ylib.string2double(paraStr.Substring(rn + 1));
             return r;
         }
 

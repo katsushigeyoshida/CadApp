@@ -1,6 +1,7 @@
 ﻿//#define MYTEST
 
 using CoreLib;
+using Microsoft.WindowsAPICodePack.Shell;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,6 +26,7 @@ namespace CadApp
         private double mPrevWindowWidth;        //  変更前のウィンドウ幅
         private WindowState mWindowState = WindowState.Normal;  //  ウィンドウの状態(最大化/最小化)
 
+        private string mHelpFile = "CadAppManual.pdf";       //  PDFのヘルプファイル
         private double[] mGridSizeMenu = {
             0, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000
         };
@@ -188,8 +190,7 @@ namespace CadApp
                 Height = Properties.Settings.Default.MainWindowHeight;
             }
             //  図面データ保存フォルダ
-            string baseDataFolder = "";
-            //string baseDataFolder = Properties.Settings.Default.BaseDataFolder;
+            string baseDataFolder = Properties.Settings.Default.BaseDataFolder;
             //  図面分類
             mFileData.mBaseDataFolder = baseDataFolder == "" ? Path.GetFullPath("Zumen") : baseDataFolder;
             mFileData.mGenreName = Properties.Settings.Default.GenreName;
@@ -762,6 +763,16 @@ namespace CadApp
         {
             //systemMenu();
             systemSettingdlg();
+        }
+
+        /// <summary>
+        /// [ヘルプ]ボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btHelp_Click(object sender, RoutedEventArgs e)
+        {
+            ylib.openUrl(mHelpFile);
         }
 
         /// <summary>

@@ -2848,6 +2848,7 @@ namespace CadApp
         /// <returns></returns>
         public bool disassemble(List<(int no, PointD pos)> pickList)
         {
+            mOperationCouunt++;
             List<LineD> lines;
             foreach ((int no, PointD pos) entNo in pickList) {
                 Entity entity = mEntityList[pickList[0].no];
@@ -2858,6 +2859,7 @@ namespace CadApp
                         lines = polylineEnt.mPolyline.toLineList();
                         foreach (var line in lines) {
                             addLine(line);
+                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
                         }
                         break;
                     case EntityId.Polygon:
@@ -2865,18 +2867,22 @@ namespace CadApp
                         lines = polygonEnt.mPolygon.toLineList();
                         foreach (var line in lines) {
                             addLine(line);
+                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
                         }
                         break;
                     case EntityId.Parts:
                         PartsEntity partsEnt = (PartsEntity)entity;
                         foreach (var line in partsEnt.mParts.mLines) {
                             addLine(line);
+                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
                         }
                         foreach (var arc in partsEnt.mParts.mArcs) {
                             addArc(arc);
+                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
                         }
                         foreach (var text in partsEnt.mParts.mTexts) {
                             addText(text);
+                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
                         }
                         break;
                 }

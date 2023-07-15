@@ -448,6 +448,7 @@ namespace CadApp
                         parts.mParts.mArrowAngle = dlg.mArrowAngle;
                         parts.mParts.remakeData();
                     }
+                    mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mOperationCount = mEntityData.mOperationCouunt;
                     mEntityData.removeEnt(pickNo.no);
                 }
                 dlg.Close();

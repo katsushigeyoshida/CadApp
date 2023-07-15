@@ -115,6 +115,15 @@ namespace CadApp
                         lbItemList.SelectedIndex = index;
                     }
                 }
+            } else {
+                if (0 < cbGenre.Items.Count) {
+                    mFileData.mGenreName = cbGenre.Items[0].ToString();
+                    lbCategoryList.ItemsSource = mFileData.getCategoryList();
+                    if (0 < lbCategoryList.Items.Count) {
+                        mFileData.mCategoryName = lbCategoryList.Items[0].ToString();
+                        lbItemList.ItemsSource = mFileData.getItemFileList();
+                    }
+                }
             }
 
             mDataDrawing.initDraw(mCommandOpe.mDispArea);
@@ -179,7 +188,8 @@ namespace CadApp
                 Height = Properties.Settings.Default.MainWindowHeight;
             }
             //  図面データ保存フォルダ
-            string baseDataFolder = Properties.Settings.Default.BaseDataFolder;
+            string baseDataFolder = "";
+            //string baseDataFolder = Properties.Settings.Default.BaseDataFolder;
             //  図面分類
             mFileData.mBaseDataFolder = baseDataFolder == "" ? Path.GetFullPath("Zumen") : baseDataFolder;
             mFileData.mGenreName = Properties.Settings.Default.GenreName;
@@ -1281,13 +1291,17 @@ namespace CadApp
                 Properties.Settings.Default.GridSize = dlg.mGridSize;
                 //  図面保存基準フォルダ
                 if (mFileData.mBaseDataFolder != dlg.mDataFolder) {
-                    mFileData.setBaseDataFolder(mFileData.mBaseDataFolder);
+                    mFileData.setBaseDataFolder(dlg.mDataFolder);
                     cbGenre.SelectedIndex = -1;
                     cbGenre.ItemsSource = mFileData.getGenreList();
-                    lbCategoryList.Items.Clear();
-                    lbItemList.Items.Clear();
-                    if (0 < cbGenre.Items.Count)
-                        cbGenre.SelectedIndex = 0;
+                    if (0 < cbGenre.Items.Count) {
+                        lbCategoryList.ItemsSource = mFileData.getCategoryList();
+                        lbItemList.ItemsSource = mFileData.getItemFileList();
+                        if (0 < lbCategoryList.Items.Count)
+                            cbGenre.SelectedIndex = 0;
+                        if (0 < lbItemList.Items.Count)
+                            lbItemList.SelectedIndex = 0;
+                    }
                 }
             }
         }

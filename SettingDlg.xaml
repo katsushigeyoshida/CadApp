@@ -34,7 +34,7 @@
         <TextBox x:Name="tbGridSize" Width="30" Margin="80,135,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
 
         <TextBlock Text="データフォルダ" Margin="10,180,0,0" HorizontalAlignment="Left"  VerticalAlignment="Top"/>
-        <TextBox x:Name="tbDataFolder" Width="280" Margin="80,180,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" MouseDoubleClick="tbDataFolder_MouseDoubleClick"/>
+        <TextBox x:Name="tbDataFolder" Margin="80,180,20,0" VerticalAlignment="Top" MouseDoubleClick="tbDataFolder_MouseDoubleClick"/>
         <Button Content="OK" Margin="0,0,100,10" IsDefault="True" Width="40" Height="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="Button_Click"/>
         <Button Content="Cancel" Margin="0,0,40,10" IsCancel="True" Width="40" Height="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="Button_Click_1"/>
     </Grid>

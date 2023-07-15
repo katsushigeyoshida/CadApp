@@ -3244,6 +3244,12 @@ namespace CadApp
             ylib.saveTextFile(path, buf);
         }
 
+        /// <summary>
+        /// 要素のテキストデータをEntityデータに変換
+        /// </summary>
+        /// <param name="propertyStr">要素プロパティのテキストデータ</param>
+        /// <param name="data">要素データのテキストデータ</param>
+        /// <returns>要素データ</returns>
         public Entity setStringEntityData(string propertyStr, string data)
         {
             string[] property = propertyStr.Split(new char[] { ',' });

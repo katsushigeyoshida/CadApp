@@ -1,4 +1,5 @@
 ﻿using CoreLib;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows;
@@ -32,10 +33,20 @@ namespace CadApp
         /// <param name="baseDataFolder">ベースフォルダ</param>
         public void setBaseDataFolder(string baseDataFolder = "")
         {
-            if (baseDataFolder != "")
-                mBaseDataFolder = baseDataFolder;
-            if (!Directory.Exists(mBaseDataFolder))
-                Directory.CreateDirectory(mBaseDataFolder);
+            try {
+                if (baseDataFolder != "")
+                    mBaseDataFolder = baseDataFolder;
+                if (!Directory.Exists(mBaseDataFolder))
+                    Directory.CreateDirectory(mBaseDataFolder);
+                string genreFolder = Path.Combine(mBaseDataFolder, mGenreName);
+                if (!Directory.Exists(genreFolder))
+                    Directory.CreateDirectory(genreFolder);
+                string categoryFolder = Path.Combine(genreFolder, mCategoryName);
+                if (!Directory.Exists(categoryFolder))
+                    Directory.CreateDirectory(categoryFolder);
+            } catch (Exception e) {
+                MessageBox.Show(e.Message);
+            }
         }
 
         /// <summary>
@@ -324,10 +335,15 @@ namespace CadApp
         /// <returns></returns>
         public List<string> getCategoryList()
         {
-            List<string> categoryList = ylib.getDirectories(getCurGenrePath());
-            if (categoryList != null)
-                categoryList.Sort();
-            categoryList = categoryList.ConvertAll(p => ylib.getLastFolder(p, 1));
+            List<string> categoryList = new List<string>();
+            try {
+                categoryList = ylib.getDirectories(getCurGenrePath());
+                if (categoryList != null)
+                    categoryList.Sort();
+                categoryList = categoryList.ConvertAll(p => ylib.getLastFolder(p, 1));
+            } catch (Exception e) {
+                MessageBox.Show(e.Message);
+            }
             return categoryList;
         }
 
@@ -337,11 +353,16 @@ namespace CadApp
         /// <returns></returns>
         public List<string> getItemFileList()
         {
-            string[] files = ylib.getFiles(getCurCategoryPath() + "\\*.csv");
             List<string> fileNameList = new List<string>();
-            for (int i = 0; i < files.Length; i++) {
-                fileNameList.Add(Path.GetFileNameWithoutExtension(files[i]));
+            try {
+                string[] files = ylib.getFiles(getCurCategoryPath() + "\\*.csv");
+                for (int i = 0; i < files.Length; i++) {
+                    fileNameList.Add(Path.GetFileNameWithoutExtension(files[i]));
+                }
+            } catch (Exception e) {
+                MessageBox.Show(e.Message);
             }
+
             return fileNameList;
         }
 

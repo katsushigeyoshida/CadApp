@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CadApp"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="700"  Loaded="Window_Loaded" Closing="Window_Closing"
+        Title="MainWindow" Height="450" Width="800"  Loaded="Window_Loaded" Closing="Window_Closing"
         MouseLeftButtonDown="Window_MouseLeftButtonDown" MouseMove="Window_MouseMove" LayoutUpdated="Window_LayoutUpdated"
         MouseLeftButtonUp="Window_MouseLeftButtonUp" MouseWheel="Window_MouseWheel" MouseRightButtonDown="Window_MouseRightButtonDown"
         PreviewKeyDown="Window_PreviewKeyDown" >
@@ -22,19 +22,31 @@
                             </ContextMenu>
                         </ComboBox.ContextMenu>
                     </ComboBox>
-                    <Button x:Name="btOpen" ToolTip="データ読出" Width="25" Height="25" Click="btOpen_Click" >
+                    <!--<Button x:Name="btOpen" ToolTip="データ読出"  Visibility="Hidden" Width="25" Height="25" Click="btOpen_Click" >
                         <Image Source="Icon\OpenFIle.png" ></Image>
-                    </Button>
-                    <Button x:Name="btSave" ToolTip="データ保存" Width="25" Height="25" Click="btSave_Click" >
+                    </Button>-->
+                    <!--<Button x:Name="btSave" ToolTip="データ保存" Visibility="Hidden" Width="25" Height="25" Click="btSave_Click" >
                         <Image Source="Icon\Save.png" ></Image>
+                    </Button>-->
+                    <Button x:Name="btUndo" ToolTip="アンドゥ" Width="25" Height="25" Click="btUndo_Click"   >
+                        <Image Source="Icon\undo.png" ></Image>
+                    </Button>
+                    <Button x:Name="btEntityCopy" ToolTip="要素データコピー" Width="25" Height="25" Click="btEntityCopy_Click"  >
+                        <Image Source="Icon\copy.png" ></Image>
+                    </Button>
+                    <Button x:Name="btEntityPaste" ToolTip="要素データ貼り付け" Width="25" Height="25" Click="btEntityPaste_Click"  >
+                        <Image Source="Icon\paste.png" ></Image>
                     </Button>
                     <Button x:Name="btScreenCopy" ToolTip="画面コピー" Width="25" Height="25" Click="btScreenCopy_Click"  >
                         <Image Source="Icon\ScreenShot.png" ></Image>
                     </Button>
+                    <Button x:Name="btAreaPick" ToolTip="領域ピック" Width="25" Height="25" Click="btAreaPick_Click"  >
+                        <Image Source="Icon\SelectAll.png" ></Image>
+                    </Button>
                 </ToolBar>
                 <ToolBar Height="25" >
-                    <Button x:Name="btZoomOriginal" Width="25" Height="25" Click="btZoomOriginal_Click"
-                            ToolTip="再表示 F1" >
+                    <Button x:Name="btZoomArea" Width="25" Height="25" Click="btZoomArea_Click"
+                            ToolTip="領域拡大 F2" >
                         <Image Source="Icon\ZoomOriginalSize.png" ></Image>
                     </Button>
                     <Button x:Name="btZoomIn" Width="25" Height="25" Click="btZoomIn_Click"
@@ -82,20 +94,23 @@
                     <ComboBox Name="cbEntSize" Width="30" ToolTip="点の大きさ/線の太さ"
                               SelectionChanged="cbEntSize_SelectionChanged"  />
                     <TextBlock Text="グリッド" FontSize="11" VerticalAlignment="Center"/>
-                    <ComboBox Name="cbGridSize" Width="30" ToolTip="グリッドのサイズ"
+                    <ComboBox Name="cbGridSize" Width="40" ToolTip="グリッドのサイズ"
                               SelectionChanged="cbGridSize_SelectionChanged" />
                 </ToolBar>
             </ToolBarTray>
-            <StackPanel DockPanel.Dock="Bottom" Height="55">
-                <StatusBar Height="25" >
+            <StackPanel DockPanel.Dock="Bottom" Height="56">
+                <StatusBar Height="26" >
                     <Button x:Name="btHelp" Width="20" Height="20" Click="btHelp_Click"
                             ToolTip="ヘルプファイルを開く" >
                         <Image Source="Icon\StatusHelpOutline.png" ></Image>
                     </Button>
-                    <TextBlock Text="文字入力" FontSize="11"/>
-                    <TextBox x:Name="tbTextString" Width="400" />
-                    <TextBlock Text="文字サイズ" FontSize="11"/>
+                    <TextBlock Text="文字　入力" FontSize="11"/>
+                    <TextBox x:Name="tbTextString" Width="400" MouseDoubleClick="tbTextString_MouseDoubleClick" />
+                    <TextBlock Text="サイズ" FontSize="11"/>
                     <ComboBox Name="cbTextSize" Width="60" ToolTip="テキストサイズ" SelectionChanged="cbTextSize_SelectionChanged" />
+                    <TextBlock Text="基準" FontSize="11"/>
+                    <ComboBox Name="cbTextHorizontal" Width="40" ToolTip="水平アライメント" SelectionChanged="cbTextHorizontal_SelectionChanged"  />
+                    <ComboBox Name="cbTextVertical" Width="40" ToolTip="垂直アライメント" SelectionChanged="cbTextVertical_SelectionChanged"  />
                     <StatusBarItem HorizontalAlignment="Right">
                         <TextBlock x:Name="tbStatusInfo" />
                     </StatusBarItem>
@@ -138,6 +153,7 @@
                             <MenuItem Name="lbItemRemoveMenu" Header="削除" Click="lbItemMenu_Click" />
                             <MenuItem Name="lbItemCopyMenu" Header="コピー" Click="lbItemMenu_Click" />
                             <MenuItem Name="lbItemMoveMenu" Header="移動" Click="lbItemMenu_Click" />
+                            <MenuItem Name="lbItemImportMenu" Header="インポート" Click="lbItemMenu_Click" />
                             <MenuItem Name="lbItemPropertyMenu" Header="プロパティ" Click="lbItemMenu_Click" />
                         </ContextMenu>
                     </ListBox.ContextMenu>

@@ -14,7 +14,7 @@ namespace CadApp
         public string mDataName = "無題";
         public string mDataExt = ".csv";
 
-        public Window mWindow;
+        public Window mMainWindow;
 
         private YLib ylib = new YLib();
 
@@ -24,7 +24,7 @@ namespace CadApp
         /// <param name="baseDataFolder">ベースフォルダ</param>
         public FileData(Window window)
         {
-            mWindow = window;
+            mMainWindow = window;
         }
 
         /// <summary>
@@ -80,8 +80,9 @@ namespace CadApp
         public string addGenre()
         {
             InputBox dlg = new InputBox();
+            dlg.Owner = mMainWindow;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             dlg.Title = "ジャンル追加";
-            dlg.mMainWindow = mWindow;
             if (dlg.ShowDialog() == true) {
                 string genrePath = getGenrePath(dlg.mEditText.ToString());
                 if (Directory.Exists(genrePath)) {
@@ -103,7 +104,8 @@ namespace CadApp
         {
             InputBox dlg = new InputBox();
             dlg.Title = "ジャンル名変更";
-            dlg.mMainWindow = mWindow;
+            dlg.Owner = mMainWindow;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             dlg.mEditText = genre;
             string oldGenrePath = getGenrePath(genre);
             if (dlg.ShowDialog() == true) {
@@ -141,7 +143,8 @@ namespace CadApp
         {
             InputBox dlg = new InputBox();
             dlg.Title = "分類追加";
-            dlg.mMainWindow = mWindow;
+            dlg.Owner = mMainWindow;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             if (dlg.ShowDialog() == true) {
                 string categoryPath = getCategoryPath(dlg.mEditText.ToString());
                 if (Directory.Exists(categoryPath)) {
@@ -163,7 +166,8 @@ namespace CadApp
         {
             InputBox dlg = new InputBox();
             dlg.Title = "分類名変更";
-            dlg.mMainWindow = mWindow;
+            dlg.Owner = mMainWindow;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             dlg.mEditText = category;
             string oldCategoryPath = getCategoryPath(category);
             if (dlg.ShowDialog() == true) {
@@ -203,7 +207,7 @@ namespace CadApp
         public bool copyCategory(string categoryName, bool move = false)
         {
             SelectMenu dlg = new SelectMenu();
-            dlg.Owner = mWindow;
+            dlg.Owner = mMainWindow;
             dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             dlg.mMenuList = getGenreList().ToArray();
             if (dlg.ShowDialog() == true) {
@@ -232,7 +236,8 @@ namespace CadApp
         {
             InputBox dlg = new InputBox();
             dlg.Title = "図面追加";
-            dlg.mMainWindow = mWindow;
+            dlg.Owner = mMainWindow;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             if (dlg.ShowDialog() == true) {
                 string filePath = getItemFilePath(dlg.mEditText.ToString());
                 if (File.Exists(filePath)) {
@@ -252,8 +257,9 @@ namespace CadApp
         public string renameItem(string dataName)
         {
             InputBox dlg = new InputBox();
+            dlg.Owner = mMainWindow;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             dlg.Title = "図面名変更";
-            dlg.mMainWindow = mWindow;
             dlg.mEditText = dataName;
             string oldDataFilePath= getItemFilePath(dataName);
             if (dlg.ShowDialog() == true) {
@@ -292,7 +298,7 @@ namespace CadApp
         public bool copyItem(string itemName, bool move = false)
         {
             SelectCategory dlg = new SelectCategory();
-            dlg.Owner = mWindow;
+            dlg.Owner = mMainWindow;
             dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             dlg.mRootFolder = mBaseDataFolder;
             if (dlg.ShowDialog() == true) {

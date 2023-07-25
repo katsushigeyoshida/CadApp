@@ -22,7 +22,7 @@ namespace CadApp
         public string mDataFolder = "";
 
         private List<string> mPointTypeMenu = new List<string>() {
-            "・点", "X クロス", "+ 十字", "□ 四角", "〇 円"
+            "・点", "X クロス", "+ 十字", "□ 四角", "〇 円", "△ 三角"
         };
         private List<string> mLineTypeMenu = new List<string>() {
             "実線", "破線", "一点鎖線", "二点鎖線"

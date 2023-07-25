@@ -41,6 +41,7 @@ namespace CadApp
         public double mTextRotate = 0;
         public double mArrowSize = 5;
         public double mArrowAngle = 0.523598775599;
+        public double mLinePitchRate = 1.2;
 
         YDraw ydraw = new YDraw();
         YLib ylib = new YLib();
@@ -66,6 +67,7 @@ namespace CadApp
             cbThickness.SelectedIndex = mTextSizeMenu.FindIndex(p => p >= mThickness);
             tbTextSize.Text = mTextSize.ToString();
             tbTextRotate.Text = ylib.R2D(mTextRotate).ToString();
+            tbLinePitchRate.Text = mLinePitchRate.ToString();
             cbHorizontal.SelectedIndex = mHa == HorizontalAlignment.Left ? 0 :
                                          mHa == HorizontalAlignment.Center ? 1 : 2;
             cbVertical.SelectedIndex = mVa == VerticalAlignment.Top ? 0 :
@@ -73,21 +75,21 @@ namespace CadApp
             tbArrowSize.Text = mArrowSize.ToString();
             tbArrowAngle.Text = ylib.double2StrZeroSup(ylib.R2D(mArrowAngle),"F8");
 
-            lbAlimentTitle.IsEnabled = false;
-            cbHorizontal.IsEnabled = false;
-            lbVATitle.IsEnabled = false;
-            cbVertical.IsEnabled = false;
-            lbRotateTitle.IsEnabled = false;
-            tbTextRotate.IsEnabled = false;
-
             lbTextSizeTitle.IsEnabled = false;
-            tbTextSize.IsEnabled = false;
-            lbRotateTitle.IsEnabled = false;
-            tbTextSize.IsEnabled = false;
-            lbArrowSizeTitle.IsEnabled = false;
-            tbArrowSize.IsEnabled = false;
+            tbTextSize.IsEnabled      = false;
+            lbRotateTitle.IsEnabled   = false;
+            tbTextRotate.IsEnabled    = false;
+            lbLinePitchRateTitle.IsEnabled = false;
+            tbLinePitchRate.IsEnabled = false;
+            lbAlimentTitle.IsEnabled  = false;
+            cbHorizontal.IsEnabled    = false;
+            lbVATitle.IsEnabled       = false;
+            cbVertical.IsEnabled      = false;
+
+            lbArrowSizeTitle.IsEnabled  = false;
+            tbArrowSize.IsEnabled       = false;
             lbArrowAngleTitle.IsEnabled = false;
-            tbArrowAngle.IsEnabled = false;
+            tbArrowAngle.IsEnabled      = false;
 
             if (mEntityId == EntityId.Text || mEntityId == EntityId.Parts) {
                 lbTextSizeTitle.IsEnabled = true;
@@ -95,25 +97,27 @@ namespace CadApp
             }
             if (mEntityId == EntityId.Text) {
                 lbTypeTitle.IsEnabled = false;
-                cbType.IsEnabled = false;
+                cbType.IsEnabled      = false;
                 lbSizeTitle.IsEnabled = false;
                 cbThickness.IsEnabled = false;
-                lbAlimentTitle.IsEnabled = true;
-                cbHorizontal.IsEnabled = true;
-                lbVATitle.IsEnabled = true;
-                cbVertical.IsEnabled = true;
                 lbRotateTitle.IsEnabled = true;
-                tbTextRotate.IsEnabled = true;
+                tbTextRotate.IsEnabled  = true;
+                lbLinePitchRateTitle.IsEnabled = true;
+                tbLinePitchRate.IsEnabled = true;
+                lbAlimentTitle.IsEnabled = true;
+                cbHorizontal.IsEnabled   = true;
+                lbVATitle.IsEnabled      = true;
+                cbVertical.IsEnabled     = true;
             } else if (mEntityId == EntityId.Parts) {
                 lbTypeTitle.IsEnabled = true;
-                cbType.IsEnabled = true;
+                cbType.IsEnabled      = true;
                 lbSizeTitle.IsEnabled = true;
                 cbThickness.IsEnabled = true;
                 cbThickness.SelectedIndex = mEntSizeMenu.FindIndex(p => p >= mThickness);
-                lbArrowSizeTitle.IsEnabled = true;
-                tbArrowSize.IsEnabled = true;
+                lbArrowSizeTitle.IsEnabled  = true;
+                tbArrowSize.IsEnabled       = true;
                 lbArrowAngleTitle.IsEnabled = true;
-                tbArrowAngle.IsEnabled = true;
+                tbArrowAngle.IsEnabled      = true;
             }
         }
 
@@ -137,6 +141,7 @@ namespace CadApp
             }
             mTextSize = ylib.string2double(tbTextSize.Text);
             mTextRotate = ylib.D2R(ylib.string2double(tbTextRotate.Text));
+            mLinePitchRate = ylib.string2double(tbLinePitchRate.Text);
             mArrowSize = ylib.string2double(tbArrowSize.Text);
             mArrowAngle = ylib.D2R(ylib.string2double(tbArrowAngle.Text));
 

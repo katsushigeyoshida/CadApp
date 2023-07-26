@@ -3171,15 +3171,8 @@ namespace CadApp
                 return -1;
             Entity ent0 = mEntityList[pickList[0].no];
             Entity ent1 = mEntityList[pickList[1].no];
-            //LineD l0 = getLine(ent0, pickList[0].pos);
-            //LineD l1 = getLine(ent1, pickList[1].pos);
-            LineD l0 = ent0.getLine(pickList[0].pos);
-            LineD l1 = ent1.getLine(pickList[1].pos);
-            PointD cp = l0.intersection(l1);
-            //PointD ps = getEndPoint(ent0, pickList[0].pos, cp);
-            //PointD pe = getEndPoint(ent1, pickList[1].pos, cp);
-            PointD ps = ent0.getEndPoint(pickList[0].pos, cp);
-            PointD pe = ent1.getEndPoint(pickList[1].pos, cp);
+            PointD ps = ent0.getEndPoint(pickList[0].pos);
+            PointD pe = ent1.getEndPoint(pickList[1].pos);
 
             return addLocDimension(ps, pe, pos);
         }
@@ -3196,10 +3189,7 @@ namespace CadApp
                 return -1;
             Entity ent0 = mEntityList[pickList[0].no];
             Entity ent1 = mEntityList[pickList[1].no];
-            //PointD cp = getLine(ent0, pickList[0].pos).intersection(getLine(ent1, pickList[1].pos));
             PointD cp = ent0.getLine(pickList[0].pos).intersection(ent1.getLine(pickList[1].pos));
-            //PointD ps = getEndPoint(ent0, pickList[0].pos, cp);
-            //PointD pe = getEndPoint(ent1, pickList[1].pos, cp);
             PointD ps = ent0.getEndPoint(pickList[0].pos, cp);
             PointD pe = ent1.getEndPoint(pickList[1].pos, cp);
             if (!cp.isNaN()) {

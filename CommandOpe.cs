@@ -719,9 +719,9 @@ namespace CadApp
                     //  共通属性
                     if (dlg.mColorChk)
                        entity.mColor = dlg.mColor;
-                    if (dlg.mLineTypeChk && entity.mEntityId == EntityId.Line)
+                    if (dlg.mLineTypeChk && entity.mEntityId != EntityId.Point)
                         entity.mType = dlg.mLineType;
-                    if (dlg.mThicknessChk && entity.mEntityId == EntityId.Line)
+                    if (dlg.mThicknessChk && entity.mEntityId != EntityId.Point)
                         entity.mThickness = dlg.mThickness;
                     if (dlg.mPointTypeChk && entity.mEntityId == EntityId.Point)
                         entity.mType = dlg.mPointType;

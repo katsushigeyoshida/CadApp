@@ -16,7 +16,21 @@
 <img src="Image/MainWindow.png" width="80%">  
 
 ### 作図機能    
- <img src="Image/作図機能表.png" width="80%">  
+ <img src="Image/製図機能一覧.png
+" width="60%">  
+
+ <img src="Image/コマンド機能一覧.png
+" width="80%">  
+
+ <img src="Image/座標の指定方法一覧.png
+" width="40%">  
+
+ <img src="Image/モードとマウスボタン操作の関係.png
+" width="50%">  
+
+ <img src="Image/ショートカットキーの機能一覧.png
+" width="30%">  
+
 
 
 ### 履歴

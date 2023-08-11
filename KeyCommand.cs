@@ -250,7 +250,7 @@ namespace CadApp
         }
 
         /// <summary>
-        /// パラメータ文字列からPointDの値に変換
+        /// パラメータ文字列からPointDの値に変換(計算式可)
         /// </summary>
         /// <param name="xy">パラメータ文字列</param>
         /// <param name="a">パラメータ名</param>
@@ -258,18 +258,15 @@ namespace CadApp
         /// <returns>パラメータ値</returns>
         private PointD getPoint(string xy, string a = "x", string b = "y")
         {
-            double x = 0, y = 0;
             int xn =xy.IndexOf(a);
             int yn =xy.IndexOf(b);
-            x = ycalc.expression(xy.Substring(xn + a.Length));
-            y = ycalc.expression(xy.Substring(yn + b.Length));
-            //x = ylib.string2double(xy.Substring(xn + a.Length));
-            //y = ylib.string2double(xy.Substring(yn + b.Length));
+            double x = ycalc.expression(xy.Substring(xn + a.Length,yn - a.Length));
+            double y = ycalc.expression(xy.Substring(yn + b.Length));
             return new PointD(x, y);
         }
 
         /// <summary>
-        /// パラメータ文字列から値に変換
+        /// パラメータ文字列から値に変換(計算式可)
         /// </summary>
         /// <param name="paraStr">パラメータ文字列</param>
         /// <param name="para">パラメータの種類</param>
@@ -278,7 +275,6 @@ namespace CadApp
         {
             int rn = paraStr.IndexOf(para);
             double r = ycalc.expression(paraStr.Substring(rn + 1));
-            //double r = ylib.string2double(paraStr.Substring(rn + 1));
             return r;
         }
 
@@ -291,7 +287,7 @@ namespace CadApp
         private int getIntPara(string paraStr, string para)
         {
             int pn = paraStr.IndexOf(para);
-            int n = ylib.string2int(paraStr.Substring(pn + 1));
+            int n = (int)ycalc.expression(paraStr.Substring(pn + 1));
             return n;
         }
 

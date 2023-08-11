@@ -6,6 +6,9 @@ using System.Windows.Media;
 
 namespace CadApp
 {
+    /// <summary>
+    /// 図面のパラメータ
+    /// </summary>
     public class DrawingPara
     {
         public int mPointType = 0;                                  //  点種
@@ -19,13 +22,21 @@ namespace CadApp
         public VerticalAlignment mVa = VerticalAlignment.Top;       //  垂直アライメント
         public double mArrowAngle = Math.PI / 6;                    //  矢印の角度
         public double mArrowSize = 5;                               //  矢印の大きさ
-        public Brush mColor = Brushes.Black;                  //  要素の色
+        public Brush mColor = Brushes.Black;                        //  要素の色
         public double mGridSize = 1.0;                              //  マウス座標の丸め値
+        public string mComment = "";                                //  図面のコメント
 
         private YLib ylib = new YLib();
 
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
         public DrawingPara() { }
 
+        /// <summary>
+        /// コピーを作成
+        /// </summary>
+        /// <returns>DrawimgPara</returns>
         public DrawingPara toCopy()
         {
             DrawingPara para = new DrawingPara();
@@ -42,8 +53,35 @@ namespace CadApp
             para.mArrowSize = mArrowSize;
             para.mColor = mColor;
             para.mGridSize = mGridSize;
+            para.mComment = mComment;
             return para;
         }
+
+        /// <summary>
+        /// 初期値に設定
+        /// </summary>
+        public void init()
+        {
+            mPointType = 0;                                 //  点種
+            mPointSize = 1;                                 //  点の大きさ
+            mLineType = 0;                                  //  線種
+            mThickness = 1;                                 //  線の太さ
+            mTextSize = 12;                                 //  文字サイズ
+            mTextRotate = 0;                                //  文字列の回転角
+            mLinePitchRate = 1.2;                           //  文字列の改行幅率
+            mHa = HorizontalAlignment.Left;                 //  水平アライメント
+            mVa = VerticalAlignment.Top;                    //  垂直アライメント
+            mArrowAngle = Math.PI / 6;                      //  矢印の角度
+            mArrowSize = 5;                                 //  矢印の大きさ
+            mColor = Brushes.Black;                         //  要素の色
+            mGridSize = 1.0;                                //  マウス座標の丸め値
+            mComment = "";                                  //  図面のコメント
+        }
+
+        /// <summary>
+        /// パラメータを文字列に変換
+        /// </summary>
+        /// <returns></returns>
         public string propertyToString()
         {
             return $"Prperty,Color,{ylib.getColorName(mColor)},PointType,{mPointType},PointSize,{mPointSize}," +
@@ -51,6 +89,16 @@ namespace CadApp
                 $"TextRotate,{mTextRotate},LinePitchRate,{mLinePitchRate},HA,{mHa},VA,{mVa}," +
                 $"ArrowSize,{mArrowSize},ArrowAngle,{mArrowAngle},GridSize,{mGridSize}";
         }
+
+        /// <summary>
+        /// 図面情報を文字列に変換
+        /// </summary>
+        /// <returns></returns>
+        public string commentToString()
+        {
+            return $"Comment,Comment,{ylib.strControlCodeCnv(mComment)}";
+        }
+
         /// <summary>
         /// 文字列配列をプロパティ設定値に変換
         /// </summary>
@@ -103,24 +151,49 @@ namespace CadApp
                         }
                     }
                 } else {
-                    mColor = ylib.getColor(data[0]);
-                    mPointType = int.Parse(data[1]);
-                    mPointSize = double.Parse(data[2]);
-                    mLineType = int.Parse(data[3]);
-                    mThickness = double.Parse(data[4]);
-                    mTextSize = double.Parse(data[5]);
-                    mArrowSize = double.Parse(data[6]);
+                    mColor      = ylib.getColor(data[0]);
+                    mPointType  = int.Parse(data[1]);
+                    mPointSize  = double.Parse(data[2]);
+                    mLineType   = int.Parse(data[3]);
+                    mThickness  = double.Parse(data[4]);
+                    mTextSize   = double.Parse(data[5]);
+                    mArrowSize  = double.Parse(data[6]);
                     mArrowAngle = double.Parse(data[7]);
-                    mGridSize = double.Parse(data[8]);
+                    mGridSize   = double.Parse(data[8]);
                     if (mArrowAngle == 0)
                         mArrowAngle = 30 * Math.PI / 180;
                 }
             } catch (Exception e) {
-
+                System.Diagnostics.Debug.WriteLine(e.Message);
             }
         }
+
+        /// <summary>
+        /// 図面情報のコメントをパラメータに設定
+        /// </summary>
+        /// <param name="data"></param>
+        public void setCommentData(string[] data)
+        {
+            try {
+                if (1 < data.Length && data[0] == "Comment") {
+                    for (int i = 1; i < data.Length; i++) {
+                        switch (data[i]) {
+                            case "Comment":
+                                mComment = ylib.strControlCodeRev(data[++i]);
+                                break;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                System.Diagnostics.Debug.WriteLine(e.Message);
+            }
+        }
+
     }
 
+    /// <summary>
+    /// コマンド操作
+    /// </summary>
     public class CommandOpe
     {
         public EntityData mEntityData;                              //  要素データ
@@ -290,14 +363,18 @@ namespace CadApp
                 case OPERATION.infoData:                    //  要素データ情報
                     infoEntityData(mPickEnt);
                     break;
+                case OPERATION.zumenComment:                //  
+                    zumenComment();
+                    break;
                 case OPERATION.zumenInfo:                   //  図面設定
                     if (zumenProperty(mPara))
-                        mMainWindow.setSystemProperty();    //  コントロールバーの設定
+                        mMainWindow.setZumenProperty();    //  コントロールバーの設定
                     break;
                 case OPERATION.allClear:
                     break;
                 case OPERATION.undo:                        //  アンドゥ
                     mEntityData.undo();
+                    mEntityData.updateData();
                     break;
                 case OPERATION.redo:
                     break;
@@ -328,7 +405,8 @@ namespace CadApp
             mEntityData.mOperationCouunt++;
             if (operation == OPERATION.createPoint || operation == OPERATION.createLine
                 || operation == OPERATION.createRect || operation == OPERATION.createArc
-                || operation == OPERATION.createCircle || operation == OPERATION.createText
+                || operation == OPERATION.createCircle || operation == OPERATION.createEllipse
+                || operation == OPERATION.createText
                 || operation == OPERATION.createPolyline || operation == OPERATION.createPolygon
                 || operation == OPERATION.createArrow || operation == OPERATION.createLabel
                 || operation == OPERATION.createLocDimension
@@ -398,6 +476,9 @@ namespace CadApp
             } else if (operation == OPERATION.createCircle && points.Count == 2) {
                 //  円の作成
                 mEntityData.addArc(new ArcD(points[0], points[0].length(points[1])));
+            } else if (operation == OPERATION.createEllipse && points.Count == 2) {
+                //  楕円の作成
+                mEntityData.addEllipse(new EllipseD(points[0], points[1]));
             } else if (operation == OPERATION.createText && points.Count == 1) {
                 //  テキスト要素の作成
                 TextD text = new TextD(mTextString, points[0], mPara.mTextSize, mPara.mTextRotate,
@@ -448,7 +529,7 @@ namespace CadApp
                     mEntityData.divide(pickEnt, loc[0]);
                 } else if (operation == OPERATION.createTangentCircle) {
                     //  接円
-                    ArcD arc = createTangentCircle(pickEnt, loc);
+                    ArcD arc = mEntityData.tangentCircle(pickEnt, loc);
                     if (arc != null)
                         mEntityData.addArc(arc);
                 } else if (operation == OPERATION.createDimension) {
@@ -535,36 +616,6 @@ namespace CadApp
         }
 
         /// <summary>
-        /// 接円の作成
-        /// </summary>
-        /// <param name="pickList">ピック要素リスト</param>
-        /// <param name="loc">ロケイト点リスト</param>
-        /// <returns>円弧データ</returns>
-        public ArcD createTangentCircle(List<(int no, PointD pos)> pickList, List<PointD> loc)
-        {
-            if (1 < pickList.Count && loc.Count == 1) {
-                Entity ent0 = mEntityData.mEntityList[pickList[0].no];
-                Entity ent1 = mEntityData.mEntityList[pickList[1].no];
-                //LineD l0 = mEntityData.getLine(ent0, pickList[0].pos);
-                //LineD l1 = mEntityData.getLine(ent1, pickList[1].pos);
-                LineD l0 = ent0.getLine(pickList[0].pos);
-                LineD l1 = ent1.getLine(pickList[1].pos);
-                if (!l0.isNaN() && !l1.isNaN()) {
-                    double r = l0.distance(loc[0]);
-                    ArcD arc = new ArcD();
-                    List<ArcD> arcList = arc.tangentCircle(l0, l1, r);
-                    for (int i = 0; i < arcList.Count; i++) {
-                        if (Math.Sign(l0.crossProduct(pickList[1].pos)) == Math.Sign(l0.crossProduct(arcList[i].mCp))
-                            && Math.Sign(l1.crossProduct(pickList[0].pos)) == Math.Sign(l1.crossProduct(arcList[i].mCp))) {
-                            return arcList[i];
-                        }
-                    }
-                }
-            }
-            return null;
-        }
-
-        /// <summary>
         /// ピックしたテキスト要素の文字列を変更する
         /// </summary>
         /// <param name="pickEnt">ピック要素リスト</param>
@@ -579,6 +630,7 @@ namespace CadApp
                 dlg.mMultiLine = true;
                 dlg.Title = "文字列変更";
                 if (mEntityData.mEntityList[pickNo.no].mEntityId == EntityId.Text) {
+                    //  文字列要素
                     TextEntity text = (TextEntity)mEntityData.mEntityList[pickNo.no];
                     dlg.mEditText = text.mText.mText;
                     if (dlg.ShowDialog() == true) {
@@ -589,8 +641,9 @@ namespace CadApp
                         mEntityData.removeEnt(pickNo.no);
                     }
                 } else if (mEntityData.mEntityList[pickNo.no].mEntityId == EntityId.Parts) {
+                    //  パーツ要素
                     PartsEntity parts = (PartsEntity)mEntityData.mEntityList[pickNo.no];
-                    if (parts.mParts.mName == "ラベル" && 0 < parts.mParts.mTexts.Count) {
+                    if (0 < parts.mParts.mTexts.Count) {
                         dlg.mEditText = parts.mParts.mTexts[0].mText;
                         if (dlg.ShowDialog() == true) {
                             mEntityData.mEntityList.Add(mEntityData.mEntityList[pickNo.no].toCopy());
@@ -663,9 +716,11 @@ namespace CadApp
                 //  Parts要素
                 if (mEntityData.mEntityList[pickNo.no].mEntityId == EntityId.Parts) {
                     PartsEntity parts = (PartsEntity)mEntityData.mEntityList[pickNo.no];
-                    dlg.mTextSize   = parts.mParts.mTextSize;
-                    dlg.mArrowSize  = parts.mParts.mArrowSize;
-                    dlg.mArrowAngle = parts.mParts.mArrowAngle;
+                    dlg.mTextSize      = parts.mParts.mTextSize;
+                    dlg.mTextRotate    = parts.mParts.mTextRotate;
+                    dlg.mLinePitchRate = parts.mParts.mLinePitchRate;
+                    dlg.mArrowSize     = parts.mParts.mArrowSize;
+                    dlg.mArrowAngle    = parts.mParts.mArrowAngle;
                 }
                 if (dlg.ShowDialog() == true) {
                     //  共通属性
@@ -685,9 +740,12 @@ namespace CadApp
                     //  Parts要素
                     if (mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mEntityId == EntityId.Parts) {
                         PartsEntity parts = (PartsEntity)mEntityData.mEntityList[mEntityData.mEntityList.Count - 1];
-                        parts.mParts.mRefValue[2] = dlg.mTextSize;
-                        parts.mParts.mRefValue[0] = dlg.mArrowSize;
-                        parts.mParts.mRefValue[1] = dlg.mArrowAngle;
+                        //parts.mParts.mRefValue = new List<double>() { 6, Math.PI / 6, 12, 1.2, 0 };
+                        parts.mParts.mArrowSize     = dlg.mArrowSize;
+                        parts.mParts.mArrowAngle    = dlg.mArrowAngle;
+                        parts.mParts.mTextSize      = dlg.mTextSize;
+                        parts.mParts.mLinePitchRate = dlg.mLinePitchRate;
+                        parts.mParts.mTextRotate    = dlg.mTextRotate;
                         parts.mParts.remakeData();
                     }
                     //  Undo処理
@@ -745,11 +803,15 @@ namespace CadApp
                     if (entity.mEntityId == EntityId.Parts) {
                         PartsEntity partsEnt = (PartsEntity)entity;
                         if (dlg.mArrowSizeChk)
-                            partsEnt.mParts.mRefValue[0] = dlg.mArrowSize;
+                            partsEnt.mParts.mArrowSize = dlg.mArrowSize;
                         if (dlg.mArrowAngleChk)
-                            partsEnt.mParts.mRefValue[1] = dlg.mArrowAngle;
+                            partsEnt.mParts.mArrowAngle = dlg.mArrowAngle;
                         if (dlg.mTextSizeChk)
-                            partsEnt.mParts.mRefValue[2] = dlg.mTextSize;
+                            partsEnt.mParts.mTextSize = dlg.mTextSize;
+                        if (dlg.mTextRotateChk)
+                            partsEnt.mParts.mTextRotate = dlg.mTextRotate;
+                        if (dlg.mLinePitchRateChk)
+                            partsEnt.mParts.mLinePitchRate = dlg.mLinePitchRate;
                         partsEnt.mParts.remakeData();
                     }
                     entity.mOperationCount = mEntityData.mOperationCouunt;
@@ -1036,7 +1098,7 @@ namespace CadApp
                         }
                         break;
                 }
-                MessageBox.Show(buf, "距離測定");
+                ylib.messageBox(mMainWindow, buf, "距離測定");
             }
         }
 
@@ -1046,7 +1108,7 @@ namespace CadApp
         public bool infoEntity(List<(int no, PointD pos)> pickEnt)
         {
             foreach ((int no, PointD pos) entNo in pickEnt) {
-                MessageBox.Show(mEntityData.mEntityList[entNo.no].entityInfo(), "要素情報");
+                ylib.messageBox(mMainWindow, mEntityData.mEntityList[entNo.no].entityInfo(), "要素情報");
             }
             return true;
         }
@@ -1080,6 +1142,22 @@ namespace CadApp
             }
             mEntityData.updateData();
             return true;
+        }
+
+        /// <summary>
+        /// 図面情報の表示と編集(ダイヤログ表示)
+        /// </summary>
+        public void  zumenComment()
+        {
+            InputBox dlg = new InputBox();
+            dlg.Owner = mMainWindow;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.mMultiLine = true;
+            dlg.Title = "図面のコメント";
+            dlg.mEditText = mPara.mComment;
+            if (dlg.ShowDialog() == true) {
+                mPara.mComment = dlg.mEditText;
+            }
         }
 
         /// <summary>

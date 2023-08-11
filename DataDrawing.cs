@@ -97,7 +97,7 @@ namespace CadApp
         public void setEntityProperty(CommandOpe ope)
         {
             mPara = ope.mPara.toCopy();
-            mCopyArea    = ope.mCopyArea;
+            mCopyArea = ope.mCopyArea;
         }
 
         /// <summary>
@@ -111,6 +111,7 @@ namespace CadApp
         {
             if (points.Count < 1)
                 return;
+
             mCanvas.Children.Clear();
             mMainWindow.imScreen.Source = mBitmapSource;
             mCanvas.Children.Add(mMainWindow.imScreen);
@@ -121,13 +122,14 @@ namespace CadApp
             ydraw.mPointType = mPara.mPointType;
             ydraw.mPointSize = mPara.mPointSize;
             PartsD parts;
+            ArcD arc;
             switch (operation) {
                 case OPERATION.createPoint:
                     ydraw.drawWPoint(points[0]);
                     break;
                 case OPERATION.createLine:
                     if (1 < points.Count)
-                        ydraw.drawWLine(points[0], points[1]);
+                        ydraw.drawWLine(new LineD(points[0], points[1]));
                     break;
                 case OPERATION.createRect:
                     if (1 < points.Count) {
@@ -144,9 +146,9 @@ namespace CadApp
                     break;
                 case OPERATION.createArc:
                     if (points.Count == 2) {
-                        ydraw.drawWLine(points[0], points[1]);
+                        ydraw.drawWLine(new LineD(points[0], points[1]));
                     } else if (points.Count == 3 && 0 < points[1].length(points[2])) {
-                        ArcD arc = new ArcD(points[0], points[2], points[1]);
+                        arc = new ArcD(points[0], points[2], points[1]);
                         if (arc.mCp != null)
                             ydraw.drawWArc(arc, false);
                     }
@@ -155,8 +157,16 @@ namespace CadApp
                     if (1 < points.Count)
                         ydraw.drawWCircle(points[0], points[0].length(points[1]), false);
                     break;
+                case OPERATION.createEllipse:
+                    if (1 < points.Count) {
+                        EllipseD ellipse = new EllipseD(points[0], points[1]);
+                        ydraw.drawWEllipse(ellipse);
+                    }
+                    break;
                 case OPERATION.createTangentCircle:
-                    tangentCircleDragging(entityData, points, pickList);
+                    arc = entityData.tangentCircle(pickList, points);
+                    if (arc != null)
+                        ydraw.drawWArc(arc);
                     break;
                 case OPERATION.createText:
                     TextD text = new TextD(mMainWindow.tbTextString.Text, points[0], mPara.mTextSize, 
@@ -176,7 +186,7 @@ namespace CadApp
                     parts.mTextSize = mPara.mTextSize;
                     parts.mArrowSize = mPara.mArrowSize;
                     if (1 < points.Count) {
-                        parts.createLabel(points[0], points[1], mMainWindow.tbTextString.Text);
+                        parts.createLabel(points, mMainWindow.tbTextString.Text);
                         drawWParts(parts);
                     }
                     break;
@@ -239,34 +249,6 @@ namespace CadApp
         }
 
         /// <summary>
-        /// 接円のドラッギング表示
-        /// </summary>
-        /// <param name="entityData">要素データリスト</param>
-        /// <param name="loc">ロケイト点リスト</param>
-        /// <param name="pickList">ピック要素リスト</param>
-        private void tangentCircleDragging(EntityData entityData, List<PointD> loc, List<(int no, PointD pos)> pickList)
-        {
-            if (1 < pickList.Count && loc.Count == 1) {
-                Entity ent0 = entityData.mEntityList[pickList[0].no];
-                Entity ent1 = entityData.mEntityList[pickList[1].no];
-                LineD l0 = ent0.getLine(pickList[0].pos);
-                LineD l1 = ent1.getLine(pickList[1].pos);
-                if (l0.isNaN() || l1.isNaN())
-                    return;
-                double r = l0.distance(loc[0]);
-                ArcD arc = new ArcD();
-                List<ArcD> arcList = arc.tangentCircle(l0, l1, r);
-                for (int i = 0; i < arcList.Count; i++) {
-                    if (Math.Sign(l0.crossProduct(pickList[1].pos)) == Math.Sign(l0.crossProduct(arcList[i].mCp))
-                        && Math.Sign(l1.crossProduct(pickList[0].pos)) == Math.Sign(l1.crossProduct(arcList[i].mCp))) {
-                        ydraw.drawWArc(arcList[i], false);
-                        return;
-                    }
-                }
-            }
-        }
-
-        /// <summary>
         /// 位置寸法線のドラッギング表示
         /// </summary>
         /// <param name="entityData">要素データリスト</param>
@@ -275,7 +257,7 @@ namespace CadApp
         private void locDimensionDragging(EntityData entityData, List<PointD> loc, List<(int no, PointD pos)> pickList)
         {
             if (loc.Count == 2) {
-                ydraw.drawWLine(loc[0], loc[1]);
+                ydraw.drawWLine(new LineD(loc[0], loc[1]));
             } else if (loc.Count == 3) {
                 PartsD parts = new PartsD();
                 parts.mTextSize = mPara.mTextSize;
@@ -394,55 +376,10 @@ namespace CadApp
                 PointD vec = loc[0].vector(loc[i]);
 
                 foreach ((int, PointD) entNo in pickList) {
-                    Entity ent = entityData.mEntityList[entNo.Item1];
-                    //ydraw.mBrush = ent.mColor;
-                    ydraw.mThickness = ent.mThickness;
-                    switch (ent.mEntityId) {
-                        case EntityId.Point:
-                            PointEntity pointEnt = (PointEntity)ent;
-                            PointD point = pointEnt.mPoint.toCopy();
-                            point.offset(vec);
-                            ydraw.mPointType = pointEnt.mType;
-                            ydraw.mPointSize = pointEnt.mThickness;
-                            ydraw.drawWPoint(point);
-                            break;
-                        case EntityId.Line:
-                            LineEntity lineEnt = (LineEntity)ent;
-                            LineD line = lineEnt.mLine.toCopy();
-                            line.translate(vec);
-                            ydraw.drawWLine(line);
-                            break;
-                        case EntityId.Polyline:
-                            PolylineEntity polylineEnt = (PolylineEntity)ent;
-                            PolylineD polyline = polylineEnt.mPolyline.toCopy();
-                            polyline.translate(vec);
-                            ydraw.drawWPolyline(polyline);
-                            break;
-                        case EntityId.Polygon:
-                            PolygonEntity polygonEnt = (PolygonEntity)ent;
-                            PolygonD polygon = polygonEnt.mPolygon.toCopy();
-                            polygon.translate(vec);
-                            ydraw.drawWPolygon(polygon);
-                            break;
-                        case EntityId.Arc:
-                            ArcEntity arcEnt = (ArcEntity)ent;
-                            ArcD arc = arcEnt.mArc.toCopy();
-                            arc.mCp.offset(vec);
-                            ydraw.drawWArc(arc, false);
-                            break;
-                        case EntityId.Text:
-                            TextEntity textEnt = (TextEntity)ent;
-                            TextD text = textEnt.mText.toCopy();
-                            text.mPos.offset(vec);
-                            ydraw.drawWText(text);
-                            break;
-                        case EntityId.Parts:
-                            PartsEntity partsEnt = (PartsEntity)ent;
-                            PartsD parts = partsEnt.mParts.toCopy();
-                            parts.translate(vec);
-                            drawWParts(parts);
-                            break;
-                    }
+                    Entity ent = entityData.mEntityList[entNo.Item1].toCopy();
+                    ent.mColor = mDraggingColor;
+                    ent.translate(vec);
+                    ent.draw(ydraw);
                 }
             }
         }
@@ -460,55 +397,10 @@ namespace CadApp
             ydraw.mBrush = mDraggingColor;
             for (int i = 1; i< loc.Count; i++) {
                 foreach ((int, PointD) entNo in pickList) {
-                    Entity ent = entityData.mEntityList[entNo.Item1];
-                    //ydraw.mBrush = ent.mColor;
-                    ydraw.mThickness = ent.mThickness;
-                    switch (ent.mEntityId) {
-                        case EntityId.Point:
-                            PointEntity pointEnt = (PointEntity)ent;
-                            PointD point = pointEnt.mPoint.toCopy();
-                            point.rotate(loc[0], loc[i]);
-                            ydraw.mPointType = pointEnt.mType;
-                            ydraw.mPointSize = pointEnt.mThickness;
-                            ydraw.drawWPoint(point);
-                            break;
-                        case EntityId.Line:
-                            LineEntity lineEnt = (LineEntity)ent;
-                            LineD line = lineEnt.mLine.toCopy();
-                            line.rotate(loc[0], loc[i]); ;
-                            ydraw.drawWLine(line);
-                            break;
-                        case EntityId.Polyline:
-                            PolylineEntity polylineEnt = (PolylineEntity)ent;
-                            PolylineD polyline = polylineEnt.mPolyline.toCopy();
-                            polyline.rotate(loc[0], loc[i]);
-                            ydraw.drawWPolyline(polyline);
-                            break;
-                        case EntityId.Polygon:
-                            PolygonEntity polygonEnt = (PolygonEntity)ent;
-                            PolygonD polygon = polygonEnt.mPolygon.toCopy();
-                            polygon.rotate(loc[0], loc[i]);
-                            ydraw.drawWPolygon(polygon);
-                            break;
-                        case EntityId.Arc:
-                            ArcEntity arcEnt = (ArcEntity)ent;
-                            ArcD arc = arcEnt.mArc.toCopy();
-                            arc.rotate(loc[0], loc[i]);
-                            ydraw.drawWArc(arc, false);
-                            break;
-                        case EntityId.Text:
-                            TextEntity textEnt = (TextEntity)ent;
-                            TextD text = textEnt.mText.toCopy();
-                            text.rotate(loc[0], loc[i]);
-                            ydraw.drawWText(text);
-                            break;
-                        case EntityId.Parts:
-                            PartsEntity partsEnt = (PartsEntity)ent;
-                            PartsD parts = partsEnt.mParts.toCopy();
-                            parts.rotate(loc[0], loc[i]);
-                            drawWParts(parts);
-                            break;
-                    }
+                    Entity ent = entityData.mEntityList[entNo.Item1].toCopy();
+                    ent.mColor = mDraggingColor;
+                    ent.rotate(loc[0], loc[i]);
+                    ent.draw(ydraw);
                 }
             }
         }
@@ -526,55 +418,10 @@ namespace CadApp
             ydraw.mBrush = mDraggingColor;
 
             foreach ((int, PointD) entNo in pickList) {
-                Entity ent = entityData.mEntityList[entNo.Item1];
-                //ydraw.mBrush = ent.mColor;
-                ydraw.mThickness = ent.mThickness;
-                switch (ent.mEntityId) {
-                    case EntityId.Point:
-                        PointEntity pointEnt = (PointEntity)ent;
-                        PointD point = pointEnt.mPoint.toCopy();
-                        point.mirror(loc[0], loc[1]);
-                        ydraw.mPointType = pointEnt.mType;
-                        ydraw.mPointSize = pointEnt.mThickness;
-                        ydraw.drawWPoint(point);
-                        break;
-                    case EntityId.Line:
-                        LineEntity lineEnt = (LineEntity)ent;
-                        LineD line = lineEnt.mLine.toCopy();
-                        line.mirror(loc[0], loc[1]); ;
-                        ydraw.drawWLine(line);
-                        break;
-                    case EntityId.Polyline:
-                        PolylineEntity polylineEnt = (PolylineEntity)ent;
-                        PolylineD polyline = polylineEnt.mPolyline.toCopy();
-                        polyline.mirror(loc[0], loc[1]);
-                        ydraw.drawWPolyline(polyline);
-                        break;
-                    case EntityId.Polygon:
-                        PolygonEntity polygonEnt = (PolygonEntity)ent;
-                        PolygonD polygon = polygonEnt.mPolygon.toCopy();
-                        polygon.mirror(loc[0], loc[1]);
-                        ydraw.drawWPolygon(polygon);
-                        break;
-                    case EntityId.Arc:
-                        ArcEntity arcEnt = (ArcEntity)ent;
-                        ArcD arc = arcEnt.mArc.toCopy();
-                        arc.mirror(loc[0], loc[1]);
-                        ydraw.drawWArc(arc, false);
-                        break;
-                    case EntityId.Text:
-                        TextEntity textEnt = (TextEntity)ent;
-                        TextD text = textEnt.mText.toCopy();
-                        text.mirror(loc[0], loc[1]);
-                        ydraw.drawWText(text);
-                        break;
-                    case EntityId.Parts:
-                        PartsEntity partsEnt = (PartsEntity)ent;
-                        PartsD parts = partsEnt.mParts.toCopy();
-                        parts.mirror(loc[0], loc[1]);
-                        drawWParts(parts);
-                        break;
-                }
+                Entity ent = entityData.mEntityList[entNo.Item1].toCopy();
+                ent.mColor = mDraggingColor;
+                ent.mirror(loc[0], loc[1]);
+                ent.draw(ydraw);
             }
         }
 
@@ -591,54 +438,10 @@ namespace CadApp
             ydraw.mBrush = mDraggingColor;
 
             foreach ((int, PointD) entNo in pickList) {
-                Entity ent = entityData.mEntityList[entNo.Item1];
-                ydraw.mThickness = ent.mThickness;
-                switch (ent.mEntityId) {
-                    case EntityId.Point:
-                        PointEntity pointEnt = (PointEntity)ent;
-                        PointD point = pointEnt.mPoint.toCopy();
-                        point.translate(loc[0], loc[1]);
-                        ydraw.mPointType = pointEnt.mType;
-                        ydraw.mPointSize = pointEnt.mThickness;
-                        ydraw.drawWPoint(point);
-                        break;
-                    case EntityId.Line:
-                        LineEntity lineEnt = (LineEntity)ent;
-                        LineD line = lineEnt.mLine.toCopy();
-                        line.offset(loc[0], loc[1]);
-                        ydraw.drawWLine(line);
-                        break;
-                    case EntityId.Polyline:
-                        PolylineEntity polylineEnt = (PolylineEntity)ent;
-                        PolylineD polyline = polylineEnt.mPolyline.toCopy();
-                        polyline.offset(loc[0], loc[1]);
-                        ydraw.drawWPolyline(polyline);
-                        break;
-                    case EntityId.Polygon:
-                        PolygonEntity polygonEnt = (PolygonEntity)ent;
-                        PolygonD polygon = polygonEnt.mPolygon.toCopy();
-                        polygon.offset(loc[0], loc[1]);
-                        ydraw.drawWPolygon(polygon);
-                        break;
-                    case EntityId.Arc:
-                        ArcEntity arcEnt = (ArcEntity)ent;
-                        ArcD arc = arcEnt.mArc.toCopy();
-                        arc.offset(loc[0], loc[1]);
-                        ydraw.drawWArc(arc, false);
-                        break;
-                    case EntityId.Text:
-                        //TextEntity textEnt = (TextEntity)ent;
-                        //TextD text = textEnt.mText.toCopy();
-                        //text.mirror(loc[0], loc[1]);
-                        //ydraw.drawWText(text);
-                        break;
-                    case EntityId.Parts:
-                        //PartsEntity partsEnt = (PartsEntity)ent;
-                        //PartsD parts = partsEnt.mParts.toCopy();
-                        //parts.mirror(loc[0], loc[1]);
-                        //drawWParts(parts);
-                        break;
-                }
+                Entity ent = entityData.mEntityList[entNo.Item1].toCopy();
+                ent.mColor = mDraggingColor;
+                ent.offset(loc[0], loc[1]);
+                ent.draw(ydraw);
             }
         }
 
@@ -655,37 +458,10 @@ namespace CadApp
             ydraw.mBrush = mDraggingColor;
 
             foreach ((int, PointD) entNo in pickList) {
-                Entity ent = entityData.mEntityList[entNo.Item1];
-                //ydraw.mBrush = ent.mColor;
-                ydraw.mThickness = ent.mThickness;
-                switch (ent.mEntityId) {
-                    case EntityId.Point:
-                        break;
-                    case EntityId.Line:
-                        LineEntity lineEnt = (LineEntity)ent;
-                        LineD line = lineEnt.mLine.toCopy();
-                        line.trim(loc[0], loc[1]); ;
-                        ydraw.drawWLine(line);
-                        break;
-                    case EntityId.Polyline:
-                        PolylineEntity polylineEnt = (PolylineEntity)ent;
-                        PolylineD polyline = polylineEnt.mPolyline.toCopy();
-                        polyline.trim(loc[0], loc[1]); ;
-                        ydraw.drawWPolyline(polyline);
-                        break;
-                    case EntityId.Polygon:
-                        break;
-                    case EntityId.Arc:
-                        ArcEntity arcEnt = (ArcEntity)ent;
-                        ArcD arc = arcEnt.mArc.toCopy();
-                        arc.trim(loc[0], loc[1]);
-                        ydraw.drawWArc(arc, false);
-                        break;
-                    case EntityId.Text:
-                        break;
-                    case EntityId.Parts:
-                        break;
-                }
+                Entity ent = entityData.mEntityList[entNo.Item1].toCopy();
+                ent.mColor = mDraggingColor;
+                ent.trim(loc[0], loc[1]);
+                ent.draw(ydraw);
             }
         }
 
@@ -703,54 +479,10 @@ namespace CadApp
             PointD vec = loc[0].vector(loc[loc.Count - 1]);
 
             foreach ((int no, PointD pos) pickEnt in pickList) {
-                Entity ent = entityData.mEntityList[pickEnt.Item1];
-                ydraw.mThickness = ent.mThickness;
-                switch (ent.mEntityId) {
-                    case EntityId.Point:
-                        PointEntity pointEnt = (PointEntity)ent;
-                        PointD point = pointEnt.mPoint.toCopy();
-                        point.offset(vec);
-                        ydraw.mPointType = pointEnt.mType;
-                        ydraw.mPointSize = pointEnt.mThickness;
-                        ydraw.drawWPoint(point);
-                        break;
-                    case EntityId.Line:
-                        LineEntity lineEnt = (LineEntity)ent;
-                        LineD line = lineEnt.mLine.toCopy();
-                        line.stretch(vec, pickEnt.pos);
-                        ydraw.drawWLine(line);
-                        break;
-                    case EntityId.Polyline:
-                        PolylineEntity polylineEnt = (PolylineEntity)ent;
-                        PolylineD polyline = polylineEnt.mPolyline.toCopy();
-                        polyline.stretch(vec, pickEnt.pos);
-                        ydraw.drawWPolyline(polyline);
-                        break;
-                    case EntityId.Polygon:
-                        PolygonEntity polygonEnt = (PolygonEntity)ent;
-                        PolygonD polygon = polygonEnt.mPolygon.toCopy();
-                        polygon.stretch(vec, pickEnt.pos);
-                        ydraw.drawWPolygon(polygon);
-                        break;
-                    case EntityId.Arc:
-                        ArcEntity arcEnt = (ArcEntity)ent;
-                        ArcD arc = arcEnt.mArc.toCopy();
-                        arc.stretch(vec, pickEnt.pos);
-                        ydraw.drawWArc(arc, false);
-                        break;
-                    case EntityId.Text:
-                        //TextEntity textEnt = (TextEntity)ent;
-                        //TextD text = textEnt.mText.toCopy();
-                        //text.rotate(loc[0], loc[1]);
-                        //ydraw.drawWText(text);
-                        break;
-                    case EntityId.Parts:
-                        PartsEntity partsEnt = (PartsEntity)ent;
-                        PartsD parts = partsEnt.mParts.toCopy();
-                        parts.stretch(vec, pickEnt.pos);
-                        drawWParts(parts);
-                        break;
-                }
+                Entity ent = entityData.mEntityList[pickEnt.no].toCopy();
+                ent.mColor = mDraggingColor;
+                ent.stretch(vec, pickEnt.pos);
+                ent.draw(ydraw);
             }
         }
 
@@ -781,16 +513,16 @@ namespace CadApp
         /// <param name="entNo"></param>
         public void pickDisp(EntityData entityData, List<(int, PointD)> pickList)
         {
-            if (pickList.Count == 0)
-                return;
             mMainWindow.imScreen.Source = mBitmapSource;
             mCanvas.Children.Clear();
             mCanvas.Children.Add(mMainWindow.imScreen);
-            foreach ((int, PointD) entNo in pickList) {
-                Entity ent = entityData.mEntityList[entNo.Item1];
-                ent.mPick = true;
-                ent.draw(ydraw);
-                ent.mPick = false;
+            foreach ((int no, PointD pos) entNo in pickList) {
+                if (entNo.no < entityData.mEntityList.Count) {
+                    Entity ent = entityData.mEntityList[entNo.no];
+                    ent.mPick = true;
+                    ent.draw(ydraw);
+                    ent.mPick = false;
+                }
             }
         }
 

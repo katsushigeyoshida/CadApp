@@ -45,7 +45,7 @@ namespace CadApp
                 if (!Directory.Exists(categoryFolder))
                     Directory.CreateDirectory(categoryFolder);
             } catch (Exception e) {
-                MessageBox.Show(e.Message);
+                ylib.messageBox(mMainWindow, e.Message);
             }
         }
 
@@ -86,7 +86,7 @@ namespace CadApp
             if (dlg.ShowDialog() == true) {
                 string genrePath = getGenrePath(dlg.mEditText.ToString());
                 if (Directory.Exists(genrePath)) {
-                    MessageBox.Show("すでにジャンルフォルダが存在しています。");
+                    ylib.messageBox(mMainWindow, "すでにジャンルフォルダが存在しています。");
                 } else {
                     Directory.CreateDirectory(genrePath);
                     return dlg.mEditText.ToString();
@@ -111,7 +111,7 @@ namespace CadApp
             if (dlg.ShowDialog() == true) {
                 string newGenrePath = getGenrePath(dlg.mEditText.ToString());
                 if (Directory.Exists(newGenrePath)) {
-                    MessageBox.Show("すでにジャンルフォルダが存在しています。");
+                    ylib.messageBox(mMainWindow, "すでにジャンルフォルダが存在しています。");
                 } else {
                     Directory.Move(oldGenrePath, newGenrePath);
                     return dlg.mEditText.ToString();
@@ -128,7 +128,7 @@ namespace CadApp
         public bool removeGenre(string genre)
         {
             string genrePath = getGenrePath(genre);
-            if (MessageBox.Show(genre + " を削除します", "項目削除", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
+            if (ylib.messageBox(mMainWindow, genre + " を削除します", "項目削除", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
                 Directory.Delete(genrePath);
                 return true;
             }
@@ -148,7 +148,7 @@ namespace CadApp
             if (dlg.ShowDialog() == true) {
                 string categoryPath = getCategoryPath(dlg.mEditText.ToString());
                 if (Directory.Exists(categoryPath)) {
-                    MessageBox.Show("すでに分類フォルダが存在しています。");
+                    ylib.messageBox(mMainWindow, "すでに分類フォルダが存在しています。");
                 } else {
                     Directory.CreateDirectory(categoryPath);
                     return dlg.mEditText.ToString();
@@ -173,7 +173,7 @@ namespace CadApp
             if (dlg.ShowDialog() == true) {
                 string newCategoryPath = getCategoryPath(dlg.mEditText.ToString());
                 if (Directory.Exists(newCategoryPath)) {
-                    MessageBox.Show("すでに分類フォルダが存在しています。");
+                    ylib.messageBox(mMainWindow, "すでに分類フォルダが存在しています。");
                 } else {
                     Directory.Move(oldCategoryPath, newCategoryPath);
                     return dlg.mEditText.ToString();
@@ -190,7 +190,7 @@ namespace CadApp
         public bool removeCategory(string category)
         {
             string categoryPath = getCategoryPath(category);
-            if (MessageBox.Show(category + " を削除します", "項目削除", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
+            if (ylib.messageBox(mMainWindow, category + " を削除します", "項目削除", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
                 Directory.Delete(categoryPath);
                 return true;
             }
@@ -241,7 +241,7 @@ namespace CadApp
             if (dlg.ShowDialog() == true) {
                 string filePath = getItemFilePath(dlg.mEditText.ToString());
                 if (File.Exists(filePath)) {
-                    MessageBox.Show("すでにファイルが存在しています。");
+                    ylib.messageBox(mMainWindow, "すでにファイルが存在しています。");
                 } else {
                     return dlg.mEditText.ToString();
                 }
@@ -265,7 +265,7 @@ namespace CadApp
             if (dlg.ShowDialog() == true) {
                 string newDataFilePath = getItemFilePath(dlg.mEditText.ToString());
                 if (File.Exists(newDataFilePath)) {
-                    MessageBox.Show("すでにファイルが存在しています。");
+                    ylib.messageBox(mMainWindow, "すでにファイルが存在しています。");
                 } else {
                     File.Move(oldDataFilePath, newDataFilePath);
                     return dlg.mEditText.ToString();
@@ -282,7 +282,7 @@ namespace CadApp
         public bool removeItem(string itemName)
         {
             string filePath = getItemFilePath(itemName);
-            if (MessageBox.Show(itemName + " を削除します", "項目削除", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
+            if (ylib.messageBox(mMainWindow, itemName + " を削除します", "項目削除", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
                 File.Delete(filePath);
                 return true;
             }
@@ -348,7 +348,8 @@ namespace CadApp
                     categoryList.Sort();
                 categoryList = categoryList.ConvertAll(p => ylib.getLastFolder(p, 1));
             } catch (Exception e) {
-                MessageBox.Show(e.Message);
+                //MessageBox.Show(e.Message);
+                ylib.messageBox(mMainWindow, e.Message);
             }
             return categoryList;
         }
@@ -366,7 +367,8 @@ namespace CadApp
                     fileNameList.Add(Path.GetFileNameWithoutExtension(files[i]));
                 }
             } catch (Exception e) {
-                MessageBox.Show(e.Message);
+                //MessageBox.Show(e.Message);
+                ylib.messageBox(mMainWindow, e.Message);
             }
 
             return fileNameList;

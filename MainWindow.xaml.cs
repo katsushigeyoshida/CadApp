@@ -29,9 +29,9 @@ namespace CadApp
             0, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000
         };
         private double[] mTextSizeMenu = {
-            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 24, 28, 32,
-            36, 40, 48, 56, 64, 96, 128, 196, 256, 384, 512, 768, 1024, 1536,
-            2048, 3072, 4096, 6144, 8192, 12288, 16384
+            0.1, 0.2, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16,
+            18, 20, 24, 28, 32, 36, 40, 48, 56, 64, 96, 128, 196, 256, 384,
+            512, 768, 1024, 1536, 2048, 3072, 4096, 6144, 8192, 12288, 16384
         };
         private double[] mEntSizeMenu = {
             1, 2, 3, 4, 5, 6, 7, 8, 9, 10
@@ -109,7 +109,7 @@ namespace CadApp
             cbTextHorizontal.ItemsSource = mHorizontalAlignmentMenu;
             cbTextVertical.ItemsSource   = mVerticalAlignmentMenu;
 
-            setSystemProperty();
+            setZumenProperty();
 
             mFileData.setBaseDataFolder();
 
@@ -310,6 +310,10 @@ namespace CadApp
                         if (mCommandOpe.entityCommand(mOperation, mCommandOpe.mLocPos, mCommandOpe.mPickEnt))
                             commandClear();
                         return;
+                    } else {
+                        PointD wp = autoLoc(pickPos, picks);
+                        if (wp != null)
+                            mCommandOpe.mLocPos.Add(wp);
                     }
                 } else {
                     //  要素上でのロケイト処理
@@ -328,7 +332,7 @@ namespace CadApp
                     int pickNo = pickSelect(picks);
                     if (0 <= pickNo) {
                         //  ピック要素の登録
-                        mCommandOpe.addPick((pickNo, pickPos), onControlKey());
+                        mCommandOpe.addPick((pickNo, pickPos.toCopy()), onControlKey());
                         mDataDrawing.pickDisp(mEntityData, mCommandOpe.mPickEnt);
                     }
                 }
@@ -556,7 +560,7 @@ namespace CadApp
                 if (mCommandOpe.openFile(mFileData.getItemFilePath(lbItemList.Items[index].ToString()))) {
                     mFileData.mDataName = lbItemList.Items[index].ToString();
                     Title = lbItemList.Items[index].ToString();
-                    setSystemProperty();
+                    setZumenProperty();
                     commandClear();
                     dispMode();
                     dispFit();
@@ -581,6 +585,7 @@ namespace CadApp
                 //  図面(Item)の追加
                 itemName = mFileData.addItem();
                 if (0 < itemName.Length) {
+                    setSystemProperty();
                     mCommandOpe.newData(mFileData.getItemFilePath(itemName));
                     lbItemList.ItemsSource = mFileData.getItemFileList();
                     lbItemList.SelectedIndex = lbItemList.Items.IndexOf(itemName);
@@ -622,7 +627,7 @@ namespace CadApp
             } else if (menuItem.Name.CompareTo("lbItemPropertyMenu") == 0 && itemName != null) {
                 //  図面のプロパティ
                 string buf = mFileData.getItemFileProperty(itemName);
-                MessageBox.Show(buf, "ファイルプロパティ");
+                ylib.messageBox(this, buf, "ファイルプロパティ");
             }
         }
 
@@ -1164,6 +1169,10 @@ namespace CadApp
                     ArcEntity arc = (ArcEntity)ent;
                     pos = arc.mArc.nearPoints(p, Math.PI * 2 <= arc.mArc.mOpenAngle ? 8 : 4);
                     break;
+                case EntityId.Ellipse:
+                    EllipseEntity ellipse = (EllipseEntity)ent;
+                    pos = ellipse.mEllipse.nearPoints(p, Math.PI * 2 <= ellipse.mEllipse.mOpenAngle ? 8 : 4);
+                    break;
                 case EntityId.Text:
                     TextEntity text = (TextEntity)ent;
                     pos = text.mText.nearPeakPoint(p);
@@ -1217,8 +1226,11 @@ namespace CadApp
             locMenu.AddRange(mLocSelectMenu);
             Entity ent = mEntityData.mEntityList[picks[0]];
             if (picks.Count == 1) {
-                if (ent.mEntityId == EntityId.Arc)
+                if (ent.mEntityId == EntityId.Arc || ent.mEntityId == EntityId.Ellipse) {
                     locMenu.Add("中心点");
+                    locMenu.Add("頂点");
+                    locMenu.Add("接点");
+                }
             } else if (1 < picks.Count) {
                 locMenu.Add("交点");
             }
@@ -1245,6 +1257,10 @@ namespace CadApp
         private PointD getLocSelectPos(string selectMenu, PointD pos, List<int> picks)
         {
             Entity ent = mEntityData.mEntityList[picks[0]];
+            PointD lastLoc = null;
+            if (0 < mCommandOpe.mLocPos.Count)
+                lastLoc = mCommandOpe.mLocPos[mCommandOpe.mLocPos.Count - 1];
+            List<PointD> plist = new List<PointD>();
             switch (selectMenu) {
                 case "端点・中間点": pos = ent.dividePos(2, pos); break;
                 case "3分割点": pos = ent.dividePos(3, pos); break;
@@ -1254,8 +1270,29 @@ namespace CadApp
                 case "8分割点": pos = ent.dividePos(8, pos); break;
                 case "16分割点": pos = ent.dividePos(16, pos); break;
                 case "垂点":
-                    PointD lastLoc = mCommandOpe.mLocPos[mCommandOpe.mLocPos.Count - 1];
                     pos = ent.onPoint(lastLoc);
+                    break;
+                case "接点":
+                    if (ent.mEntityId == EntityId.Arc) {
+                        ArcEntity arcEnt = (ArcEntity)ent;
+                        plist = arcEnt.mArc.tangentPoint(lastLoc);
+                    } else if (ent.mEntityId == EntityId.Ellipse) {
+                        EllipseEntity ellipseEnt = (EllipseEntity)ent;
+                        plist = ellipseEnt.mEllipse.tangentPoint(lastLoc);
+                    }
+                    if (0 < plist.Count)
+                        pos = plist.MinBy(p => p.length(pos));  //  最短位置
+                    break;
+                case "頂点":
+                    if (ent.mEntityId == EntityId.Arc) {
+                        ArcEntity arcEnt = (ArcEntity)ent;
+                        plist = arcEnt.mArc.toPeakList();
+                    } else if (ent.mEntityId == EntityId.Ellipse) {
+                        EllipseEntity ellipseEnt = (EllipseEntity)ent;
+                        plist = ellipseEnt.mEllipse.toPeakList();
+                    }
+                    if (0 < plist.Count)
+                        pos = plist.MinBy(p => p.length(pos));  //  最短位置
                     break;
                 case "端点距離":
                     pos = getEndPoint(selectMenu, ent, pos);
@@ -1264,12 +1301,15 @@ namespace CadApp
                     if (ent.mEntityId == EntityId.Arc) {
                         ArcEntity arcEnt = (ArcEntity)ent;
                         pos = arcEnt.mArc.mCp;
+                    } else if (ent.mEntityId == EntityId.Ellipse) {
+                        EllipseEntity ellipseEnt = (EllipseEntity)ent;
+                        pos = ellipseEnt.mEllipse.mCp;
                     }
                     break;
                 case "交点":
                     if (2 <= picks.Count) {
-                        List<PointD> plist = mEntityData.intersection(picks[0], picks[1]);
-                        pos = plist.MinBy(p => p.length(pos));
+                        plist = mEntityData.intersection(picks[0], picks[1]);
+                        pos = plist.MinBy(p => p.length(pos));  //  最短位置
                     }
                     break;
             }
@@ -1332,14 +1372,14 @@ namespace CadApp
                 List<string> locMenu = new List<string>();
                 locMenu.AddRange(mLocMenu);
                 if (mOperation == OPERATION.translate || mOperation == OPERATION.copyTranslate) {
-                    locMenu.Add("平行距離");
+                    locMenu.Add("平行距離,繰返し数");
                     locMenu.Add("スライド距離");
                 } else if (mOperation == OPERATION.offset || mOperation == OPERATION.copyOffset) {
-                    locMenu.Add("平行距離");
+                    locMenu.Add("平行距離,繰返し数");
                 } else if (mOperation == OPERATION.createCircle || mOperation == OPERATION.createTangentCircle) {
                     locMenu.Add("半径");
                 } else if (mOperation == OPERATION.rotate || mOperation == OPERATION.copyRotate) {
-                    locMenu.Add("回転角");
+                    locMenu.Add("回転角,繰返し数");
                 }
                 MenuDialog dlg = new MenuDialog();
                 dlg.Title = "ロケイトメニュー";
@@ -1366,10 +1406,14 @@ namespace CadApp
             if (dlg.ShowDialog() == true) {
                 string[] valstr;
                 double val;
+                int repeat = 1;
                 PointD wp = new PointD();
+                PointD p1, p2;
                 LineD line;
                 Entity entity;
-                PointD lastLoc = mCommandOpe.mLocPos[mCommandOpe.mLocPos.Count - 1];
+                PointD lastLoc = new PointD(0, 0);
+                if (0 < mCommandOpe.mLocPos.Count)
+                    lastLoc = mCommandOpe.mLocPos[mCommandOpe.mLocPos.Count - 1];
                 switch (title) {
                     case "座標入力":
                         //  xxx,yyy で入力
@@ -1394,18 +1438,41 @@ namespace CadApp
                                 commandClear();
                         }
                         break;
-                    case "平行距離":
+                    case "平行距離,繰返し数":
                         //  移動またはコピー移動の時のみ
                         if (0 == mCommandOpe.mLocPos.Count)     //  方向を決めるロケイトが必要
                             break;
                         valstr = dlg.mEditText.Split(',');
                         val = ycalc.expression(valstr[0]);
+                        if (1 < valstr.Length)
+                            repeat = (int)ycalc.expression(valstr[1]);
                         entity = mEntityData.mEntityList[mCommandOpe.mPickEnt[mCommandOpe.mPickEnt.Count - 1].no];
-                        //line = mEntityData.getLine(entity, mCommandOpe.mPickEnt[mCommandOpe.mPickEnt.Count - 1].pos);
-                        line = entity.getLine(mCommandOpe.mPickEnt[mCommandOpe.mPickEnt.Count - 1].pos);
-                        if (!line.isNaN()) {
-                            wp = line.offset(lastLoc, val);
-                            mCommandOpe.mLocPos.Add(wp);
+                        if (entity.mEntityId == EntityId.Arc) {
+                            ArcEntity arcEnt = (ArcEntity)entity;
+                            LineD la = new LineD(arcEnt.mArc.mCp, lastLoc);
+                            for (int i = 1; i < repeat + 1; i++) {
+                                la.setLength(la.length() + val);
+                                wp = la.pe.toCopy();
+                                mCommandOpe.mLocPos.Add(wp);
+                            }
+                        } else if (entity.mEntityId == EntityId.Ellipse) {
+                            EllipseEntity ellipseEnt = (EllipseEntity)entity;
+                            LineD la = new LineD(ellipseEnt.mEllipse.mCp, lastLoc);
+                            for (int i = 1; i < repeat + 1; i++) {
+                                la.setLength(la.length() + val);
+                                wp = la.pe.toCopy();
+                                mCommandOpe.mLocPos.Add(wp);
+                            }
+                        } else {
+                            line = entity.getLine(mCommandOpe.mPickEnt[mCommandOpe.mPickEnt.Count - 1].pos);
+                            if (!line.isNaN()) {
+                                for (int i = 1; i < repeat + 1; i++) {
+                                    wp = line.offset(lastLoc, val * i);
+                                    mCommandOpe.mLocPos.Add(wp);
+                                }
+                            }
+                        }
+                        if (0 < mCommandOpe.mLocPos.Count) {
                             if (mCommandOpe.entityCommand(mOperation, mCommandOpe.mLocPos, mCommandOpe.mPickEnt))
                                 commandClear();
                         }
@@ -1417,7 +1484,6 @@ namespace CadApp
                         valstr = dlg.mEditText.Split(',');
                         val = ycalc.expression(valstr[0]);
                         entity = mEntityData.mEntityList[mCommandOpe.mPickEnt[mCommandOpe.mPickEnt.Count - 1].no];
-                        //line = mEntityData.getLine(entity, mCommandOpe.mPickEnt[mCommandOpe.mPickEnt.Count - 1].pos);
                         line = entity.getLine(mCommandOpe.mPickEnt[mCommandOpe.mPickEnt.Count - 1].pos);
                         if (!line.isNaN()) {
                             LineD directLine = new LineD(line.centerPoint(), line.intersection(lastLoc));
@@ -1433,15 +1499,12 @@ namespace CadApp
                         if (mOperation == OPERATION.createCircle) {
                             //  円の作成
                             wp = lastLoc + new PointD(val, 0);
-                        } else if (mOperation == OPERATION.createTangentCircle) {
+                        } else if (mOperation == OPERATION.createTangentCircle && 2 <= mCommandOpe.mPickEnt.Count) {
                             //  接円の作成
-                            entity = mEntityData.mEntityList[mCommandOpe.mPickEnt[mCommandOpe.mPickEnt.Count - 2].no];
-                            //line = mEntityData.getLine(entity, mCommandOpe.mPickEnt[mCommandOpe.mPickEnt.Count - 2].pos);
-                            line = entity.getLine(mCommandOpe.mPickEnt[mCommandOpe.mPickEnt.Count - 2].pos);
-                            if (!line.isNaN()) {
-                                line.offset(val, mCommandOpe.mPickEnt[mCommandOpe.mPickEnt.Count - 1].pos);
-                                wp = line.intersection(mCommandOpe.mPickEnt[mCommandOpe.mPickEnt.Count - 1].pos);
-                            }
+                            mCommandOpe.mLocPos.Add(mDataDrawing.cnvScreen2World(new PointD(mPrevPosition)));
+                            ArcD arc = mEntityData.tangentCircle(mCommandOpe.mPickEnt, mCommandOpe.mLocPos, val);
+                            wp = arc.mCp;
+                            mCommandOpe.mLocPos.RemoveAt(mCommandOpe.mLocPos.Count - 1);
                         } else {
                             break;
                         }
@@ -1451,16 +1514,17 @@ namespace CadApp
                                 commandClear();
                         }
                         break;
-                    case "回転角":
+                    case "回転角,繰返し数":
                         valstr = dlg.mEditText.Split(',');
                         val = ycalc.expression(valstr[0]);
+                        if (1 < valstr.Length)
+                            repeat = (int)ycalc.expression(valstr[1]);
                         PointD vec = new PointD(1, 0);
-                        vec.rotate(ylib.D2R(val));
-                        if (0 < mCommandOpe.mLocPos.Count)
+                        for (int i = 1; i < repeat + 1; i++) {
+                            vec.rotate(ylib.D2R(val));
                             wp = lastLoc + vec;
-                        else
-                            wp = vec;
-                        mCommandOpe.mLocPos.Add(wp);
+                            mCommandOpe.mLocPos.Add(wp);
+                        }
                         if (mCommandOpe.entityCommand(mOperation, mCommandOpe.mLocPos, mCommandOpe.mPickEnt))
                             commandClear();
                         break;
@@ -1528,7 +1592,7 @@ namespace CadApp
             //  CSVファイルに保存
             string path = mFileData.getItemFilePath(Path.GetFileNameWithoutExtension(filePath));
             if (File.Exists(path)) {
-                if (MessageBox.Show("ファイルが既に存在します。上書きしてもよいですか?", "確認", MessageBoxButton.OKCancel) != MessageBoxResult.OK)
+                if (ylib.messageBox(this,"ファイルが既に存在します。上書きしてもよいですか?", "確認", MessageBoxButton.OKCancel) != MessageBoxResult.OK)
                     return "";
             }
             entityData.saveData(path);
@@ -1651,9 +1715,19 @@ namespace CadApp
         }
 
         /// <summary>
-        /// コントロールバーのシステム属性を設定する
+        /// システム値を表示図面に反映する
         /// </summary>
         public void setSystemProperty()
+        {
+            loadDispArea();
+            loadDataProperty();
+            setZumenProperty();
+        }
+
+        /// <summary>
+        /// コントロールバーのシステム属性を設定する
+        /// </summary>
+        public void setZumenProperty()
         {
             cbColor.SelectedIndex     = ylib.mColorList.FindIndex(p => p.brush == mCommandOpe.mPara.mColor);
             cbGridSize.SelectedIndex  = mGridSizeMenu.FindIndex(Math.Abs(mCommandOpe.mPara.mGridSize));

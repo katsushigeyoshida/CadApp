@@ -17,7 +17,9 @@ namespace CadApp
             "実線", "破線", "一点鎖線", "二点鎖線"
         };
         private double[] mTextSizeMenu = {
-            1, 2, 4, 6, 8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 56, 64
+            0.1, 0.2, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16,
+            18, 20, 24, 28, 32, 36, 40, 48, 56, 64, 96, 128, 196, 256, 384,
+            512, 768, 1024, 1536, 2048, 3072, 4096, 6144, 8192, 12288, 16384
         };
         private double[] mTextRotateMenu = {
             0, 30, 45, 60, 90, 120, 135, 150, 180, 210, 225, 240, 270, 300, 315, 330
@@ -64,9 +66,9 @@ namespace CadApp
             cbVertical.ItemsSource = mVerticalAlignmentMenu;
 
             cbType.SelectedIndex = mLineType;
-            cbThickness.SelectedIndex = mTextSizeMenu.FindIndex(p => p >= mThickness);
+            cbThickness.SelectedIndex = mEntSizeMenu.FindIndex(p => p >= mThickness);
             tbTextSize.Text = mTextSize.ToString();
-            tbTextRotate.Text = ylib.R2D(mTextRotate).ToString();
+            tbTextRotate.Text = ylib.double2StrZeroSup(ylib.R2D(mTextRotate), "F8");
             tbLinePitchRate.Text = mLinePitchRate.ToString();
             cbHorizontal.SelectedIndex = mHa == HorizontalAlignment.Left ? 0 :
                                          mHa == HorizontalAlignment.Center ? 1 : 2;
@@ -114,6 +116,10 @@ namespace CadApp
                 lbSizeTitle.IsEnabled = true;
                 cbThickness.IsEnabled = true;
                 cbThickness.SelectedIndex = mEntSizeMenu.FindIndex(p => p >= mThickness);
+                lbRotateTitle.IsEnabled = true;
+                tbTextRotate.IsEnabled = true;
+                lbLinePitchRateTitle.IsEnabled = true;
+                tbLinePitchRate.IsEnabled = true;
                 lbArrowSizeTitle.IsEnabled  = true;
                 tbArrowSize.IsEnabled       = true;
                 lbArrowAngleTitle.IsEnabled = true;

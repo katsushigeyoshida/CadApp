@@ -52,7 +52,7 @@ namespace CadApp
             "垂点", "端点距離"
         };
         private List<string> mSystemSetMenu = new List<string>() {
-            "データフォルダ"
+             "システム設定", "バックアップ", "バックアップ管理"
         };
         private Point mPrevPosition;                        //  マウスの前回位置(画面スクロール)
         private bool mMouseLeftButtonDown = false;          //  マウス左ボタン状態
@@ -75,6 +75,7 @@ namespace CadApp
 
         private FileData mFileData;
         private DataDrawing mDataDrawing;
+
         private YCalc ycalc = new YCalc();
         private YLib ylib = new YLib();
 
@@ -163,7 +164,9 @@ namespace CadApp
             }
             mWindowState = WindowState;
 
-            mDataDrawing.initDraw(mCommandOpe.mDispArea);
+            Box dispArea = mDataDrawing.getWorldArea();
+            dispArea = dispArea == null ? mCommandOpe.mDispArea : dispArea;
+            mDataDrawing.initDraw(dispArea);
             disp(mEntityData);
         }
 
@@ -199,6 +202,8 @@ namespace CadApp
             }
             //  図面データ保存フォルダ
             string baseDataFolder = Properties.Settings.Default.BaseDataFolder;
+            mFileData.mBackupFolder = Properties.Settings.Default.BackupFolder;
+            mFileData.mDiffTool = Properties.Settings.Default.DiffTool;
             //  図面分類
             mFileData.mBaseDataFolder = baseDataFolder == "" ? Path.GetFullPath("Zumen") : baseDataFolder;
             mFileData.mGenreName = Properties.Settings.Default.GenreName;
@@ -218,6 +223,8 @@ namespace CadApp
         private void WindowFormSave()
         {
             //  図面分類
+            Properties.Settings.Default.DiffTool = mFileData.mDiffTool;
+            Properties.Settings.Default.BackupFolder = mFileData.mBackupFolder;
             Properties.Settings.Default.BaseDataFolder = mFileData.mBaseDataFolder;
             Properties.Settings.Default.GenreName = mFileData.mGenreName;
             Properties.Settings.Default.CategoryName = mFileData.mCategoryName;
@@ -900,8 +907,7 @@ namespace CadApp
         /// <param name="e"></param>
         private void btSetting_Click(object sender, RoutedEventArgs e)
         {
-            //systemMenu();
-            systemSettingdlg();
+            systemMenu();
         }
 
         /// <summary>
@@ -1592,7 +1598,7 @@ namespace CadApp
             //  CSVファイルに保存
             string path = mFileData.getItemFilePath(Path.GetFileNameWithoutExtension(filePath));
             if (File.Exists(path)) {
-                if (ylib.messageBox(this,"ファイルが既に存在します。上書きしてもよいですか?", "確認", MessageBoxButton.OKCancel) != MessageBoxResult.OK)
+                if (ylib.messageBox(this,"ファイルが既に存在します。上書きしてもよいですか?", "", "確認", MessageBoxButton.OKCancel) != MessageBoxResult.OK)
                     return "";
             }
             entityData.saveData(path);
@@ -1680,6 +1686,8 @@ namespace CadApp
             dlg.mGridSize = Properties.Settings.Default.GridSize;
             //  図面保存基準フォルダ
             dlg.mDataFolder = mFileData.mBaseDataFolder;
+            dlg.mBackupFolder = mFileData.mBackupFolder;
+            dlg.mDiffTool = mFileData.mDiffTool;
             if (dlg.ShowDialog() == true) {
                 //  表示エリア
                 Properties.Settings.Default.WorldWindowLeft = dlg.mWorldWindow.Left;
@@ -1711,6 +1719,35 @@ namespace CadApp
                             lbItemList.SelectedIndex = 0;
                     }
                 }
+                mFileData.mBackupFolder = dlg.mBackupFolder;
+                if (!Directory.Exists(mFileData.mBackupFolder)) {
+                    Directory.CreateDirectory(mFileData.mBackupFolder);
+                }
+                mFileData.mDiffTool = dlg.mDiffTool;
+            }
+        }
+
+        /// <summary>
+        /// システム設定
+        /// </summary>
+        private void systemMenu()
+        {
+            MenuDialog dlg = new MenuDialog();
+            dlg.Owner = this;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.Title = "システム設定";
+            dlg.mMenuList = mSystemSetMenu;
+            dlg.ShowDialog();
+            switch (dlg.mResultMenu) {
+                case "バックアップ":
+                    mFileData.dataBackUp();
+                    break;
+                case "バックアップ管理":
+                    mFileData.dataRestor();
+                    break;
+                case "システム設定":
+                    systemSettingdlg();
+                    break;
             }
         }
 

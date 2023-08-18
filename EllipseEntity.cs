@@ -106,6 +106,7 @@ namespace CadApp
             buf += $"\n開始角 {R2D(mEllipse.mSa).ToString("f2")} 終了角 {R2D(mEllipse.mEa).ToString("f2")} 回転角 {R2D(mEllipse.mRotate).ToString("f2")}";
             buf += $"\nカラー: {getColorName(mColor)}";
             buf += $"\n太さ: {mThickness}";
+            buf += $"\nレイヤー: {mLayerName}";
             return buf;
         }
 

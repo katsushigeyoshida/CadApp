@@ -19,14 +19,16 @@ namespace CadApp
     public abstract class Entity
     {
         //  属性
-        public int mNo = -1;
-        public EntityId mEntityId = EntityId.Non;
-        public Brush mColor = Brushes.Black;
-        public double mThickness = 1.0;
-        public int mType = 0;
-        public bool mRemove = false;
-        public int mRemoveLink = -1;
-        public int mOperationCount = -1;
+        public int mNo = -1;                        //  要素番号(非保存)
+        public EntityId mEntityId = EntityId.Non;   //  要素種別
+        public Brush mColor = Brushes.Black;        //  色
+        public double mThickness = 1.0;             //  線の太さ/点の大きさ
+        public int mType = 0;                       //  線種/店主
+        public bool mRemove = false;                //  削除フラグ(非保存)
+        public int mRemoveLink = -1;                //  削除要素番号(非保存)
+        public int mOperationCount = -1;            //  操作番号(非保存)
+        public string mLayerName = "BaseLayer";     //  レイヤー名
+        public ulong mLayerBit = 0x1;               //  レイヤービット(64bit非保存)
         //  表示領域
         public Box mArea;
         //  ピック
@@ -61,6 +63,8 @@ namespace CadApp
                 mThickness = double.Parse(property[2].Trim());
             if (3 < property.Length)
                 mType = int.Parse(property[3].Trim());
+            if (4 < property.Length)
+                mLayerName = property[4].Trim();
         }
 
         /// <summary>
@@ -111,7 +115,7 @@ namespace CadApp
         /// <returns></returns>
         public string toString()
         {
-            return $"{mEntityId},{ydraw.getColorName(mColor)},{mThickness},{mType}";
+            return $"{mEntityId},{ydraw.getColorName(mColor)},{mThickness},{mType},{mLayerName}";
         }
 
         /// <summary>
@@ -121,7 +125,8 @@ namespace CadApp
         public List<string> toList()
         {
             List<string> propertyLis = new List<string>() {
-                mEntityId.ToString(), ydraw.getColorName(mColor), mThickness.ToString(), mType.ToString()
+                mEntityId.ToString(), ydraw.getColorName(mColor), mThickness.ToString(),
+                mType.ToString(), mLayerName
             };
             return propertyLis;
         }

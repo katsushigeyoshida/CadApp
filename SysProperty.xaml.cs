@@ -52,6 +52,8 @@ namespace CadApp
         public VerticalAlignment mVa = VerticalAlignment.Top;
         public double mArrowSize = 6;
         public double mArrowAngle = 30 * Math.PI / 180;
+        public string mLayerName = "";
+        public List<string> mLayerNameList;
         public double mGridSize = 1;
 
         public bool mShowCheckBox     = false;
@@ -67,6 +69,7 @@ namespace CadApp
         public bool mVaChk            = false;
         public bool mArrowSizeChk     = false;
         public bool mArrowAngleChk    = false;
+        public bool mLayerNameChk     = false;
 
         YDraw ydraw = new YDraw();
         YLib ylib = new YLib();
@@ -90,6 +93,7 @@ namespace CadApp
             cbVertical.ItemsSource   = mVerticalAlignmentMenu;
             cbArrowSize.ItemsSource  = mTextSizeMenu;
             cbArrowAngle.ItemsSource = mArrowAngleMenu;
+            cbLayerName.ItemsSource = mLayerNameList;
             cbGridSize.ItemsSource   = mGridSizeMenu;
 
             cbColor.SelectedIndex      = ydraw.mColorList.FindIndex(p => p.brush == mColor);
@@ -120,6 +124,9 @@ namespace CadApp
             chVertical.Visibility      = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
             chArrowSize.Visibility     = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
             chArrowAngle.Visibility    = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
+            lbLayerTitle.Visibility    = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
+            cbLayerName.Visibility     = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
+            chLayerName.Visibility     = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
             lbGridTitle.Visibility     = mShowCheckBox ? Visibility.Hidden : Visibility.Visible;
             cbGridSize.Visibility      = mShowCheckBox ? Visibility.Hidden : Visibility.Visible;
 
@@ -164,7 +171,7 @@ namespace CadApp
                 mArrowSize = ylib.string2double(cbArrowSize.Text);
             if (0 < cbArrowAngle.Text.Length)
                 mArrowAngle = ylib.D2R(ylib.string2double(cbArrowAngle.Text));
-
+            mLayerName = cbLayerName.Text;
             if (0 <= cbGridSize.SelectedIndex)
                 mGridSize = mGridSizeMenu[cbGridSize.SelectedIndex];
 
@@ -180,6 +187,7 @@ namespace CadApp
             mVaChk            = chVertical.IsChecked      == true;
             mArrowSizeChk     = chArrowSize.IsChecked     == true;
             mArrowAngleChk    = chArrowAngle.IsChecked    == true;
+            mLayerNameChk     = chLayerName.IsChecked     == true;
 
             DialogResult = true;
             Close();

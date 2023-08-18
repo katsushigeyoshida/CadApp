@@ -264,6 +264,7 @@ namespace CadApp
             buf += $"\n領域 {mArea.ToString("f2")}";
             buf += $"\nカラー: {getColorName(mColor)}";
             buf += $"\n太さ: {mThickness}";
+            buf += $"\nレイヤー: {mLayerName}";
 
             return buf;
         }

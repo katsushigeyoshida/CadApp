@@ -118,6 +118,7 @@ namespace CadApp
             buf += $"\n起点    : {mText.mPos.ToString("f4")}";
             buf += $"\n文字高さ: {mText.mTextSize.ToString("f4")} 水平位置 {mText.mHa} 垂直位置 {mText.mVa}";
             buf += $"\nカラー  : {getColorName(mColor)}";
+            buf += $"\nレイヤー: {mLayerName}";
 
             return buf;
         }

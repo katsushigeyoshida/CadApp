@@ -25,6 +25,7 @@ namespace CadApp
         public Brush mColor = Brushes.Black;                        //  要素の色
         public double mGridSize = 1.0;                              //  マウス座標の丸め値
         public string mComment = "";                                //  図面のコメント
+        public ulong mDispLayerBit = 0xffffffff;                    //  表示レイヤービットフィルタ
 
         private YLib ylib = new YLib();
 
@@ -54,6 +55,7 @@ namespace CadApp
             para.mColor = mColor;
             para.mGridSize = mGridSize;
             para.mComment = mComment;
+            para.mDispLayerBit = mDispLayerBit;
             return para;
         }
 
@@ -76,6 +78,7 @@ namespace CadApp
             mColor = Brushes.Black;                         //  要素の色
             mGridSize = 1.0;                                //  マウス座標の丸め値
             mComment = "";                                  //  図面のコメント
+            mDispLayerBit = 0xffffffff;                     //  表示レイヤービットフィルタ
         }
 
         /// <summary>
@@ -87,7 +90,7 @@ namespace CadApp
             return $"Prperty,Color,{ylib.getColorName(mColor)},PointType,{mPointType},PointSize,{mPointSize}," +
                 $"LineType,{mLineType},Thickness,{mThickness},TextSize,{mTextSize}," +
                 $"TextRotate,{mTextRotate},LinePitchRate,{mLinePitchRate},HA,{mHa},VA,{mVa}," +
-                $"ArrowSize,{mArrowSize},ArrowAngle,{mArrowAngle},GridSize,{mGridSize}";
+                $"ArrowSize,{mArrowSize},ArrowAngle,{mArrowAngle},GridSize,{mGridSize},DispLaerBit,{mDispLayerBit}";
         }
 
         /// <summary>
@@ -148,6 +151,9 @@ namespace CadApp
                             case "GridSize":
                                 mGridSize = double.Parse(data[++i]);
                                 break;
+                            case "DispLaerBit":
+                                mDispLayerBit = ulong.Parse(data[++i]);
+                                break;
                         }
                     }
                 } else {
@@ -200,7 +206,7 @@ namespace CadApp
 
         public string mTextString = "";                             //  文字列データ
         public DrawingPara mPara = new DrawingPara();
-        public DrawingPara mSysPara = new DrawingPara();
+        //public DrawingPara mSysPara = new DrawingPara();
 
         public string mCurFilePath = "";                            //  編集中のファイルパス
         public int mGridMinmumSize = 10;                            //  グリッドの最小表示スクリーンサイズ
@@ -363,12 +369,18 @@ namespace CadApp
                 case OPERATION.infoData:                    //  要素データ情報
                     infoEntityData(mPickEnt);
                     break;
-                case OPERATION.zumenComment:                //  
+                case OPERATION.zumenComment:                //  図面のコメント設定
                     zumenComment();
                     break;
                 case OPERATION.zumenInfo:                   //  図面設定
                     if (zumenProperty(mPara))
                         mMainWindow.setZumenProperty();    //  コントロールバーの設定
+                    break;
+                case OPERATION.setDispLayer:                //  表示レイヤー設定
+                    setDispLayer();
+                    break;
+                case OPERATION.setAllDispLayer:             //  全レイヤー表示
+                    mPara.mDispLayerBit = 0xffffffff;
                     break;
                 case OPERATION.allClear:
                     break;
@@ -700,13 +712,17 @@ namespace CadApp
                 dlg.Owner = mMainWindow;
                 dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
                 //  共通属性
-                dlg.mEntityId  = mEntityData.mEntityList[pickNo.no].mEntityId;
-                dlg.mColor     = mEntityData.mEntityList[pickNo.no].mColor;
-                dlg.mLineType  = mEntityData.mEntityList[pickNo.no].mType;
-                dlg.mThickness = mEntityData.mEntityList[pickNo.no].mThickness;
+                mEntityData.layerListUpdate();
+                dlg.mLayerNameList = mEntityData.getLayerNameList();
+                Entity entity = mEntityData.mEntityList[pickNo.no];
+                dlg.mEntityId  = entity.mEntityId;
+                dlg.mColor     = entity.mColor;
+                dlg.mLineType  = entity.mType;
+                dlg.mThickness = entity.mThickness;
+                dlg.mLayerName = entity.mLayerName;
                 //  Text要素
-                if (mEntityData.mEntityList[pickNo.no].mEntityId == EntityId.Text) {
-                    TextEntity text = (TextEntity)mEntityData.mEntityList[pickNo.no];
+                if (entity.mEntityId == EntityId.Text) {
+                    TextEntity text = (TextEntity)entity;
                     dlg.mTextSize   = text.mText.mTextSize;
                     dlg.mHa         = text.mText.mHa;
                     dlg.mVa         = text.mText.mVa;
@@ -714,8 +730,8 @@ namespace CadApp
                     dlg.mLinePitchRate = text.mText.mLinePitchRate;
                 }
                 //  Parts要素
-                if (mEntityData.mEntityList[pickNo.no].mEntityId == EntityId.Parts) {
-                    PartsEntity parts = (PartsEntity)mEntityData.mEntityList[pickNo.no];
+                if (entity.mEntityId == EntityId.Parts) {
+                    PartsEntity parts = (PartsEntity)entity;
                     dlg.mTextSize      = parts.mParts.mTextSize;
                     dlg.mTextRotate    = parts.mParts.mTextRotate;
                     dlg.mLinePitchRate = parts.mParts.mLinePitchRate;
@@ -725,12 +741,15 @@ namespace CadApp
                 if (dlg.ShowDialog() == true) {
                     //  共通属性
                     mEntityData.mEntityList.Add(mEntityData.mEntityList[pickNo.no].toCopy());
-                    mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mColor = dlg.mColor;
-                    mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mType = dlg.mLineType;
-                    mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mThickness = dlg.mThickness;
+                    entity = mEntityData.mEntityList[mEntityData.mEntityList.Count - 1];
+                    entity.mColor = dlg.mColor;
+                    entity.mType = dlg.mLineType;
+                    entity.mThickness = dlg.mThickness;
+                    entity.mLayerName = dlg.mLayerName;
+                    entity.mLayerBit = mEntityData.setLayerBit(entity.mLayerName);
                     //  Text要素
-                    if (mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mEntityId == EntityId.Text) {
-                        TextEntity text = (TextEntity)mEntityData.mEntityList[mEntityData.mEntityList.Count - 1];
+                    if (entity.mEntityId == EntityId.Text) {
+                        TextEntity text = (TextEntity)entity;
                         text.mText.mTextSize      = dlg.mTextSize;
                         text.mText.mHa            = dlg.mHa;
                         text.mText.mVa            = dlg.mVa;
@@ -738,8 +757,8 @@ namespace CadApp
                         text.mText.mLinePitchRate = dlg.mLinePitchRate;
                     }
                     //  Parts要素
-                    if (mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mEntityId == EntityId.Parts) {
-                        PartsEntity parts = (PartsEntity)mEntityData.mEntityList[mEntityData.mEntityList.Count - 1];
+                    if (entity.mEntityId == EntityId.Parts) {
+                        PartsEntity parts = (PartsEntity)entity;
                         //parts.mParts.mRefValue = new List<double>() { 6, Math.PI / 6, 12, 1.2, 0 };
                         parts.mParts.mArrowSize     = dlg.mArrowSize;
                         parts.mParts.mArrowAngle    = dlg.mArrowAngle;
@@ -749,17 +768,18 @@ namespace CadApp
                         parts.mParts.remakeData();
                     }
                     //  Undo処理
-                    mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mOperationCount = mEntityData.mOperationCouunt;
+                    entity.mOperationCount = mEntityData.mOperationCouunt;
                     mEntityData.removeEnt(pickNo.no);
                 }
                 dlg.Close();
             }
             mEntityData.updateData();
+            mEntityData.layerListUpdate();
             return true;
         }
 
         /// <summary>
-        /// ピック下要素の属性一括変更
+        /// ピックした要素の属性一括変更
         /// </summary>
         /// <param name="pickEnt">ピック要素リスト</param>
         /// <returns></returns>
@@ -768,7 +788,9 @@ namespace CadApp
             SysProperty dlg = new SysProperty();
             dlg.Owner = mMainWindow;
             dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.Title = "属性一括変更";
             dlg.mShowCheckBox = true;
+            dlg.mLayerNameList = mEntityData.getLayerNameList();
             if (dlg.ShowDialog() == true) {
                 mEntityData.mOperationCouunt++;
                 foreach ((int no, PointD pos) pickNo in pickEnt) {
@@ -785,6 +807,10 @@ namespace CadApp
                         entity.mType = dlg.mPointType;
                     if (dlg.mPointSizeChk && entity.mEntityId == EntityId.Point)
                         entity.mThickness = dlg.mPointSize;
+                    if (dlg.mLayerNameChk) {
+                        entity.mLayerName = dlg.mLayerName;
+                        entity.mLayerBit = mEntityData.setLayerBit(entity.mLayerName);
+                    }
                     //  テキスト要素
                     if (entity.mEntityId == EntityId.Text) {
                         TextEntity textEnt = (TextEntity)entity;
@@ -888,7 +914,7 @@ namespace CadApp
         }
 
         /// <summary>
-        /// 要素の属性値の設定
+        /// 図面の属性値を設定
         /// </summary>
         /// <returns></returns>
         public bool zumenProperty(DrawingPara para)
@@ -929,6 +955,20 @@ namespace CadApp
             } else {
                 dlg.Close();
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// 表示レイヤーをダイヤログで設定
+        /// </summary>
+        public void setDispLayer()
+        {
+            ChkListDialog dlg = new ChkListDialog();
+            dlg.Owner = mMainWindow;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.mChkList = mEntityData.getLayerChkList();
+            if (dlg.ShowDialog() == true) {
+                mEntityData.setDispLayerBit(dlg.mChkList);
             }
         }
 
@@ -1108,7 +1148,7 @@ namespace CadApp
         public bool infoEntity(List<(int no, PointD pos)> pickEnt)
         {
             foreach ((int no, PointD pos) entNo in pickEnt) {
-                ylib.messageBox(mMainWindow, mEntityData.mEntityList[entNo.no].entityInfo(), "要素情報");
+                ylib.messageBox(mMainWindow, mEntityData.mEntityList[entNo.no].entityInfo(),"", "要素情報");
             }
             return true;
         }
@@ -1215,7 +1255,7 @@ namespace CadApp
                 mEntityData.loadData(filePath);
                 mCurFilePath = filePath;
                 mPara = mEntityData.mPara;
-                mSysPara = mEntityData.mSysPara;
+                //mSysPara = mEntityData.mSysPara;
                 return true;
             }
             return false;

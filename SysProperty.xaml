@@ -57,8 +57,12 @@
         <Label Name="lbArrowAngleTitle" Content="矢印角度" Margin="200,155,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
         <ComboBox Name="cbArrowAngle" Margin="255,155,0,0" Width="80" IsEditable="True" VerticalAlignment="Top" HorizontalAlignment="Left" />
         <CheckBox x:Name="chArrowAngle" Margin="340,158,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <Label Name="lbGridTitle" Content="グリッド" Margin="10,180,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <ComboBox Name="cbGridSize" Margin="70,180,0,0" IsEditable="True" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <Label Name="lbLayerTitle" Content="レイヤー名" Margin="10,180,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <ComboBox Name="cbLayerName" Margin="70,180,0,0" IsEditable="True" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <CheckBox x:Name="chLayerName" Margin="175,182,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <Label Name="lbGridTitle" Content="グリッド" Margin="10,205,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <ComboBox Name="cbGridSize" Margin="70,205,0,0" IsEditable="True" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        
         <Button x:Name="btOK" Content="OK" Height="20" Margin="0,0,100,10" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="50" Click="btOK_Click"/>
         <Button x:Name="btCancel" Content="Cancel" Height="20" Margin="0,0,40,10" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="50" Click="btCancel_Click"/>
     </Grid>

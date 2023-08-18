@@ -107,8 +107,9 @@ namespace CadApp
             buf += $"\n要素種別: 線分要素";
             buf += $"\n始点 {mLine.ps.ToString("f4")} 終点 {mLine.pe.ToString("f4")}";
             buf += $"\n長さ {mLine.length().ToString("f4")}";
-            buf += $"\nカラー: {getColorName(mColor)}";
-            buf += $"\n太さ: {mThickness}";
+            buf += $"\nカラー　: {getColorName(mColor)}";
+            buf += $"\n太さ　　: {mThickness}";
+            buf += $"\nレイヤー: {mLayerName}";
 
             return buf;
         }

@@ -21,7 +21,7 @@ namespace CadApp
         back, cancel, close,
         save, saveAs, open, screenCopy, entityCopy, entityPaste,
         colorChange, thicknessChange, textSizeChange, pointTypeChange, lineTypeChange,
-        color, thickness, textSize, gridSize,
+        color, thickness, textSize, gridSize, setDispLayer, setAllDispLayer,
         allClear,
     }
 
@@ -95,6 +95,8 @@ namespace CadApp
             new Command("測定",      "戻る",        "", OPERATION.back,                 ENTITY.non),
             new Command("削除",      "削除",        "", OPERATION.remove,               ENTITY.any),
             new Command("設定",      "図面設定",    "", OPERATION.zumenInfo,            ENTITY.non),
+            new Command("設定",      "表示レイヤー設定",  "", OPERATION.setDispLayer,   ENTITY.non),
+            new Command("設定",      "全レイヤー表示",   "", OPERATION.setAllDispLayer, ENTITY.non),
             new Command("設定",      "戻る",        "", OPERATION.back,                 ENTITY.non),
             new Command("アンドゥ",  "アンドゥ",    "", OPERATION.undo,                 ENTITY.non),
             //new Command("リドゥ",    "リドゥ",      "", OPERATION.redo,            ENTITY.non),

@@ -44,6 +44,8 @@ namespace CadApp
         public double mArrowSize = 5;
         public double mArrowAngle = 0.523598775599;
         public double mLinePitchRate = 1.2;
+        public List<string> mLayerNameList = new List<string>();
+        public string mLayerName = "";
 
         YDraw ydraw = new YDraw();
         YLib ylib = new YLib();
@@ -125,6 +127,8 @@ namespace CadApp
                 lbArrowAngleTitle.IsEnabled = true;
                 tbArrowAngle.IsEnabled      = true;
             }
+            cbLayerName.ItemsSource = mLayerNameList;
+            cbLayerName.Text = mLayerName;
         }
 
         private void btOK_Click(object sender, RoutedEventArgs e)
@@ -150,6 +154,7 @@ namespace CadApp
             mLinePitchRate = ylib.string2double(tbLinePitchRate.Text);
             mArrowSize = ylib.string2double(tbArrowSize.Text);
             mArrowAngle = ylib.D2R(ylib.string2double(tbArrowAngle.Text));
+            mLayerName = cbLayerName.Text;
 
             DialogResult = true;
             Close();

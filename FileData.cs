@@ -9,11 +9,12 @@ namespace CadApp
     public class FileData
     {
         public string mBaseDataFolder = "Zumen";
+        public string mBackupFolder = "Zumen";
         public string mGenreName = "図面";
         public string mCategoryName = "無題";
         public string mDataName = "無題";
         public string mDataExt = ".csv";
-
+        public string mDiffTool = "";
         public Window mMainWindow;
 
         private YLib ylib = new YLib();
@@ -128,7 +129,7 @@ namespace CadApp
         public bool removeGenre(string genre)
         {
             string genrePath = getGenrePath(genre);
-            if (ylib.messageBox(mMainWindow, genre + " を削除します", "項目削除", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
+            if (ylib.messageBox(mMainWindow, genre + " を削除します", "", "項目削除", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
                 Directory.Delete(genrePath);
                 return true;
             }
@@ -190,7 +191,7 @@ namespace CadApp
         public bool removeCategory(string category)
         {
             string categoryPath = getCategoryPath(category);
-            if (ylib.messageBox(mMainWindow, category + " を削除します", "項目削除", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
+            if (ylib.messageBox(mMainWindow, category + " を削除します", "", "項目削除", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
                 Directory.Delete(categoryPath);
                 return true;
             }
@@ -282,7 +283,7 @@ namespace CadApp
         public bool removeItem(string itemName)
         {
             string filePath = getItemFilePath(itemName);
-            if (ylib.messageBox(mMainWindow, itemName + " を削除します", "項目削除", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
+            if (ylib.messageBox(mMainWindow, itemName + " を削除します", "", "項目削除", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
                 File.Delete(filePath);
                 return true;
             }
@@ -348,7 +349,6 @@ namespace CadApp
                     categoryList.Sort();
                 categoryList = categoryList.ConvertAll(p => ylib.getLastFolder(p, 1));
             } catch (Exception e) {
-                //MessageBox.Show(e.Message);
                 ylib.messageBox(mMainWindow, e.Message);
             }
             return categoryList;
@@ -367,7 +367,6 @@ namespace CadApp
                     fileNameList.Add(Path.GetFileNameWithoutExtension(files[i]));
                 }
             } catch (Exception e) {
-                //MessageBox.Show(e.Message);
                 ylib.messageBox(mMainWindow, e.Message);
             }
 
@@ -490,6 +489,40 @@ namespace CadApp
             buf +=  entityData.getDataInfo();
 
             return buf;
+        }
+
+        /// <summary>
+        /// データをバックアップする
+        /// </summary>
+        public void dataBackUp()
+        {
+            if (mBaseDataFolder == null || mBackupFolder.Length == 0 || !Directory.Exists(mBackupFolder)) {
+                ylib.messageBox(mMainWindow, "バックアップのフォルダが設定されていません。");
+                return;
+            }
+            DirectoryDiff directoryDiff = new DirectoryDiff(mBaseDataFolder, mBackupFolder);
+            int count = directoryDiff.syncFolder();
+            ylib.messageBox(mMainWindow, $"{count} ファイルのバックアップを更新しました。");
+        }
+
+        /// <summary>
+        /// バックアップデータを元に戻す
+        /// </summary>
+        public void dataRestor()
+        {
+            if (mBaseDataFolder == null || mBackupFolder.Length == 0 || !Directory.Exists(mBackupFolder)) {
+                ylib.messageBox(mMainWindow, "バックアップのフォルダが設定されていません。");
+                return;
+            }
+            DiffFolder dlg = new DiffFolder();
+            dlg.Owner = mMainWindow;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.mSrcTitle = "比較元(データフォルダ)";
+            dlg.mDestTitle = "比較先(バックアップ先)";
+            dlg.mSrcFolder = mBaseDataFolder;
+            dlg.mDestFolder = mBackupFolder;
+            dlg.mDiffTool = mDiffTool;
+            dlg.ShowDialog();
         }
     }
 }

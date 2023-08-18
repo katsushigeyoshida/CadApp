@@ -101,8 +101,9 @@ namespace CadApp
             buf += $"要素番号: {mNo}";
             buf += $"\n要素種別: 点要素";
             buf += $"\n座標: {mPoint.ToString("f4")}";
-            buf += $"\nカラー: {getColorName(mColor)}";
-            buf += $"\n大きさ: {mThickness}";
+            buf += $"\nカラー　: {getColorName(mColor)}";
+            buf += $"\n大きさ　: {mThickness}";
+            buf += $"\nレイヤー: {mLayerName}";
 
             return buf;
         }

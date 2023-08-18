@@ -74,5 +74,11 @@
     <Setting Name="GridSize" Type="System.Double" Scope="User">
       <Value Profile="(Default)">1</Value>
     </Setting>
+    <Setting Name="BackupFolder" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="DiffTool" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

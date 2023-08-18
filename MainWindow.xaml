@@ -112,7 +112,7 @@
                     <ComboBox Name="cbTextHorizontal" Width="40" ToolTip="水平アライメント" SelectionChanged="cbTextHorizontal_SelectionChanged"  />
                     <ComboBox Name="cbTextVertical" Width="40" ToolTip="垂直アライメント" SelectionChanged="cbTextVertical_SelectionChanged"  />
                     <StatusBarItem HorizontalAlignment="Right">
-                        <TextBlock x:Name="tbStatusInfo" />
+                        <TextBlock x:Name="tbPosition" />
                     </StatusBarItem>
                 </StatusBar>
                 <StatusBar Height="30" >
@@ -123,7 +123,7 @@
                     <TextBlock Text="コマンド" FontSize="11"/>
                     <ComboBox x:Name="cbCommand" Width="400" IsEditable="True" />
                     <StatusBarItem HorizontalAlignment="Right">
-                        <TextBlock x:Name="tbPosition" />
+                        <TextBlock x:Name="tbStatusInfo" />
                     </StatusBarItem>
                 </StatusBar>
             </StackPanel>

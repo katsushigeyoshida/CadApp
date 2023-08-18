@@ -675,6 +675,15 @@ namespace CadApp
         }
 
         /// <summary>
+        /// ワールド領域の取得
+        /// </summary>
+        /// <returns>ワールド領域</returns>
+        public Box getWorldArea()
+        {
+            return ydraw.mWorld;
+        }
+
+        /// <summary>
         /// 論理座標(ワールド座標)をスクリーン座標に変換
         /// </summary>
         /// <param name="wp">ワールド座標</param>

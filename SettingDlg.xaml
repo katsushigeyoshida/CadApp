@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CadApp"
         mc:Ignorable="d"
-        Title="初期設定" Height="300" Width="400" Loaded="Window_Loaded">
+        Title="初期設定" Height="350" Width="400" Loaded="Window_Loaded">
     <Grid>
         <TextBlock Text="初期画面" Margin="10,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
         <TextBlock Text="左下 X" Margin="70,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
@@ -34,7 +34,11 @@
         <TextBox x:Name="tbGridSize" Width="30" Margin="80,135,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
 
         <TextBlock Text="データフォルダ" Margin="10,180,0,0" HorizontalAlignment="Left"  VerticalAlignment="Top"/>
-        <TextBox x:Name="tbDataFolder" Margin="80,180,20,0" VerticalAlignment="Top" MouseDoubleClick="tbDataFolder_MouseDoubleClick"/>
+        <TextBox x:Name="tbDataFolder" Margin="105,180,20,0" VerticalAlignment="Top" MouseDoubleClick="tbDataFolder_MouseDoubleClick"/>
+        <TextBlock Text="バックアップフォルダ" Margin="10,210,0,0" HorizontalAlignment="Left"  VerticalAlignment="Top"/>
+        <TextBox x:Name="tbBackupFolder" Margin="105,210,20,0" VerticalAlignment="Top" MouseDoubleClick="tbBackupFolder_MouseDoubleClick"/>
+        <TextBlock Text="ファイル比較ツール" Margin="10,240,0,0" HorizontalAlignment="Left"  VerticalAlignment="Top"/>
+        <TextBox x:Name="tbDiffTool" Margin="105,240,20,0" VerticalAlignment="Top" MouseDoubleClick="tbDiffTool_MouseDoubleClick" />
         <Button Content="OK" Margin="0,0,100,10" IsDefault="True" Width="40" Height="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="Button_Click"/>
         <Button Content="Cancel" Margin="0,0,40,10" IsCancel="True" Width="40" Height="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="Button_Click_1"/>
     </Grid>

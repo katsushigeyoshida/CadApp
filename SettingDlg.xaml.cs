@@ -1,5 +1,6 @@
 ﻿using CoreLib;
 using System.Collections.Generic;
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
 
@@ -20,6 +21,8 @@ namespace CadApp
         public double mArrowAngle = 30;
         public double mGridSize = 1;
         public string mDataFolder = "";
+        public string mBackupFolder = "";
+        public string mDiffTool = "";
 
         private List<string> mPointTypeMenu = new List<string>() {
             "・点", "X クロス", "+ 十字", "□ 四角", "〇 円", "△ 三角"
@@ -53,6 +56,8 @@ namespace CadApp
             tbArrowAngle.Text = ylib.R2D(mArrowAngle).ToString();
             tbGridSize.Text = mGridSize.ToString();
             tbDataFolder.Text = mDataFolder;
+            tbBackupFolder.Text = mBackupFolder;
+            tbDiffTool.Text = mDiffTool;
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -70,6 +75,8 @@ namespace CadApp
             mArrowAngle = ylib.D2R(ylib.string2double(tbArrowAngle.Text));
             mGridSize = ylib.string2double(tbGridSize.Text);
             mDataFolder = tbDataFolder.Text;
+            mBackupFolder = tbBackupFolder.Text;
+            mDiffTool = tbDiffTool.Text;
 
             DialogResult = true;
             Close();
@@ -86,6 +93,24 @@ namespace CadApp
             string folder = ylib.folderSelect("データフォルダ", mDataFolder);
             if (folder != null && 0 < folder.Length) 
                 tbDataFolder.Text = folder;
+        }
+
+        private void tbBackupFolder_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            string folder = ylib.folderSelect("バックアップフォルダ", mBackupFolder);
+            if (folder != null && 0 < folder.Length)
+                tbBackupFolder.Text = folder;
+        }
+
+        private void tbDiffTool_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            List<string[]> filters = new List<string[]>() {
+                    new string[] { "実行ファイル", "*.exe" },
+                    new string[] { "すべてのファイル", "*.*"}
+                };
+            string filePath = ylib.fileOpenSelectDlg("ツール選択", Path.GetDirectoryName(mDiffTool), filters);
+            if (0 < filePath.Length)
+                tbDiffTool.Text = filePath;
         }
     }
 }

@@ -37,10 +37,7 @@ namespace CadApp
         public override Entity toCopy()
         {
             PointEntity point = new PointEntity(mPoint.toCopy());
-            point.mColor = mColor;
-            point.mThickness = mThickness;
-            point.mType = mType;
-            point.mRemove = mRemove;
+            point.setProperty(this);
             point.mArea = mArea.toCopy();
             return point;
         }

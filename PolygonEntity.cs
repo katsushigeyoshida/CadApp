@@ -50,10 +50,7 @@ namespace CadApp
         public override Entity toCopy()
         {
             PolygonEntity polygon = new PolygonEntity(mPolygon);
-            polygon.mColor = mColor;
-            polygon.mThickness = mThickness;
-            polygon.mType = mType;
-            polygon.mRemove = mRemove;
+            polygon.setProperty(this);
             polygon.mArea = mArea.toCopy();
             return polygon;
         }
@@ -208,7 +205,7 @@ namespace CadApp
             List<Entity> entityList = new();
             PolylineEntity polylineEnt = new PolylineEntity();
             polylineEnt.mPolyline = mPolygon.divide(dp);
-            polylineEnt.setProperty(mColor, mThickness, mType);
+            polylineEnt.setProperty(this);
             entityList.Add(polylineEnt);
             return entityList;
         }

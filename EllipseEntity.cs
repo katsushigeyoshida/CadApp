@@ -83,10 +83,7 @@ namespace CadApp
         public override Entity toCopy()
         {
             EllipseEntity entity = new EllipseEntity();
-            entity.mColor = mColor;
-            entity.mThickness = mThickness;
-            entity.mType = mType;
-            entity.mRemove = mRemove;
+            entity.setProperty(this);
             entity.mEllipse = mEllipse.toCopy();
             entity.mArea = mArea.toCopy();
             return entity;
@@ -239,6 +236,10 @@ namespace CadApp
                 case EntityId.Arc:
                     ArcEntity arc = (ArcEntity)entity;
                     plist = mEllipse.intersection(arc.mArc);
+                    break;
+                case EntityId.Ellipse:
+                    EllipseEntity ellipse = (EllipseEntity)entity;
+                    plist = mEllipse.intersection(ellipse.mEllipse);
                     break;
                 case EntityId.Polyline:
                     PolylineEntity polyline = (PolylineEntity)entity;

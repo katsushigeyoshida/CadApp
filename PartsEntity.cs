@@ -41,10 +41,7 @@ namespace CadApp
         public override Entity toCopy()
         {
             PartsEntity parts = new PartsEntity();
-            parts.mColor = mColor;
-            parts.mThickness = mThickness;
-            parts.mType = mType;
-            parts.mRemove = mRemove;
+            parts.setProperty(this);
             parts.mParts = mParts.toCopy();
             parts.mArea = mArea.toCopy();
             return parts;

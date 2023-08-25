@@ -41,10 +41,7 @@ namespace CadApp
         public override Entity toCopy()
         {
             TextEntity text = new TextEntity(mText.toCopy());
-            text.mColor = mColor;
-            text.mThickness = mThickness;
-            text.mType = mType;
-            text.mRemove = mRemove;
+            text.setProperty(this);
             text.mArea = mArea.toCopy();
             return text;
         }

@@ -40,10 +40,7 @@ namespace CadApp
         public override Entity toCopy()
         {
             ArcEntity arc = new ArcEntity(mArc);
-            arc.mColor = mColor;
-            arc.mThickness = mThickness;
-            arc.mType = mType;
-            arc.mRemove = mRemove;
+            arc.setProperty(this);
             arc.mArea = mArea.toCopy();
             return arc;
         }

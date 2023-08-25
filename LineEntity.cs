@@ -39,10 +39,7 @@ namespace CadApp
         public override Entity toCopy()
         {
             LineEntity line = new LineEntity(mLine);
-            line.mColor = mColor;
-            line.mThickness = mThickness;
-            line.mType = mType;
-            line.mRemove = mRemove;
+            line.setProperty(this);
             line.mArea = mArea.toCopy();
             return line;
         }

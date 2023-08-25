@@ -19,14 +19,13 @@ namespace CadApp
         private double mEps = 1E-8;
         public List<Entity> mEntityList;        //  要素リスト
         public Dictionary<string, ulong> mLayerList;    //  レイヤーリスト
-        public string mDefultLayerName = "BaseLayer";
 
         private YLib ylib = new YLib();
 
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        public EntityData() { 
+        public EntityData() {
             mEntityList = new List<Entity>();
             mLayerList = new Dictionary<string, ulong>();
         }
@@ -153,7 +152,9 @@ namespace CadApp
         public int addPoint(PointD p)
         {
             Entity pointEnt = new PointEntity(p);
-            pointEnt.setProperty(mPara.mColor, mPara.mPointSize, mPara.mPointType);
+            pointEnt.setProperty(mPara);
+            pointEnt.mThickness = mPara.mPointSize;
+            pointEnt.mType = mPara.mPointType;
             mEntityList.Add(pointEnt);
             if (mArea == null) {
                 mArea = pointEnt.mArea;
@@ -186,7 +187,7 @@ namespace CadApp
             if (pline == null || pline.length() < mEps)
                 return -1;
             Entity lineEnt = new LineEntity(pline);
-            lineEnt.setProperty(mPara.mColor, mPara.mThickness, mPara.mLineType);
+            lineEnt.setProperty(mPara);
             mEntityList.Add(lineEnt);
             if (mArea == null) {
                 mArea = lineEnt.mArea.toCopy();
@@ -223,7 +224,7 @@ namespace CadApp
             if (polyline == null || polyline.Count < 2)
                 return -1;
             Entity polylineEnt = new PolylineEntity(polyline);
-            polylineEnt.setProperty(mPara.mColor, mPara.mThickness, mPara.mLineType);
+            polylineEnt.setProperty(mPara);
             mEntityList.Add(polylineEnt);
             if (mArea == null) {
                 mArea = polylineEnt.mArea.toCopy();
@@ -245,7 +246,7 @@ namespace CadApp
             if (polygon == null || polygon.Count < 3) 
                 return -1;
             Entity polygonEnt = new PolygonEntity(polygon);
-            polygonEnt.setProperty(mPara.mColor, mPara.mThickness, mPara.mLineType);
+            polygonEnt.setProperty(mPara);
             mEntityList.Add(polygonEnt);
             if (mArea == null) {
                 mArea = polygonEnt.mArea.toCopy();
@@ -267,7 +268,7 @@ namespace CadApp
             if (arc == null || arc.mR < mEps || arc.mEa - arc.mSa < mEps)
                 return -1;
             Entity arcEnt = new ArcEntity(arc);
-            arcEnt.setProperty(mPara.mColor, mPara.mThickness, mPara.mLineType);
+            arcEnt.setProperty(mPara);
             mEntityList.Add(arcEnt);
             if (mArea == null) {
                 mArea = arcEnt.mArea;
@@ -290,7 +291,7 @@ namespace CadApp
                 || ellipse.mEa - ellipse.mSa < mEps)
                 return -1;
             Entity ellipseEnt = new EllipseEntity(ellipse);
-            ellipseEnt.setProperty(mPara.mColor, mPara.mThickness, mPara.mLineType);
+            ellipseEnt.setProperty(mPara);
             mEntityList.Add(ellipseEnt);
             if (mArea == null) {
                 mArea = ellipseEnt.mArea;
@@ -312,7 +313,7 @@ namespace CadApp
             if (text == null || text.mText.Length == 0 || text.mTextSize == 0)
                 return -1;
             Entity textEnt = new TextEntity(text);
-            textEnt.setProperty(mPara.mColor, mPara.mThickness, mPara.mLineType);
+            textEnt.setProperty(mPara);
             mEntityList.Add(textEnt);
             if (mArea == null) {
                 mArea = textEnt.mArea;
@@ -333,6 +334,7 @@ namespace CadApp
         public int addArrow(PointD sp, PointD ep)
         {
             PartsEntity partsEnt = new PartsEntity();
+            partsEnt.setProperty(mPara);
             partsEnt.mParts = new PartsD();
             partsEnt.mParts.mArrowSize = mPara.mArrowSize;
             partsEnt.mParts.createArrow(sp, ep);
@@ -359,6 +361,7 @@ namespace CadApp
         {
             List<PointD> plist = new List<PointD>() { sp, ep };
             PartsEntity partsEnt = new PartsEntity();
+            partsEnt.setProperty(mPara);
             partsEnt.mParts = new PartsD();
             partsEnt.mParts.mTextSize = mPara.mTextSize;
             partsEnt.mParts.mArrowSize = mPara.mArrowSize;
@@ -388,6 +391,7 @@ namespace CadApp
                 sp, ep, pos
             };
             PartsEntity partsEnt = new PartsEntity();
+            partsEnt.setProperty(mPara);
             partsEnt.mParts = new PartsD();
             partsEnt.mParts.mTextSize = mPara.mTextSize;
             partsEnt.mParts.mArrowSize = mPara.mArrowSize;
@@ -439,6 +443,7 @@ namespace CadApp
             PointD pe = ent1.getEndPoint(pickList[1].pos, cp);
             if (!cp.isNaN()) {
                 PartsEntity partsEnt = new PartsEntity();
+                partsEnt.setProperty(mPara);
                 partsEnt.mParts = new PartsD();
                 partsEnt.mParts.mTextSize = mPara.mTextSize;
                 partsEnt.mParts.mArrowSize = mPara.mArrowSize;
@@ -473,6 +478,7 @@ namespace CadApp
             if (ent.mEntityId == EntityId.Arc) {
                 ArcEntity arcEnt = (ArcEntity)ent;
                 PartsEntity partsEnt = new PartsEntity();
+                partsEnt.setProperty(mPara);
                 partsEnt.mParts = new PartsD();
                 partsEnt.mParts.mTextSize = mPara.mTextSize;
                 partsEnt.mParts.mArrowSize = mPara.mArrowSize;
@@ -506,6 +512,7 @@ namespace CadApp
             if (ent.mEntityId == EntityId.Arc) {
                 ArcEntity arcEnt = (ArcEntity)ent;
                 PartsEntity partsEnt = new PartsEntity();
+                partsEnt.setProperty(mPara);
                 partsEnt.mParts = new PartsD();
                 partsEnt.mParts.mTextSize = mPara.mTextSize;
                 partsEnt.mParts.mArrowSize = mPara.mArrowSize;
@@ -914,7 +921,10 @@ namespace CadApp
         {
             Entity ent1 = mEntityList[entNo1];
             Entity ent2 = mEntityList[entNo2];
-            return ent1.intersection(ent2);
+            if (ent2.mEntityId == EntityId.Ellipse)
+                return ent2.intersection(ent1);
+            else
+                return ent1.intersection(ent2);
         }
 
         /// <summary>
@@ -985,6 +995,7 @@ namespace CadApp
         /// <returns>レイヤー名リスト</returns>
         public List<CheckBoxListItem> getLayerChkList()
         {
+            updateLayerList();
             List<CheckBoxListItem> chkList = new List<CheckBoxListItem>();
             foreach (KeyValuePair<string, ulong> item in mLayerList) {
                 CheckBoxListItem chkItem = new CheckBoxListItem((mPara.mDispLayerBit & item.Value) != 0, item.Key);
@@ -1010,16 +1021,14 @@ namespace CadApp
         /// <summary>
         /// 要素全体のレイヤー名と表示ビットを更新
         /// </summary>
-        public void layerListUpdate()
+        public void updateLayerList()
         {
             mLayerList.Clear();
             foreach (Entity ent in mEntityList) {
-                if (0 < ent.mLayerName.Length) {
-                    ent.mLayerBit = setLayerBit(ent.mLayerName);
-                } else {
-                    ent.mLayerName = mDefultLayerName;
-                    ent.mLayerBit = setLayerBit(ent.mLayerName);
+                if (ent.mLayerName.Length == 0) {
+                    ent.mLayerName = mPara.mCreateLayerName;
                 }
+                ent.mLayerBit = setLayerBit(ent.mLayerName);
             }
         }
 
@@ -1098,7 +1107,7 @@ namespace CadApp
                 Entity entity = setStringEntityData(dataList[i], dataList[i + 1]);
                 if (entity != null) {
                     if (entity.mLayerName == "") {
-                        entity.mLayerName = mDefultLayerName;
+                        entity.mLayerName = mPara.mCreateLayerName;
                     }
                     entity.mLayerBit = setLayerBit(entity.mLayerName);
                     mEntityList.Add(entity);
@@ -1118,7 +1127,7 @@ namespace CadApp
                 }
             }
             updateData();
-            layerListUpdate();
+            updateLayerList();
         }
 
         /// <summary>

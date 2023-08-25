@@ -38,19 +38,19 @@
         <Label Name="lbTextSizeTitle" Content="文字サイズ" Margin="10,80,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
         <ComboBox Name="cbTextSize" Margin="70,80,0,0" IsEditable="True" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
         <CheckBox x:Name="chTextSize" Margin="175,83,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <Label Name="lbLinePitchRateTitle" Content="改行比率" Margin="10,105,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <TextBox Name="tbLinerPitchRate" Margin="70,108,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
-        <CheckBox x:Name="chLinePitchRate" Margin="175,108,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
         <Label Name="lbTextRotateTitle" Content="回転角" Margin="200,80,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
         <ComboBox Name="cbTextRotate" Margin="255,80,0,0" IsEditable="True" Width="80" VerticalAlignment="Top" HorizontalAlignment="Left" />
         <CheckBox x:Name="chTextRotate" Margin="340,83,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <Label Name="lbAlimentTitle" Content="アライメント" Margin="10,130,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <Label Name="lbHorizontalTitle" Content="水平" Margin="70,130,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <ComboBox Name="cbHorizontal" Margin="110,130,0,0" Width="60" VerticalAlignment="Top" HorizontalAlignment="Left" />
-        <CheckBox x:Name="chHorizontal" Margin="175,133,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <Label Name="lbVerticalTitle" Content="垂直" Margin="200,130,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <ComboBox Name="cbVertical" Margin="255,130,0,0" Width="60" VerticalAlignment="Top" HorizontalAlignment="Left" />
-        <CheckBox x:Name="chVertical" Margin="340,133,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <Label Name="lbAlimentTitle" Content="アライメント" Margin="10,105,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <Label Name="lbHorizontalTitle" Content="水平" Margin="70,105,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <ComboBox Name="cbHorizontal" Margin="110,106,0,0" Width="60" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <CheckBox x:Name="chHorizontal" Margin="175,108,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <Label Name="lbVerticalTitle" Content="垂直" Margin="200,105,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <ComboBox Name="cbVertical" Margin="255,106,0,0" Width="60" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <CheckBox x:Name="chVertical" Margin="340,108,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <Label Name="lbLinePitchRateTitle" Content="改行比率" Margin="10,130,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <TextBox Name="tbLinerPitchRate" Margin="70,134,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <CheckBox x:Name="chLinePitchRate" Margin="175,134,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
         <Label Name="lbArrowSizeTitle" Content="矢印サイズ" Margin="10,155,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
         <ComboBox Name="cbArrowSize" Margin="70,155,0,0" IsEditable="True" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
         <CheckBox x:Name="chArrowSize" Margin="175,158,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
@@ -58,8 +58,8 @@
         <ComboBox Name="cbArrowAngle" Margin="255,155,0,0" Width="80" IsEditable="True" VerticalAlignment="Top" HorizontalAlignment="Left" />
         <CheckBox x:Name="chArrowAngle" Margin="340,158,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
         <Label Name="lbLayerTitle" Content="レイヤー名" Margin="10,180,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <ComboBox Name="cbLayerName" Margin="70,180,0,0" IsEditable="True" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
-        <CheckBox x:Name="chLayerName" Margin="175,182,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <ComboBox Name="cbLayerName" Margin="70,180,0,0" IsEditable="True" Width="265" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <CheckBox x:Name="chLayerName" Margin="340,182,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
         <Label Name="lbGridTitle" Content="グリッド" Margin="10,205,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
         <ComboBox Name="cbGridSize" Margin="70,205,0,0" IsEditable="True" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
         

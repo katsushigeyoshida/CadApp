@@ -41,14 +41,25 @@ namespace CadApp
         /// <summary>
         /// 要素属性の設定
         /// </summary>
-        /// <param name="color">色</param>
-        /// <param name="thickness">太さ</param>
-        /// <param name="type">点種/線種</param>
-        public void setProperty(Brush color, double thickness, int type = 0)
+        /// <param name="ent">Entity</param>
+        public void setProperty(Entity ent)
         {
-            mColor = color;
-            mThickness = thickness;
-            mType = type;
+            mColor     = ent.mColor;
+            mThickness = ent.mThickness;
+            mType      = ent.mType;
+            mLayerName = ent.mLayerName;
+        }
+
+        /// <summary>
+        /// 要素属性の設定
+        /// </summary>
+        /// <param name="para">図面パラメータ</param>
+        public void setProperty(DrawingPara para)
+        {
+            mColor     = para.mColor;
+            mThickness = para.mThickness;
+            mType      = para.mLineType;
+            mLayerName = para.mCreateLayerName;
         }
 
         /// <summary>
@@ -57,14 +68,14 @@ namespace CadApp
         /// <param name="property">文字列データ</param>
         public void setProperty(string[] property)
         {
-            if (1 < property.Length)
-                mColor = ydraw.getColor(property[1].Trim());
-            if (2 < property.Length)
+            try {
+                mColor     = ydraw.getColor(property[1].Trim());
                 mThickness = double.Parse(property[2].Trim());
-            if (3 < property.Length)
-                mType = int.Parse(property[3].Trim());
-            if (4 < property.Length)
+                mType      = int.Parse(property[3].Trim());
                 mLayerName = property[4].Trim();
+            } catch (Exception e) {
+                System.Diagnostics.Debug.WriteLine(e.ToString());
+            }
         }
 
         /// <summary>

@@ -60,10 +60,7 @@ namespace CadApp
         public override Entity toCopy()
         {
             LinkEntity entity = new LinkEntity();
-            entity.mColor = mColor;
-            entity.mThickness = mThickness;
-            entity.mType = mType;
-            entity.mRemove = mRemove;
+            entity.setProperty(this);
             entity.mLinkNo = mLinkNo;
             return entity;
         }

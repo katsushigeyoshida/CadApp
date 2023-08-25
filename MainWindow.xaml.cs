@@ -1263,7 +1263,7 @@ namespace CadApp
         private PointD getLocSelectPos(string selectMenu, PointD pos, List<int> picks)
         {
             Entity ent = mEntityData.mEntityList[picks[0]];
-            PointD lastLoc = null;
+            PointD lastLoc = pos;
             if (0 < mCommandOpe.mLocPos.Count)
                 lastLoc = mCommandOpe.mLocPos[mCommandOpe.mLocPos.Count - 1];
             List<PointD> plist = new List<PointD>();
@@ -1812,6 +1812,27 @@ namespace CadApp
         {
             BitmapSource bitmapSource = canvas2Bitmap(cvCanvas);
             Clipboard.SetImage(bitmapSource);
+        }
+
+        /// <summary>
+        /// CAD画面をファイルに保存
+        /// </summary>
+        public void screenSave()
+        {
+            BitmapSource bitmapSource = canvas2Bitmap(cvCanvas);
+            List<string[]> filters = new List<string[]>() {
+                    new string[] { "PNGファイル", "*.png" },
+                    new string[] { "JPEGファイル", "*.jpg" },
+                    new string[] { "GIFファイル", "*.gif" },
+                    new string[] { "BMPファイル", "*.bmp" },
+                    new string[] { "すべてのファイル", "*.*"}
+                };
+            string path = ylib.fileSaveSelectDlg("イメージ保存", ".", filters);
+            if (0 < path.Length) {
+                if (Path.GetExtension(path).Length == 0)
+                    path += ".png"; 
+                ylib.saveBitmapImage(bitmapSource, path);
+            }
         }
 
         /// <summary>

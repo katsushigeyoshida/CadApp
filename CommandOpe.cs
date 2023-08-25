@@ -26,6 +26,7 @@ namespace CadApp
         public double mGridSize = 1.0;                              //  マウス座標の丸め値
         public string mComment = "";                                //  図面のコメント
         public ulong mDispLayerBit = 0xffffffff;                    //  表示レイヤービットフィルタ
+        public string mCreateLayerName = "BaseLayer";               //  作成レイヤー名
 
         private YLib ylib = new YLib();
 
@@ -56,6 +57,7 @@ namespace CadApp
             para.mGridSize = mGridSize;
             para.mComment = mComment;
             para.mDispLayerBit = mDispLayerBit;
+            para.mCreateLayerName = mCreateLayerName;
             return para;
         }
 
@@ -79,6 +81,7 @@ namespace CadApp
             mGridSize = 1.0;                                //  マウス座標の丸め値
             mComment = "";                                  //  図面のコメント
             mDispLayerBit = 0xffffffff;                     //  表示レイヤービットフィルタ
+            mCreateLayerName = "BaseLayer";                 //  作成レイヤー名
         }
 
         /// <summary>
@@ -90,7 +93,8 @@ namespace CadApp
             return $"Prperty,Color,{ylib.getColorName(mColor)},PointType,{mPointType},PointSize,{mPointSize}," +
                 $"LineType,{mLineType},Thickness,{mThickness},TextSize,{mTextSize}," +
                 $"TextRotate,{mTextRotate},LinePitchRate,{mLinePitchRate},HA,{mHa},VA,{mVa}," +
-                $"ArrowSize,{mArrowSize},ArrowAngle,{mArrowAngle},GridSize,{mGridSize},DispLaerBit,{mDispLayerBit}";
+                $"ArrowSize,{mArrowSize},ArrowAngle,{mArrowAngle},GridSize,{mGridSize},DispLaerBit,{mDispLayerBit}," +
+                $"CreateLayer,{ylib.strControlCodeCnv(mCreateLayerName)}";
         }
 
         /// <summary>
@@ -153,6 +157,9 @@ namespace CadApp
                                 break;
                             case "DispLaerBit":
                                 mDispLayerBit = ulong.Parse(data[++i]);
+                                break;
+                            case "CreateLayer":
+                                mCreateLayerName = ylib.strControlCodeRev(data[++i]);
                                 break;
                         }
                     }
@@ -343,11 +350,14 @@ namespace CadApp
                 case OPERATION.screenCopy:                  //  製図領域のイメージコピー
                     mMainWindow.screenCopy();
                     break;
+                case OPERATION.screenSave:                  //  製図領域のイメージコピー
+                    mMainWindow.screenSave();
+                    break;
                 case OPERATION.entityCopy:                  //  要素コピー
                     entitiesCopy(mPickEnt);
                     break;
                 case OPERATION.entityPaste:                 //  要素貼付け
-                    entitiesPate();
+                    entitiesPaste();
                     locMode = MainWindow.OPEMODE.loc;
                     mLocPos.Clear();
                     commansInit = false;
@@ -376,11 +386,15 @@ namespace CadApp
                     if (zumenProperty(mPara))
                         mMainWindow.setZumenProperty();    //  コントロールバーの設定
                     break;
+                case OPERATION.createLayer:                //  作成レイヤー設定
+                    setCreateLayer();
+                    break;
                 case OPERATION.setDispLayer:                //  表示レイヤー設定
                     setDispLayer();
                     break;
                 case OPERATION.setAllDispLayer:             //  全レイヤー表示
                     mPara.mDispLayerBit = 0xffffffff;
+                    mEntityData.mPara.mDispLayerBit = mPara.mDispLayerBit;
                     break;
                 case OPERATION.allClear:
                     break;
@@ -395,7 +409,8 @@ namespace CadApp
                     mPickEnt.Clear();
                     break;
                 case OPERATION.close:                       //  終了
-                    mMainWindow.Close();
+                    if (ylib.messageBox(mMainWindow, "終了します", "", "確認",MessageBoxButton.OKCancel) == MessageBoxResult.OK)
+                        mMainWindow.Close();
                     break;
                 case OPERATION.gridSize:
                     gridSet();
@@ -460,16 +475,12 @@ namespace CadApp
         /// <summary>
         /// 要素作成データ追加
         /// </summary>
-        /// <param name="points">ロケイト点はいれつ</param>
+        /// <param name="points">ロケイト点配列</param>
         /// <param name="operation">操作</param>
         /// <returns></returns>
         public bool createData(List<PointD> points, OPERATION operation)
         {
-            mEntityData.mPara.mColor     = mPara.mColor;
-            mEntityData.mPara.mThickness = mPara.mThickness;
-            mEntityData.mPara.mLineType  = mPara.mLineType;
-            mEntityData.mPara.mTextSize  = mPara.mTextSize;
-            mEntityData.mPara.mArrowSize = mPara.mArrowSize;
+            mEntityData.mPara = mPara.toCopy();
             if (operation == OPERATION.createPoint && points.Count == 1) {
                 //  点要素作成
                 mEntityData.mPara.mPointType = mPara.mPointType;
@@ -530,12 +541,8 @@ namespace CadApp
         /// <returns></returns>
         public bool changeData(List<PointD> loc, List<(int, PointD)> pickEnt, OPERATION operation)
         {
+            mEntityData.mPara = mPara.toCopy();
             if (loc.Count == 1) {
-                mEntityData.mPara.mColor = mPara.mColor;
-                mEntityData.mPara.mThickness = mPara.mThickness;
-                mEntityData.mPara.mLineType = mPara.mLineType;
-                mEntityData.mPara.mTextSize = mPara.mTextSize;
-                mEntityData.mPara.mArrowSize = mPara.mArrowSize;
                 if (operation == OPERATION.divide) {
                     //  分割
                     mEntityData.divide(pickEnt, loc[0]);
@@ -712,7 +719,7 @@ namespace CadApp
                 dlg.Owner = mMainWindow;
                 dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
                 //  共通属性
-                mEntityData.layerListUpdate();
+                mEntityData.updateLayerList();
                 dlg.mLayerNameList = mEntityData.getLayerNameList();
                 Entity entity = mEntityData.mEntityList[pickNo.no];
                 dlg.mEntityId  = entity.mEntityId;
@@ -774,7 +781,7 @@ namespace CadApp
                 dlg.Close();
             }
             mEntityData.updateData();
-            mEntityData.layerListUpdate();
+            mEntityData.updateLayerList();
             return true;
         }
 
@@ -790,6 +797,7 @@ namespace CadApp
             dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             dlg.Title = "属性一括変更";
             dlg.mShowCheckBox = true;
+            mEntityData.updateLayerList();
             dlg.mLayerNameList = mEntityData.getLayerNameList();
             if (dlg.ShowDialog() == true) {
                 mEntityData.mOperationCouunt++;
@@ -874,7 +882,7 @@ namespace CadApp
         /// <summary>
         /// クリップボードにコピーされた要素を取得する
         /// </summary>
-        public void entitiesPate()
+        public void entitiesPaste()
         {
             string buf = Clipboard.GetText();
             mCopyEntityList = new List<Entity>();
@@ -884,10 +892,11 @@ namespace CadApp
                     string[] areaStr = ylib.csvData2ArrayStr(dataList[0]);
                     if (4 < areaStr.Length && areaStr[0] == "area") {
                         mCopyArea = new Box($"{areaStr[1]},{areaStr[2]},{areaStr[3]},{areaStr[4]}");
+                        mCopyArea.normalize();
                     }
                     for (int i = 1; i < dataList.Length -1; i++) {
                         string[] property = ylib.csvData2ArrayStr(dataList[i]);
-                        if (property.Length != 4)
+                        if (property.Length <= 4)
                             continue;
                         string[] data = ylib.csvData2ArrayStr(dataList[++i]);
                         Entity ent = mEntityData.setStringEntityData(property, data);
@@ -908,9 +917,11 @@ namespace CadApp
             for (int i = 0; i < mCopyEntityList.Count; i++) {
                 Entity entity = mCopyEntityList[i];
                 entity.translate(vec);
+                entity.mOperationCount = mEntityData.mOperationCouunt;
                 mEntityData.addEntity(entity);
             }
             mEntityData.updateData();
+            mEntityData.updateLayerList();
         }
 
         /// <summary>
@@ -959,6 +970,22 @@ namespace CadApp
         }
 
         /// <summary>
+        /// 作成レイヤーを設定する
+        /// </summary>
+        public void setCreateLayer()
+        {
+            InputSelect dlg = new InputSelect();
+            dlg.Owner = mMainWindow;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.mTitle = "作成レイヤー";
+            dlg.mText = mPara.mCreateLayerName;
+            dlg.mTextList = mEntityData.getLayerNameList();
+            if (dlg.ShowDialog() == true) {
+                mPara.mCreateLayerName = dlg.mText;
+            }
+        }
+
+        /// <summary>
         /// 表示レイヤーをダイヤログで設定
         /// </summary>
         public void setDispLayer()
@@ -966,6 +993,7 @@ namespace CadApp
             ChkListDialog dlg = new ChkListDialog();
             dlg.Owner = mMainWindow;
             dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.mTitle = "表示レイヤー";
             dlg.mChkList = mEntityData.getLayerChkList();
             if (dlg.ShowDialog() == true) {
                 mEntityData.setDispLayerBit(dlg.mChkList);

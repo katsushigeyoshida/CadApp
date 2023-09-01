@@ -52,11 +52,14 @@ namespace CadApp
             "垂点", "端点距離"
         };
         private List<string> mSystemSetMenu = new List<string>() {
-             "システム設定", "バックアップ", "バックアップ管理"
+            "システム設定", "データバックアップ", "シンボルバックアップ",
+            "データバックアップ管理", "シンボルバックアップ管理"
+        };
+        private List<string> mPrintTypeMenu = new List<string>() {
+            "A4 横", "A4 縦"
         };
         private Point mPrevPosition;                        //  マウスの前回位置(画面スクロール)
         private bool mMouseLeftButtonDown = false;          //  マウス左ボタン状態
-        private BitmapSource mBitmapSource;                 //  画像データ(描画データのバッファリング)
         private int mPickBoxSize = 10;                      //  ピック領域サイズ
         private int mScrollSize = 19;                       //  キーによるスクロール単位
         private List<string> mKeyCommandList = new();       //  キー入力コマンドの履歴
@@ -75,6 +78,7 @@ namespace CadApp
 
         private FileData mFileData;
         private DataDrawing mDataDrawing;
+        public SymbolData mSymbolData;
 
         private YCalc ycalc = new YCalc();
         private YLib ylib = new YLib();
@@ -84,9 +88,10 @@ namespace CadApp
             InitializeComponent();
 
             mDataDrawing = new DataDrawing(cvCanvas, this);
-            mEntityData = new EntityData();
-            mCommandOpe = new CommandOpe(mEntityData, this);
-            mFileData = new FileData(this);
+            mEntityData  = new EntityData();
+            mCommandOpe  = new CommandOpe(mEntityData, this);
+            mFileData    = new FileData(this);
+            mSymbolData  = new SymbolData(this);
 
             WindowFormLoad();
         }
@@ -192,7 +197,7 @@ namespace CadApp
             if (Properties.Settings.Default.MainWindowWidth < 100 ||
                 Properties.Settings.Default.MainWindowHeight < 100 ||
                 SystemParameters.WorkArea.Height < Properties.Settings.Default.MainWindowHeight) {
-                Properties.Settings.Default.MainWindowWidth = mWindowWidth;
+                Properties.Settings.Default.MainWindowWidth  = mWindowWidth;
                 Properties.Settings.Default.MainWindowHeight = mWindowHeight;
             } else {
                 Top    = Properties.Settings.Default.MainWindowTop;
@@ -201,14 +206,19 @@ namespace CadApp
                 Height = Properties.Settings.Default.MainWindowHeight;
             }
             //  図面データ保存フォルダ
-            string baseDataFolder = Properties.Settings.Default.BaseDataFolder;
+            string baseDataFolder   = Properties.Settings.Default.BaseDataFolder;
             mFileData.mBackupFolder = Properties.Settings.Default.BackupFolder;
-            mFileData.mDiffTool = Properties.Settings.Default.DiffTool;
+            mFileData.mDiffTool     = Properties.Settings.Default.DiffTool;
+            mSymbolData.mDiffTool   = Properties.Settings.Default.DiffTool;
             //  図面分類
             mFileData.mBaseDataFolder = baseDataFolder == "" ? Path.GetFullPath("Zumen") : baseDataFolder;
-            mFileData.mGenreName = Properties.Settings.Default.GenreName;
-            mFileData.mCategoryName = Properties.Settings.Default.CategoryName;
-            mFileData.mDataName = Properties.Settings.Default.DataName;
+            mFileData.mGenreName      = Properties.Settings.Default.GenreName;
+            mFileData.mCategoryName   = Properties.Settings.Default.CategoryName;
+            mFileData.mDataName       = Properties.Settings.Default.DataName;
+            //  シンボルフォルダ
+            string symbolFolder = Properties.Settings.Default.SymbolFolder;
+            mSymbolData.mSymbolFolder = symbolFolder == "" ? Path.GetFullPath("Symbol") : symbolFolder;
+            mSymbolData.mBackupFolder = Properties.Settings.Default.BackupFolder;
 
             //  初期作図表示エリア
             loadDispArea();
@@ -223,12 +233,14 @@ namespace CadApp
         private void WindowFormSave()
         {
             //  図面分類
-            Properties.Settings.Default.DiffTool = mFileData.mDiffTool;
-            Properties.Settings.Default.BackupFolder = mFileData.mBackupFolder;
+            Properties.Settings.Default.DiffTool       = mFileData.mDiffTool;
+            Properties.Settings.Default.BackupFolder   = mFileData.mBackupFolder;
             Properties.Settings.Default.BaseDataFolder = mFileData.mBaseDataFolder;
-            Properties.Settings.Default.GenreName = mFileData.mGenreName;
-            Properties.Settings.Default.CategoryName = mFileData.mCategoryName;
-            Properties.Settings.Default.DataName = mFileData.mDataName;
+            Properties.Settings.Default.GenreName      = mFileData.mGenreName;
+            Properties.Settings.Default.CategoryName   = mFileData.mCategoryName;
+            Properties.Settings.Default.DataName       = mFileData.mDataName;
+            //  シンボルフォルダ
+            Properties.Settings.Default.SymbolFolder   = mSymbolData.mSymbolFolder;
             //  Windowの位置とサイズを保存(登録項目をPropeties.settingsに登録して使用する)
             Properties.Settings.Default.MainWindowTop    = Top;
             Properties.Settings.Default.MainWindowLeft   = Left;
@@ -305,7 +317,7 @@ namespace CadApp
             PointD pickPos = mDataDrawing.cnvScreen2World(new PointD(e.GetPosition(cvCanvas)));
             List<int> picks = getPickNo(pickPos);
             if (mLocMode == OPEMODE.loc) {
-                //  通常のロケイト処理
+                //  ロケイト処理
                 if (0 < mCommandOpe.mLocPos.Count &&
                     (mOperation == OPERATION.createPolyline
                     || mOperation == OPERATION.createPolygon
@@ -318,6 +330,7 @@ namespace CadApp
                             commandClear();
                         return;
                     } else {
+                        //  オートロケイト
                         PointD wp = autoLoc(pickPos, picks);
                         if (wp != null)
                             mCommandOpe.mLocPos.Add(wp);
@@ -382,22 +395,12 @@ namespace CadApp
                     } else {
                         return;
                     }
-                } else if ((0 < mCommandOpe.mLocPos.Count && mOperation != OPERATION.non) ||
-                    (0 == mCommandOpe.mLocPos.Count &&
-                    (mOperation == OPERATION.createPoint
-                    || mOperation == OPERATION.createTangentCircle
-                    || mOperation == OPERATION.createText
-                    || mOperation == OPERATION.createDimension
-                    || mOperation == OPERATION.createAngleDimension
-                    || mOperation == OPERATION.createDiameterDimension
-                    || mOperation == OPERATION.createRadiusDimension
-                    || mOperation == OPERATION.entityPaste))) {
+                } else {
                     //  ドラッギング表示
                     mCommandOpe.mLocPos.Add(wp);
                     mDataDrawing.setEntityProperty(mCommandOpe);
                     mDataDrawing.dragging(mEntityData, mCommandOpe.mLocPos, mCommandOpe.mPickEnt, mOperation);
                     mCommandOpe.mLocPos.RemoveAt(mCommandOpe.mLocPos.Count - 1);
-                } else {
                 }
             }
             mPrevPosition = point;
@@ -509,7 +512,7 @@ namespace CadApp
         private void lbCategoryMenu_Click(object sender, RoutedEventArgs e)
         {
             MenuItem menuItem = (MenuItem)e.Source;
-            string category = null;
+            string category = "";
             if (0 <= lbCategoryList.SelectedIndex)
                 category = lbCategoryList.SelectedItem.ToString();
 
@@ -1183,6 +1186,10 @@ namespace CadApp
                     TextEntity text = (TextEntity)ent;
                     pos = text.mText.nearPeakPoint(p);
                     break;
+                case EntityId.Parts:
+                    PartsEntity parts = (PartsEntity)ent;
+                    pos = parts.mParts.nearPoint(p);
+                    break;
             }
             return pos;
         }
@@ -1661,7 +1668,7 @@ namespace CadApp
         }
 
         /// <summary>
-        /// プロパティの初期値を設定
+        /// [システム設定]プロパティの初期値を設定
         /// </summary>
         private void systemSettingdlg()
         {
@@ -1686,6 +1693,7 @@ namespace CadApp
             dlg.mGridSize = Properties.Settings.Default.GridSize;
             //  図面保存基準フォルダ
             dlg.mDataFolder = mFileData.mBaseDataFolder;
+            dlg.mSymbolFolder = mSymbolData.mSymbolFolder;
             dlg.mBackupFolder = mFileData.mBackupFolder;
             dlg.mDiffTool = mFileData.mDiffTool;
             if (dlg.ShowDialog() == true) {
@@ -1723,6 +1731,13 @@ namespace CadApp
                 if (!Directory.Exists(mFileData.mBackupFolder)) {
                     Directory.CreateDirectory(mFileData.mBackupFolder);
                 }
+                mSymbolData.mSymbolFolder = dlg.mSymbolFolder;
+                if (!Directory.Exists(mSymbolData.mSymbolFolder))
+                    Directory.CreateDirectory(mSymbolData.mSymbolFolder);
+                mSymbolData.mBackupFolder = dlg.mBackupFolder;
+                if (!Directory.Exists(mSymbolData.mBackupFolder)) {
+                    Directory.CreateDirectory(mSymbolData.mBackupFolder);
+                }
                 mFileData.mDiffTool = dlg.mDiffTool;
             }
         }
@@ -1739,14 +1754,20 @@ namespace CadApp
             dlg.mMenuList = mSystemSetMenu;
             dlg.ShowDialog();
             switch (dlg.mResultMenu) {
-                case "バックアップ":
-                    mFileData.dataBackUp();
-                    break;
-                case "バックアップ管理":
-                    mFileData.dataRestor();
-                    break;
                 case "システム設定":
                     systemSettingdlg();
+                    break;
+                case "データバックアップ":
+                    mFileData.dataBackUp();
+                    break;
+                case "シンボルバックアップ":
+                    mSymbolData.dataBackUp();
+                    break;
+                case "データバックアップ管理":
+                    mFileData.dataRestor();
+                    break;
+                case "シンボルバックアップ管理":
+                    mSymbolData.dataRestor();
                     break;
             }
         }
@@ -1834,6 +1855,30 @@ namespace CadApp
                 ylib.saveBitmapImage(bitmapSource, path);
             }
         }
+
+        /// <summary>
+        /// 印刷処理
+        /// </summary>
+        public void print()
+        {
+            Box dispArea = mCommandOpe.mDispArea.toCopy();
+            SelectMenu dlg = new SelectMenu();
+            dlg.Owner = this;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.Title = "印刷の形式";
+            dlg.mMenuList = mPrintTypeMenu.ToArray();
+            if (dlg.ShowDialog() == true) {
+                //  印刷の実行
+                if (dlg.mSelectIndex == 0)
+                    mDataDrawing.setPrint(mEntityData, mCommandOpe.mDispArea);
+                else
+                    mDataDrawing.setPrint(mEntityData, mCommandOpe.mDispArea, System.Printing.PageOrientation.Portrait);
+                //  画面表示に戻す
+                mDataDrawing.initDraw(dispArea);
+                disp(mEntityData);
+            }
+        }
+
 
         /// <summary>
         /// CanvasをBitmapに変換

@@ -194,6 +194,13 @@ namespace CadApp
         abstract public void mirror(PointD sp, PointD ep);
 
         /// <summary>
+        /// 原点を指定して拡大縮小
+        /// </summary>
+        /// <param name="cp">原点</param>
+        /// <param name="scale">拡大率</param>
+        abstract public void scale(PointD cp, double scale);
+
+        /// <summary>
         /// 要素のオフセット
         /// </summary>
         /// <param name="sp">始点座標</param>

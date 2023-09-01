@@ -1,10 +1,13 @@
 ﻿using CoreLib;
 using System;
 using System.Collections.Generic;
+using System.Printing;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Xps;
 
 namespace CadApp
 {
@@ -22,6 +25,7 @@ namespace CadApp
 
         public string mTextString = "";                             //  文字列データ
         public Box mCopyArea;
+        public List<Entity> mCopyEntityList;
 
         private Canvas mCanvas;
         private MainWindow mMainWindow;
@@ -35,9 +39,9 @@ namespace CadApp
         /// <param name="mainWindow">親ウィンドウ</param>
         public DataDrawing(Canvas canvas, MainWindow mainWindow)
         {
-            ydraw = new YWorldDraw(canvas);
             mCanvas = canvas;
             mMainWindow = mainWindow;
+            ydraw = new YWorldDraw(canvas);
         }
 
         /// <summary>
@@ -46,12 +50,74 @@ namespace CadApp
         /// <param name="dispArea"></param>
         public void initDraw(Box dispArea)
         {
+            ydraw = new YWorldDraw(mCanvas);
+
             ydraw.setViewArea(0, 0, mCanvas.ActualWidth, mCanvas.ActualHeight);
             ydraw.mAspectFix = true;
             ydraw.mClipping = true;
             ydraw.setWorldWindow(dispArea);
             System.Diagnostics.Debug.WriteLine($"View: {ydraw.mView}");
             System.Diagnostics.Debug.WriteLine($"World: {ydraw.mWorld.ToString("f2")}");
+        }
+
+        /// <summary>
+        /// 印刷処理
+        /// </summary>
+        /// <param name="entityData">要素データ</param>
+        /// <param name="dispArea">表示領域</param>
+        public void setPrint(EntityData entityData, Box dispArea, PageOrientation orient = PageOrientation.Landscape)
+        {
+            LocalPrintServer lps = new LocalPrintServer();
+            PrintQueue queue = lps.DefaultPrintQueue;
+            XpsDocumentWriter writer = PrintQueue.CreateXpsDocumentWriter(queue);
+            //  用紙サイズ
+            PrintTicket ticket = queue.DefaultPrintTicket;
+            ticket.PageMediaSize = new PageMediaSize(PageMediaSizeName.ISOA4);
+            ticket.PageOrientation = orient;
+            //  印刷領域
+            var area = queue.GetPrintCapabilities().PageImageableArea;
+            //if (area == null) {
+            //    MessageBox.Show("印刷可能領域の取得に失敗 ...");
+            //    return;
+            //}
+
+            //  Canvasにデータを設定
+            Canvas canvas = new Canvas();
+            double width = area.ExtentWidth;    // ticket.PageMediaSize.Width.Value;
+            double height = area.ExtentHeight;  // ticket.PageMediaSize.Height.Value;
+            if (ticket.PageOrientation == PageOrientation.Landscape) {
+                YLib.Swap(ref width, ref height);
+            }
+
+            initPrint(canvas, dispArea, 30, -30, width, height);
+            ydraw.clear();
+            entityData.drawingAll(ydraw);
+
+            FixedPage page = new FixedPage();
+            page.Children.Add(canvas);
+
+            //  印刷実行
+            writer.Write(page, ticket);
+        }
+
+        /// <summary>
+        /// 印刷領域の設定
+        /// </summary>
+        /// <param name="canvas">Canvas</param>
+        /// <param name="dispArea">作図領域</param>
+        /// <param name="offsetWidth">印刷の位置</param>
+        /// <param name="offsetHeight">印刷の位置</param>
+        /// <param name="width">印刷幅</param>
+        /// <param name="height">印刷高さ</param>
+        public void initPrint(Canvas canvas, Box dispArea, double offsetWidth, double offsetHeight, double width, double height)
+        {
+            ydraw = new YWorldDraw(canvas);
+            System.Diagnostics.Debug.WriteLine($"initPrint: {width} {height} {offsetHeight}");
+            //  ViewとWorld領域を設定
+            ydraw.setViewArea(offsetWidth, offsetHeight, width, height);
+            ydraw.setWorldWindow(dispArea);
+            ydraw.mAspectFix = true;
+            ydraw.mClipping = true;
         }
 
         /// <summary>
@@ -98,6 +164,7 @@ namespace CadApp
         {
             mPara = ope.mPara.toCopy();
             mCopyArea = ope.mCopyArea;
+            mCopyEntityList = ope.mCopyEntityList;
         }
 
         /// <summary>
@@ -112,65 +179,71 @@ namespace CadApp
             if (points.Count < 1)
                 return;
 
-            mCanvas.Children.Clear();
-            mMainWindow.imScreen.Source = mBitmapSource;
-            mCanvas.Children.Add(mMainWindow.imScreen);
-            ydraw.mBrush     = mDraggingColor;
-            ydraw.mTextColor = mDraggingColor;
-            ydraw.mThickness = mPara.mThickness;
-            ydraw.mLineType  = mPara.mLineType;
-            ydraw.mPointType = mPara.mPointType;
-            ydraw.mPointSize = mPara.mPointSize;
             PartsD parts;
             ArcD arc;
             switch (operation) {
                 case OPERATION.createPoint:
+                    preDragging();
                     ydraw.drawWPoint(points[0]);
                     break;
                 case OPERATION.createLine:
-                    if (1 < points.Count)
+                    if (1 < points.Count) {
+                        preDragging();
                         ydraw.drawWLine(new LineD(points[0], points[1]));
+                    }
                     break;
                 case OPERATION.createRect:
                     if (1 < points.Count) {
+                        preDragging();
                         Box b = new Box(points[0], points[1]);
                         List<PointD> plist = b.ToPointDList();
                         ydraw.drawWPolygon(plist);
                     }
                     break;
                 case OPERATION.createPolyline:
+                    preDragging();
                     ydraw.drawWPolyline(points);
                     break;
                 case OPERATION.createPolygon:
+                    preDragging();
                     ydraw.drawWPolygon(points, false);
                     break;
                 case OPERATION.createArc:
                     if (points.Count == 2) {
+                        preDragging();
                         ydraw.drawWLine(new LineD(points[0], points[1]));
                     } else if (points.Count == 3 && 0 < points[1].length(points[2])) {
                         arc = new ArcD(points[0], points[2], points[1]);
-                        if (arc.mCp != null)
+                        if (arc.mCp != null) {
+                            preDragging();
                             ydraw.drawWArc(arc, false);
+                        }
                     }
                     break;
                 case OPERATION.createCircle:
-                    if (1 < points.Count)
+                    if (1 < points.Count) {
+                        preDragging();
                         ydraw.drawWCircle(points[0], points[0].length(points[1]), false);
+                    }
                     break;
                 case OPERATION.createEllipse:
                     if (1 < points.Count) {
                         EllipseD ellipse = new EllipseD(points[0], points[1]);
+                        preDragging();
                         ydraw.drawWEllipse(ellipse);
                     }
                     break;
                 case OPERATION.createTangentCircle:
                     arc = entityData.tangentCircle(pickList, points);
-                    if (arc != null)
+                    if (arc != null) {
+                        preDragging();
                         ydraw.drawWArc(arc);
+                    }
                     break;
                 case OPERATION.createText:
                     TextD text = new TextD(mMainWindow.tbTextString.Text, points[0], mPara.mTextSize, 
                         mPara.mTextRotate, mPara.mHa, mPara.mVa, mPara.mLinePitchRate);
+                    preDragging();
                     ydraw.drawWText(text);
                     break;
                 case OPERATION.createArrow:
@@ -178,6 +251,7 @@ namespace CadApp
                     parts.mArrowSize = mPara.mArrowSize;
                     if (1 < points.Count) {
                         parts.createArrow(points[0], points[1]);
+                        preDragging();
                         drawWParts(parts);
                     }
                     break;
@@ -187,65 +261,116 @@ namespace CadApp
                     parts.mArrowSize = mPara.mArrowSize;
                     if (1 < points.Count) {
                         parts.createLabel(points, mMainWindow.tbTextString.Text);
+                        preDragging();
                         drawWParts(parts);
                     }
                     break;
                 case OPERATION.createLocDimension:
+                    preDragging();
                     locDimensionDragging(entityData, points, pickList);
                     break;
                 case OPERATION.createDimension:
+                    preDragging();
                     dimensionDragging(entityData, points, pickList);
                     break;
                 case OPERATION.createAngleDimension:
+                    preDragging();
                     angleDimensionDragging(entityData, points, pickList);
                     break;
                 case OPERATION.createDiameterDimension:
+                    preDragging();
                     diameterDimensionDragging(entityData, points, pickList);
                     break;
                 case OPERATION.createRadiusDimension:
+                    preDragging();
                     radiusDimensionDragging(entityData, points, pickList);
                     break;
                 case OPERATION.translate:
                 case OPERATION.copyTranslate:
+                    preDragging();
                     translateDragging(entityData, points, pickList);
                     break;
                 case OPERATION.rotate:
                 case OPERATION.copyRotate:
+                    preDragging();
                     rotateDragging(entityData, points, pickList);
                     break;
                 case OPERATION.mirror:
                 case OPERATION.copyMirror:
+                    preDragging();
                     mirrorDragging(entityData, points, pickList);
+                    break;
+                case OPERATION.scale:
+                case OPERATION.copyScale:
+                    preDragging();
+                    scaleDragging(entityData, points, pickList);
                     break;
                 case OPERATION.offset:
                 case OPERATION.copyOffset:
+                    preDragging();
                     offsetDragging(entityData, points, pickList);
                     break;
                 case OPERATION.trim:
+                case OPERATION.copyTrim:
+                    preDragging();
                     trimDragging(entityData, points, pickList);
                     break;
                 case OPERATION.divide:
                     break;
                 case OPERATION.stretch:
+                    preDragging();
                     stretchDragging(entityData, points, pickList);
                     break;
                 case OPERATION.entityPaste: {
                         Box b = new Box(points[0], mCopyArea.Size);
                         List<PointD> plist = b.ToPointDList();
+                        preDragging();
                         ydraw.drawWPolygon(plist);
+                    }
+                    break;
+                case OPERATION.createSymbol: {
+                        if (mCopyEntityList != null && 0 < mCopyEntityList.Count) {
+                            PointD vec = points[0] - mCopyEntityList[0].mArea.getCenter();
+                            Entity ent = mCopyEntityList[0].toCopy();
+                            preDragging();
+                            ent.mColor = mDraggingColor;
+                            ent.translate(vec);
+                            ent.draw(ydraw);
+                        }
                     }
                     break;
                 default:
                     return;
             }
             // ロケイト点表示
-            if (operation != OPERATION.createPoint) {
+            if (operation != OPERATION.createPoint
+                 && operation != OPERATION.createText
+                 && operation != OPERATION.entityPaste
+                 && operation != OPERATION.createSymbol) {
+                if (points.Count == 1)
+                    preDragging();
                 ydraw.mPointType = 2;
                 ydraw.mPointSize = 3;
                 for (int i = 0; i < points.Count; i++) {
                     ydraw.drawWPoint(points[i]);
                 }
             }
+        }
+
+        /// <summary>
+        /// ドラッギング表示の前処理
+        /// </summary>
+        private void preDragging()
+        {
+            mCanvas.Children.Clear();
+            mMainWindow.imScreen.Source = mBitmapSource;
+            mCanvas.Children.Add(mMainWindow.imScreen);
+            ydraw.mBrush = mDraggingColor;
+            ydraw.mTextColor = mDraggingColor;
+            ydraw.mThickness = mPara.mThickness;
+            ydraw.mLineType = mPara.mLineType;
+            ydraw.mPointType = mPara.mPointType;
+            ydraw.mPointSize = mPara.mPointSize;
         }
 
         /// <summary>
@@ -421,6 +546,27 @@ namespace CadApp
                 Entity ent = entityData.mEntityList[entNo.Item1].toCopy();
                 ent.mColor = mDraggingColor;
                 ent.mirror(loc[0], loc[1]);
+                ent.draw(ydraw);
+            }
+        }
+
+        /// <summary>
+        /// 拡大縮小ドラッギング
+        /// </summary>
+        /// <param name="entityData">要素データリスト</param>
+        /// <param name="loc">ロケイト点リスト</param>
+        /// <param name="pickList">ピック要素リスト</param>
+        private void scaleDragging(EntityData entityData, List<PointD> loc, List<(int no, PointD pos)> pickList)
+        {
+            if (loc.Count < 3) return;
+
+            ydraw.mBrush = mDraggingColor;
+            double scale = loc[0].length(loc[2]) / loc[0].length(loc[1]);
+
+            foreach ((int, PointD) entNo in pickList) {
+                Entity ent = entityData.mEntityList[entNo.Item1].toCopy();
+                ent.mColor = mDraggingColor;
+                ent.scale(loc[0], scale);
                 ent.draw(ydraw);
             }
         }

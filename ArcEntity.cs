@@ -58,7 +58,7 @@ namespace CadApp
                 mArc.mSa = double.Parse(data[3]);
                 mArc.mEa = double.Parse(data[4]);
             } catch(Exception e) {
-
+                System.Diagnostics.Debug.WriteLine(e.Message);
             }
             mArea = new Box(mArc);
         }
@@ -157,6 +157,17 @@ namespace CadApp
         }
 
         /// <summary>
+        /// 原点を指定して拡大縮小
+        /// </summary>
+        /// <param name="cp">原点</param>
+        /// <param name="scale">拡大率</param>
+        public override void scale(PointD cp, double scale)
+        {
+            mArc.scale(cp, scale);
+            mArea = new Box(mArc);
+        }
+
+        /// <summary>
         /// 要素のオフセット
         /// </summary>
         /// <param name="sp">始点座標</param>
@@ -228,11 +239,10 @@ namespace CadApp
         public override List<PointD> intersection(Entity entity)
         {
             List<PointD> plist = new List<PointD>();
-            PointD ip = null;
             switch (entity.mEntityId) {
                 case EntityId.Point:
                     PointEntity point = (PointEntity)entity;
-                    ip = mArc.intersection(point.mPoint);
+                    PointD ip = mArc.intersection(point.mPoint);
                     plist.Add(ip);
                     break;
                 case EntityId.Line:

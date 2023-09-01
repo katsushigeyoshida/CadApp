@@ -8,6 +8,9 @@ namespace CadApp
 {
     /// <summary>
     /// SettingDlg.xaml の相互作用ロジック
+    /// 
+    /// システム設定ダイヤログ
+    /// 
     /// </summary>
     public partial class SettingDlg : Window
     {
@@ -21,6 +24,7 @@ namespace CadApp
         public double mArrowAngle = 30;
         public double mGridSize = 1;
         public string mDataFolder = "";
+        public string mSymbolFolder = "";
         public string mBackupFolder = "";
         public string mDiffTool = "";
 
@@ -43,51 +47,68 @@ namespace CadApp
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            tbAreaLeft.Text = mWorldWindow.Left.ToString();
-            tbAreaBottum.Text = mWorldWindow.Bottom.ToString();
-            tbAreaRight.Text = mWorldWindow.Right.ToString();
-            tbAreaTop.Text = mWorldWindow.Top.ToString();
-            tbPointSize.Text = mPointSize.ToString();
+            tbAreaLeft.Text     = mWorldWindow.Left.ToString();
+            tbAreaBottum.Text   = mWorldWindow.Bottom.ToString();
+            tbAreaRight.Text    = mWorldWindow.Right.ToString();
+            tbAreaTop.Text      = mWorldWindow.Top.ToString();
+            tbPointSize.Text    = mPointSize.ToString();
             cbPointType.SelectedIndex = mPointType;
-            tbThickness.Text = mThickness.ToString();
+            tbThickness.Text    = mThickness.ToString();
             cbLineType.SelectedIndex = mLineType;
-            tbTextSize.Text = mTextSize.ToString();
-            tbArrowSize.Text = mArrowSize.ToString();
-            tbArrowAngle.Text = ylib.R2D(mArrowAngle).ToString();
-            tbGridSize.Text = mGridSize.ToString();
-            tbDataFolder.Text = mDataFolder;
+            tbTextSize.Text     = mTextSize.ToString();
+            tbArrowSize.Text    = mArrowSize.ToString();
+            tbArrowAngle.Text   = ylib.double2StrZeroSup(ylib.R2D(mArrowAngle), "F8");
+            tbGridSize.Text     = mGridSize.ToString();
+            tbDataFolder.Text   = mDataFolder;
+            tbSymbolFolder.Text = mSymbolFolder;
             tbBackupFolder.Text = mBackupFolder;
-            tbDiffTool.Text = mDiffTool;
+            tbDiffTool.Text     = mDiffTool;
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// [OK]ボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btOK_Click(object sender, RoutedEventArgs e)
         {
-            mWorldWindow.Left = ylib.string2double(tbAreaLeft.Text);
+            mWorldWindow.Left   = ylib.string2double(tbAreaLeft.Text);
             mWorldWindow.Bottom = ylib.string2double(tbAreaBottum.Text);
-            mWorldWindow.Right = ylib.string2double(tbAreaRight.Text);
-            mWorldWindow.Top = ylib.string2double(tbAreaTop.Text);
-            mPointSize = ylib.string2double(tbPointSize.Text);
-            mPointType = cbPointType.SelectedIndex;
-            mThickness = ylib.string2double(tbThickness.Text);
-            mLineType = cbLineType.SelectedIndex;
-            mTextSize = ylib.string2double(tbTextSize.Text);
-            mArrowSize = ylib.string2double(tbArrowSize.Text);
-            mArrowAngle = ylib.D2R(ylib.string2double(tbArrowAngle.Text));
-            mGridSize = ylib.string2double(tbGridSize.Text);
-            mDataFolder = tbDataFolder.Text;
-            mBackupFolder = tbBackupFolder.Text;
-            mDiffTool = tbDiffTool.Text;
+            mWorldWindow.Right  = ylib.string2double(tbAreaRight.Text);
+            mWorldWindow.Top    = ylib.string2double(tbAreaTop.Text);
+            mPointSize          = ylib.string2double(tbPointSize.Text);
+            mPointType          = cbPointType.SelectedIndex;
+            mThickness          = ylib.string2double(tbThickness.Text);
+            mLineType           = cbLineType.SelectedIndex;
+            mTextSize           = ylib.string2double(tbTextSize.Text);
+            mArrowSize          = ylib.string2double(tbArrowSize.Text);
+            mArrowAngle         = ylib.D2R(ylib.string2double(tbArrowAngle.Text));
+            mGridSize           = ylib.string2double(tbGridSize.Text);
+            mDataFolder         = tbDataFolder.Text;
+            mSymbolFolder       = tbSymbolFolder.Text;
+            mBackupFolder       = tbBackupFolder.Text;
+            mDiffTool           = tbDiffTool.Text;
 
             DialogResult = true;
             Close();
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// [Cancel]ボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btCancel_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
             Close();
         }
 
+        /// <summary>
+        /// [データフォルダ]選択
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void tbDataFolder_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             string folder = ylib.folderSelect("データフォルダ", mDataFolder);
@@ -95,6 +116,23 @@ namespace CadApp
                 tbDataFolder.Text = folder;
         }
 
+        /// <summary>
+        /// [シンボルフォルダ]選択
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void tbSymbolFolder_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            string folder = ylib.folderSelect("シンボルフォルダ", mSymbolFolder);
+            if (folder != null && 0 < folder.Length)
+                tbSymbolFolder.Text = folder;
+        }
+
+        /// <summary>
+        /// [バックアップフォルダ]選択
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void tbBackupFolder_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             string folder = ylib.folderSelect("バックアップフォルダ", mBackupFolder);
@@ -102,6 +140,11 @@ namespace CadApp
                 tbBackupFolder.Text = folder;
         }
 
+        /// <summary>
+        /// [テキスト比較ツール]選択
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void tbDiffTool_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             List<string[]> filters = new List<string[]>() {
@@ -112,5 +155,6 @@ namespace CadApp
             if (0 < filePath.Length)
                 tbDiffTool.Text = filePath;
         }
+
     }
 }

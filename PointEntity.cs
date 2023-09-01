@@ -147,6 +147,17 @@ namespace CadApp
         }
 
         /// <summary>
+        /// 原点を指定して拡大縮小
+        /// </summary>
+        /// <param name="cp">原点</param>
+        /// <param name="scale">拡大率</param>
+        public override void scale(PointD cp, double scale)
+        {
+            mPoint.scale(cp, scale);
+            mArea = new Box(mPoint);
+        }
+
+        /// <summary>
         /// 要素のオフセット
         /// </summary>
         /// <param name="sp">始点座標</param>

@@ -176,6 +176,17 @@ namespace CadApp
         }
 
         /// <summary>
+        /// 原点を指定して拡大縮小
+        /// </summary>
+        /// <param name="cp">原点</param>
+        /// <param name="scale">拡大率</param>
+        public override void scale(PointD cp, double scale)
+        {
+            mPolyline.scale(cp, scale);
+            mArea = mPolyline.getBox();
+        }
+
+        /// <summary>
         /// 要素のオフセット
         /// </summary>
         /// <param name="sp">始点座標</param>
@@ -246,7 +257,6 @@ namespace CadApp
         public override List<PointD> intersection(Entity entity)
         {
             List<PointD> plist = new List<PointD>();
-            PointD ip = null;
             switch (entity.mEntityId) {
                 case EntityId.Point:
                     PointEntity point = (PointEntity)entity;

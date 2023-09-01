@@ -62,7 +62,7 @@ namespace CadApp
                 mText.mVa = (VerticalAlignment)Enum.Parse(typeof(VerticalAlignment), data[6]);
                 mText.mLinePitchRate = double.Parse(data[7]);
             } catch (Exception e) {
-
+                System.Diagnostics.Debug.WriteLine(e.Message);
             }
             mArea = new Box(mText.getBox());
         }
@@ -157,6 +157,17 @@ namespace CadApp
         public override void mirror(PointD sp, PointD ep)
         {
             mText.mirror(sp, ep);
+            mArea = mText.getBox();
+        }
+
+        /// <summary>
+        /// 原点を指定して拡大縮小
+        /// </summary>
+        /// <param name="cp">原点</param>
+        /// <param name="scale">拡大率</param>
+        public override void scale(PointD cp, double scale)
+        {
+            mText.scale(cp, scale);
             mArea = mText.getBox();
         }
 

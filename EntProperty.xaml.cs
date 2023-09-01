@@ -7,6 +7,8 @@ namespace CadApp
 {
     /// <summary>
     /// EntProperty.xaml の相互作用ロジック
+    /// 
+    /// 要素プロパティ変更ダイヤログ
     /// </summary>
     public partial class EntProperty : Window
     {
@@ -33,9 +35,7 @@ namespace CadApp
         public EntityId mEntityId = EntityId.Non;
         public string mColorName = "Black";
         public Brush mColor = Brushes.Black;
-        //public int mPointType = 0;
         public int mLineType = 0;
-        //public double mPointSize = 1;
         public double mThickness = 1;
         public double mTextSize = 12;
         public HorizontalAlignment mHa = HorizontalAlignment.Left;
@@ -46,6 +46,7 @@ namespace CadApp
         public double mLinePitchRate = 1.2;
         public List<string> mLayerNameList = new List<string>();
         public string mLayerName = "";
+        public string mPartsName = "";
 
         YDraw ydraw = new YDraw();
         YLib ylib = new YLib();
@@ -78,6 +79,7 @@ namespace CadApp
                                        mVa == VerticalAlignment.Center ? 1 : 2;
             tbArrowSize.Text = mArrowSize.ToString();
             tbArrowAngle.Text = ylib.double2StrZeroSup(ylib.R2D(mArrowAngle),"F8");
+            tbPartsName.Text = mPartsName.TrimStart('_');
 
             lbTextSizeTitle.IsEnabled = false;
             tbTextSize.IsEnabled      = false;
@@ -94,6 +96,8 @@ namespace CadApp
             tbArrowSize.IsEnabled       = false;
             lbArrowAngleTitle.IsEnabled = false;
             tbArrowAngle.IsEnabled      = false;
+            lbPartsNameTitle.IsEnabled  = false;
+            tbPartsName.IsEnabled       = false;
 
             if (mEntityId == EntityId.Text || mEntityId == EntityId.Parts) {
                 lbTextSizeTitle.IsEnabled = true;
@@ -126,11 +130,20 @@ namespace CadApp
                 tbArrowSize.IsEnabled       = true;
                 lbArrowAngleTitle.IsEnabled = true;
                 tbArrowAngle.IsEnabled      = true;
+                if (mPartsName.Length == 0 || (2 < mPartsName.Length && mPartsName.Substring(0, 2) == "__")) {
+                    lbPartsNameTitle.IsEnabled = true;
+                    tbPartsName.IsEnabled = true;
+                }
             }
             cbLayerName.ItemsSource = mLayerNameList;
             cbLayerName.Text = mLayerName;
         }
 
+        /// <summary>
+        /// [OK]ボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void btOK_Click(object sender, RoutedEventArgs e)
         {
             if (0 <= cbColor.SelectedIndex) {
@@ -155,11 +168,18 @@ namespace CadApp
             mArrowSize = ylib.string2double(tbArrowSize.Text);
             mArrowAngle = ylib.D2R(ylib.string2double(tbArrowAngle.Text));
             mLayerName = cbLayerName.Text;
+            if (mPartsName.Length == 0 || (2 < mPartsName.Length && mPartsName.Substring(0, 2) == "__"))
+                mPartsName = "__" + tbPartsName.Text;
 
             DialogResult = true;
             Close();
         }
 
+        /// <summary>
+        /// [キャンセル]ボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void btCancel_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;

@@ -5,11 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CadApp"
         mc:Ignorable="d"
-        Title="要素属性" Height="260" Width="300" Loaded="Window_Loaded">
+        Title="要素属性" Height="300" Width="300" Loaded="Window_Loaded">
     <Grid>
-        <Label Content="色" HorizontalAlignment="Left" Margin="10,5,0,0" VerticalAlignment="Top" />
+        <Label Name="lbLayerTitle" Content="レイヤー" Margin="10,5,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <ComboBox Name="cbLayerName" IsEditable="True" Height="20" Margin="70,5,10,0" VerticalAlignment="Top" />
+        <Label Content="色" HorizontalAlignment="Left" Margin="10,30,0,0" VerticalAlignment="Top" />
         <ComboBox Name="cbColor" ItemsSource="{Binding}" SelectedValue="{Binding Color}"
-            Margin="70,5,10,0" VerticalAlignment="Top" >
+            Margin="70,30,10,0" VerticalAlignment="Top" >
             <ComboBox.ItemTemplate>
                 <DataTemplate>
                     <!--色と色名を並べて表示-->
@@ -22,26 +24,26 @@
                 </DataTemplate>
             </ComboBox.ItemTemplate>
         </ComboBox>
-        <Label Name="lbTypeTitle" Content="線種" Margin="10,30,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <ComboBox Name="cbType" Margin="70,30,0,0" Width="80" VerticalAlignment="Top" HorizontalAlignment="Left"  />
-        <Label Name="lbSizeTitle" Content="線太さ" Margin="165,30,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <ComboBox Name="cbThickness" Margin="210,30,0,0" Width="60" VerticalAlignment="Top" HorizontalAlignment="Left" />
-        <Label Name="lbTextSizeTitle" Content="文字　　 サイズ" Margin="10,55,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <TextBox Name="tbTextSize" Margin="100,60,0,0" Width="50" VerticalAlignment="Top" HorizontalAlignment="Left" />
-        <Label Name="lbRotateTitle" Content="回転角" Margin="165,55,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <TextBox Name="tbTextRotate" Margin="210,60,0,0" Width="50" VerticalAlignment="Top" HorizontalAlignment="Left" />
-        <Label Name="lbLinePitchRateTitle" Content="改行比率" Margin="60,80,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <TextBox Name="tbLinePitchRate" Margin="120,85,0,0" Width="50" VerticalAlignment="Top" HorizontalAlignment="Left" />
-        <Label Name="lbAlimentTitle" Content="アライメント 水平" Margin="10,105,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <ComboBox Name="cbHorizontal" Margin="100,108,0,0" Width="60" VerticalAlignment="Top" HorizontalAlignment="Left" />
-        <Label Name="lbVATitle" Content="垂直" Margin="165,105,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <ComboBox Name="cbVertical" Margin="210,108,0,0" Width="60" VerticalAlignment="Top" HorizontalAlignment="Left" />
-        <Label Name="lbArrowSizeTitle" Content="矢印　　 サイズ" Margin="10,130,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <TextBox Name="tbArrowSize" Margin="100,135,0,0" Width="50" VerticalAlignment="Top" HorizontalAlignment="Left" />
-        <Label Name="lbArrowAngleTitle" Content="角度" Margin="165,130,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <TextBox Name="tbArrowAngle" Margin="210,135,0,0" Width="50" VerticalAlignment="Top" HorizontalAlignment="Left" />
-        <Label Name="lbLayerTitle" Content="レイヤー" Margin="10,155,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <ComboBox Name="cbLayerName" IsEditable="True" Height="20" Margin="70,160,10,0" VerticalAlignment="Top" />
+        <Label Name="lbTypeTitle" Content="線種" Margin="10,55,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <ComboBox Name="cbType" Margin="70,55,0,0" Width="80" VerticalAlignment="Top" HorizontalAlignment="Left"  />
+        <Label Name="lbSizeTitle" Content="線太さ" Margin="165,55,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <ComboBox Name="cbThickness" Margin="210,55,0,0" Width="60" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <Label Name="lbTextSizeTitle" Content="文字　　 サイズ" Margin="10,80,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <TextBox Name="tbTextSize" Margin="100,85,0,0" Width="50" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <Label Name="lbRotateTitle" Content="回転角" Margin="165,80,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <TextBox Name="tbTextRotate" Margin="210,85,0,0" Width="50" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <Label Name="lbLinePitchRateTitle" Content="改行比率" Margin="60,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <TextBox Name="tbLinePitchRate" Margin="120,105,0,0" Width="50" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <Label Name="lbAlimentTitle" Content="アライメント 水平" Margin="10,130,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <ComboBox Name="cbHorizontal" Margin="100,130,0,0" Width="60" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <Label Name="lbVATitle" Content="垂直" Margin="165,130,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <ComboBox Name="cbVertical" Margin="210,130,0,0" Width="60" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <Label Name="lbArrowSizeTitle" Content="矢印　　 サイズ" Margin="10,155,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <TextBox Name="tbArrowSize" Margin="100,160,0,0" Width="50" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <Label Name="lbArrowAngleTitle" Content="角度" Margin="165,155,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <TextBox Name="tbArrowAngle" Margin="210,160,0,0" Width="50" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <Label Name="lbPartsNameTitle" Content="パーツ名" Margin="10,180,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <TextBox Name="tbPartsName" Margin="70,185,10,0" VerticalAlignment="Top" />
 
         <Button x:Name="btOK" Content="OK" IsDefault="True" Height="20" Margin="0,0,80,10" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="50" Click="btOK_Click"/>
         <Button x:Name="btCancel" Content="Cancel" IsCancel="True" Height="20" Margin="0,0,20,10" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="50" Click="btCancel_Click"/>

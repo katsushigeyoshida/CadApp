@@ -119,7 +119,7 @@ namespace CadApp
                         mPara.mArrowAngle = 30 * Math.PI / 180;
                 }
             } catch (Exception e) {
-
+                System.Diagnostics.Debug.WriteLine(e.Message);
             }
         }
 
@@ -532,17 +532,49 @@ namespace CadApp
         }
 
         /// <summary>
-        /// 要素を追加する
+        /// 接円を作成する
         /// </summary>
-        /// <param name="entity">Entityデータ</param>
-        /// <returns></returns>
-        public int addEntity(Entity entity)
+        /// <param name="pickList">ピック要素</param>
+        /// <param name="loc">参照位置</param>
+        /// <returns>円データ</returns>
+        public ArcD tangentCircle(List<(int no, PointD pos)> pickList, List<PointD> loc, double r = 0)
         {
-            entity.updateArea();
-            mEntityList.Add(entity);
-            entity.mNo = mEntityList.Count - 1;
-            entity.mOperationCount = mOperationCouunt;
-            return entity.mNo;
+            if (1 < pickList.Count && loc.Count == 1) {
+                List<ArcD> arcList = null;
+                Entity ent0 = mEntityList[pickList[0].no];
+                Entity ent1 = mEntityList[pickList[1].no];
+                if ((ent0.mEntityId == EntityId.Line || ent0.mEntityId == EntityId.Polyline || ent0.mEntityId == EntityId.Polygon) &&
+                    (ent1.mEntityId == EntityId.Line || ent1.mEntityId == EntityId.Polyline || ent1.mEntityId == EntityId.Polygon)) {
+                    LineD l0 = ent0.getLine(pickList[0].pos);
+                    LineD l1 = ent1.getLine(pickList[1].pos);
+                    if (!l0.isNaN() && !l1.isNaN()) {
+                        r = r == 0 ? l0.distance(loc[0]) : r;
+                        ArcD arc = new ArcD();
+                        arcList = arc.tangentCircle(l0, l1, r);
+                    }
+                } else if ((ent0.mEntityId == EntityId.Line || ent0.mEntityId == EntityId.Polyline || ent0.mEntityId == EntityId.Polygon) &&
+                        ent1.mEntityId == EntityId.Arc) {
+                    LineD l0 = ent0.getLine(pickList[0].pos);
+                    ArcD arc = ((ArcEntity)ent1).mArc;
+                    r = r == 0 ? l0.distance(loc[0]) : r;
+                    arcList = arc.tangentCircle(l0, arc, r);
+                } else if ((ent1.mEntityId == EntityId.Line || ent1.mEntityId == EntityId.Polyline || ent1.mEntityId == EntityId.Polygon) &&
+                        ent0.mEntityId == EntityId.Arc) {
+                    LineD l1 = ent1.getLine(pickList[1].pos);
+                    ArcD arc = ((ArcEntity)ent0).mArc;
+                    r = r == 0 ? l1.distance(loc[0]) : r;
+                    arcList = arc.tangentCircle(l1, arc, r);
+                } else if (ent0.mEntityId == EntityId.Arc && ent1.mEntityId == EntityId.Arc) {
+                    ArcD arc0 = ((ArcEntity)ent0).mArc;
+                    ArcD arc1 = ((ArcEntity)ent1).mArc;
+                    r = r == 0 ? Math.Abs(arc0.mCp.length(loc[0]) - arc0.mR) : r;
+                    arcList = arc0.tangentCircle(arc0, arc1, r);
+                } else {
+                    return null;
+                }
+                return arcList.MinBy(p => p.mCp.length(loc[0]));
+            }
+            return null;
         }
 
         /// <summary>
@@ -557,7 +589,6 @@ namespace CadApp
                     && !ydraw.mWorld.outsideChk(entity.mArea))
                     entity.draw(ydraw);
             }
-
         }
 
         /// <summary>
@@ -623,6 +654,27 @@ namespace CadApp
         }
 
         /// <summary>
+        /// 原点を指定して拡大縮小
+        /// </summary>
+        /// <param name="pickList">要素リスト</param>
+        /// <param name="cp">原点</param>
+        /// <param name="scale">拡大率</param>
+        /// <param name="copy">コピー作成</param>
+        /// <returns></returns>
+        public bool scale(List<(int no, PointD pos)> pickList, PointD cp, double scale, bool copy = false)
+        {
+            foreach ((int no, PointD pos) entNo in pickList) {
+                mEntityList.Add(mEntityList[entNo.no].toCopy());
+                mEntityList[mEntityList.Count - 1].scale(cp, scale);
+                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
+                if (!copy)
+                    removeEnt(entNo.no);
+            }
+            updateData();
+            return true;
+        }
+
+        /// <summary>
         /// 要素をオフセットする
         /// </summary>
         /// <param name="pickList">要素リスト</param>
@@ -649,14 +701,16 @@ namespace CadApp
         /// <param name="pickList">要素リスト</param>
         /// <param name="sp">始点座標</param>
         /// <param name="ep">終点座標</param>
+        /// <param name="copy">コピー作成</param>
         /// <returns></returns>
-        public bool trim(List<(int no, PointD pos)> pickList, PointD sp, PointD ep)
+        public bool trim(List<(int no, PointD pos)> pickList, PointD sp, PointD ep, bool copy = false)
         {
             foreach ((int no, PointD pos) entNo in pickList) {
                 mEntityList.Add(mEntityList[entNo.no].toCopy());
                 mEntityList[mEntityList.Count - 1].trim(sp, ep);
                 mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
-                removeEnt(entNo.no);
+                if (!copy)
+                    removeEnt(entNo.no);
             }
             updateData();
             return true;
@@ -713,7 +767,7 @@ namespace CadApp
             mOperationCouunt++;
             List<LineD> lines;
             foreach ((int no, PointD pos) entNo in pickList) {
-                Entity entity = mEntityList[pickList[0].no];
+                Entity entity = mEntityList[entNo.no];
                 getProperty(entity);
                 switch (entity.mEntityId) {
                     case EntityId.Polyline:
@@ -756,7 +810,21 @@ namespace CadApp
         }
 
         /// <summary>
-        /// 指定要素を削除する
+        /// 要素を追加する
+        /// </summary>
+        /// <param name="entity">Entityデータ</param>
+        /// <returns></returns>
+        public int addEntity(Entity entity)
+        {
+            entity.updateArea();
+            mEntityList.Add(entity);
+            entity.mNo = mEntityList.Count - 1;
+            entity.mOperationCount = mOperationCouunt;
+            return entity.mNo;
+        }
+
+        /// <summary>
+        /// ピックした要素を削除する
         /// </summary>
         /// <param name="pickList">要素番号リスト</param>
         /// <returns></returns>
@@ -807,22 +875,29 @@ namespace CadApp
         }
 
         /// <summary>
-        /// 要素領域、要素番号の更新
+        /// 要素領域、要素番号、レイヤービットの更新、
         /// </summary>
         public void updateData()
         {
             if (mEntityList != null && 0 < mEntityList.Count) {
                 mArea = null;
                 for (int i = 0; i < mEntityList.Count; i++) {
-                    if (!mEntityList[i].mRemove && mEntityList[i].mEntityId != EntityId.Link) {
+                    if (!mEntityList[i].mRemove && mEntityList[i].mEntityId != EntityId.Link
+                        && (mEntityList[i].mLayerBit & mPara.mDispLayerBit) != 0) {
+                        //  要素領域の更新
                         if (mArea == null) {
                             mArea = mEntityList[i].mArea.toCopy();
                         } else {
                             mEntityList[i].updateArea();
                             mArea.extension(mEntityList[i].mArea);
                         }
+                        //  要素番号
                         mEntityList[i].mNo = i;
                     }
+                    //  レイヤービットの更新
+                    if (mEntityList[i].mLayerName.Length == 0)
+                        mEntityList[i].mLayerName = mPara.mCreateLayerName;
+                    mEntityList[i].mLayerBit = setLayerBit(mEntityList[i].mLayerName);
                 }
             }
         }
@@ -848,51 +923,6 @@ namespace CadApp
                     picks.Add(i);
             }
             return picks;
-        }
-        /// <summary>
-        /// 接円を作成する
-        /// </summary>
-        /// <param name="pickList">ピック要素</param>
-        /// <param name="loc">参照位置</param>
-        /// <returns>円データ</returns>
-        public ArcD tangentCircle(List<(int no, PointD pos)> pickList, List<PointD> loc, double r = 0)
-        {
-            if (1 < pickList.Count && loc.Count == 1) {
-                List<ArcD> arcList = null;
-                Entity ent0 = mEntityList[pickList[0].no];
-                Entity ent1 = mEntityList[pickList[1].no];
-                if ((ent0.mEntityId == EntityId.Line || ent0.mEntityId == EntityId.Polyline || ent0.mEntityId == EntityId.Polygon) &&
-                    (ent1.mEntityId == EntityId.Line || ent1.mEntityId == EntityId.Polyline || ent1.mEntityId == EntityId.Polygon)) {
-                    LineD l0 = ent0.getLine(pickList[0].pos);
-                    LineD l1 = ent1.getLine(pickList[1].pos);
-                    if (!l0.isNaN() && !l1.isNaN()) {
-                        r = r == 0 ? l0.distance(loc[0]) : r;
-                        ArcD arc = new ArcD();
-                        arcList = arc.tangentCircle(l0, l1, r);
-                    }
-                } else if ((ent0.mEntityId == EntityId.Line || ent0.mEntityId == EntityId.Polyline || ent0.mEntityId == EntityId.Polygon) &&
-                        ent1.mEntityId == EntityId.Arc) {
-                    LineD l0 = ent0.getLine(pickList[0].pos);
-                    ArcD arc = ((ArcEntity)ent1).mArc;
-                    r = r == 0 ? l0.distance(loc[0]) : r;
-                    arcList = arc.tangentCircle(l0, arc, r);
-                } else if ((ent1.mEntityId == EntityId.Line || ent1.mEntityId == EntityId.Polyline || ent1.mEntityId == EntityId.Polygon) &&
-                        ent0.mEntityId == EntityId.Arc) {
-                    LineD l1 = ent1.getLine(pickList[1].pos);
-                    ArcD arc = ((ArcEntity)ent0).mArc;
-                    r = r== 0 ? l1.distance(loc[0]) : r;
-                    arcList = arc.tangentCircle(l1, arc, r);
-                } else if (ent0.mEntityId == EntityId.Arc && ent1.mEntityId == EntityId.Arc) {
-                    ArcD arc0 = ((ArcEntity)ent0).mArc;
-                    ArcD arc1 = ((ArcEntity)ent1).mArc;
-                    r = r == 0 ? Math.Abs(arc0.mCp.length(loc[0]) - arc0.mR) : r;
-                    arcList = arc0.tangentCircle(arc0, arc1, r);
-                } else {
-                    return null;
-                }
-                return arcList.MinBy(p => p.mCp.length(loc[0]));
-            }
-            return null;
         }
 
         /// <summary>
@@ -1127,7 +1157,7 @@ namespace CadApp
                 }
             }
             updateData();
-            updateLayerList();
+            //updateLayerList();
         }
 
         /// <summary>

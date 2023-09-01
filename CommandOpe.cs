@@ -324,13 +324,22 @@ namespace CadApp
                 case OPERATION.translate:
                 case OPERATION.rotate:
                 case OPERATION.mirror:
+                case OPERATION.scale:
                 case OPERATION.trim:
                 case OPERATION.divide:
                 case OPERATION.stretch:
                 case OPERATION.copyTranslate:
                 case OPERATION.copyRotate:
                 case OPERATION.copyMirror:
+                case OPERATION.copyScale:
+                case OPERATION.copyTrim:
                 case OPERATION.copyOffset:
+                    locMode = MainWindow.OPEMODE.loc;
+                    mLocPos.Clear();
+                    commansInit = false;
+                    break;
+                case OPERATION.createSymbol:                //  シンボル配置
+                    selectSymbol();
                     locMode = MainWindow.OPEMODE.loc;
                     mLocPos.Clear();
                     commansInit = false;
@@ -350,7 +359,7 @@ namespace CadApp
                 case OPERATION.screenCopy:                  //  製図領域のイメージコピー
                     mMainWindow.screenCopy();
                     break;
-                case OPERATION.screenSave:                  //  製図領域のイメージコピー
+                case OPERATION.screenSave:                  //  製図領域のイメージ保存
                     mMainWindow.screenSave();
                     break;
                 case OPERATION.entityCopy:                  //  要素コピー
@@ -361,6 +370,9 @@ namespace CadApp
                     locMode = MainWindow.OPEMODE.loc;
                     mLocPos.Clear();
                     commansInit = false;
+                    break;
+                case OPERATION.symbolAssemble:             //  シンボル化
+                    cnvSymbol(mPickEnt);
                     break;
                 case OPERATION.disassemble:                 //  分解
                     mEntityData.disassemble(mPickEnt);
@@ -395,6 +407,13 @@ namespace CadApp
                 case OPERATION.setAllDispLayer:             //  全レイヤー表示
                     mPara.mDispLayerBit = 0xffffffff;
                     mEntityData.mPara.mDispLayerBit = mPara.mDispLayerBit;
+                    mEntityData.updateData();
+                    break;
+                case OPERATION.setSymbol:
+                    setSymbol(mPickEnt);
+                    break;
+                case OPERATION.manageSymbol:
+                    manageSymbol();
                     break;
                 case OPERATION.allClear:
                     break;
@@ -403,6 +422,9 @@ namespace CadApp
                     mEntityData.updateData();
                     break;
                 case OPERATION.redo:
+                    break;
+                case OPERATION.print:                       //  印刷
+                    mMainWindow.print();
                     break;
                 case OPERATION.cancel:                      //  キャンセル
                     mLocPos.Clear();
@@ -437,7 +459,7 @@ namespace CadApp
                 || operation == OPERATION.createPolyline || operation == OPERATION.createPolygon
                 || operation == OPERATION.createArrow || operation == OPERATION.createLabel
                 || operation == OPERATION.createLocDimension
-                || operation == OPERATION.entityPaste) {
+                || operation == OPERATION.entityPaste || operation == OPERATION.createSymbol) {
                 //  要素の追加 (Ctrlキーなし)
                 if (createData(locPos, operation)) {
                     return true;
@@ -454,16 +476,22 @@ namespace CadApp
                 }
             } else if (locPos.Count == 2 &&
                 (operation == OPERATION.translate || operation == OPERATION.rotate
-                || operation == OPERATION.mirror || operation == OPERATION.offset
-                || operation == OPERATION.copyRotate
+                || operation == OPERATION.mirror || operation == OPERATION.trim
+                || operation == OPERATION.offset
                 || operation == OPERATION.copyMirror || operation == OPERATION.copyOffset
-                || operation == OPERATION.trim || operation == OPERATION.stretch)) {
+                || operation == OPERATION.copyTrim || operation == OPERATION.stretch)) {
+                //  編集コマンド
+                if (changeData(locPos, pickEnt, operation)) {
+                    return true;
+                }
+            } else if (locPos.Count == 3 &&
+                (operation == OPERATION.scale || operation == OPERATION.copyScale)) {
                 //  編集コマンド
                 if (changeData(locPos, pickEnt, operation)) {
                     return true;
                 }
             } else if (1 < locPos.Count &&
-                (operation == OPERATION.copyTranslate || operation == OPERATION.copyRotate                || operation == OPERATION.copyRotate)) {
+                (operation == OPERATION.copyTranslate || operation == OPERATION.copyRotate)) {
                 //  編集コマンド
                 if (changeData(locPos, pickEnt, operation)) {
                     return true;
@@ -511,10 +539,18 @@ namespace CadApp
                 //  ポリライン要素の作成
                 if (1 < points.Count)
                     mEntityData.addPolyline(points);
+                else {
+                    mEntityData.mOperationCouunt--;
+                    return false;
+                }
             } else if (operation == OPERATION.createPolygon) {
                 //  ポリゴンの作成
                 if (1 < points.Count)
                     mEntityData.addPolygon(points);
+                else {
+                    mEntityData.mOperationCouunt--;
+                    return false;
+                }
             } else if (operation == OPERATION.createArrow && points.Count == 2) {
                 //  矢印の作成
                 mEntityData.addArrow(points[0], points[1]);
@@ -527,10 +563,14 @@ namespace CadApp
             } else if (operation == OPERATION.entityPaste && points.Count == 1) {
                 //  クリップボードの要素を貼り付け
                 entityPaste(points[0]);
+            } else if (operation == OPERATION.createSymbol && points.Count == 1) {
+                //  シンボルの追加
+                createSymbol(points[0]);
             } else {
                 mEntityData.mOperationCouunt--;
                 return false;
             }
+            mEntityData.updateLayerList();
             return true;
         }
 
@@ -594,6 +634,9 @@ namespace CadApp
                 } else if (operation == OPERATION.trim) {
                     //  トリム
                     mEntityData.trim(pickEnt, loc[0], loc[1]);
+                } else if (operation == OPERATION.copyTrim) {
+                    //  トリム
+                    mEntityData.trim(pickEnt, loc[0], loc[1], true);
                 } else if (operation == OPERATION.divide) {
                     //  分割
                     mEntityData.divide(pickEnt, loc[0]);
@@ -604,6 +647,17 @@ namespace CadApp
                 } else {
                     mEntityData.mOperationCouunt--;
                     return false;
+                }
+            } else if (loc.Count == 3 &&
+                (operation == OPERATION.scale || operation == OPERATION.copyScale)) {
+                if (operation == OPERATION.scale) {
+                    //  拡大縮小
+                    double scale = loc[0].length(loc[2]) / loc[0].length(loc[1]);
+                    mEntityData.scale(pickEnt, loc[0], scale);
+                } else if (operation == OPERATION.copyScale) {
+                    //  拡大縮小
+                    double scale = loc[0].length(loc[2]) / loc[0].length(loc[1]);
+                    mEntityData.scale(pickEnt, loc[0], scale, true);
                 }
             } else if (2 < loc.Count) {
                 for (int i = 1; i < loc.Count; i++) {
@@ -620,6 +674,7 @@ namespace CadApp
                 mEntityData.mOperationCouunt--;
                 return false;
             }
+            mEntityData.updateLayerList();
             return true;
         }
 
@@ -744,6 +799,7 @@ namespace CadApp
                     dlg.mLinePitchRate = parts.mParts.mLinePitchRate;
                     dlg.mArrowSize     = parts.mParts.mArrowSize;
                     dlg.mArrowAngle    = parts.mParts.mArrowAngle;
+                    dlg.mPartsName     = parts.mParts.mName;
                 }
                 if (dlg.ShowDialog() == true) {
                     //  共通属性
@@ -772,6 +828,7 @@ namespace CadApp
                         parts.mParts.mTextSize      = dlg.mTextSize;
                         parts.mParts.mLinePitchRate = dlg.mLinePitchRate;
                         parts.mParts.mTextRotate    = dlg.mTextRotate;
+                        parts.mParts.mName          = dlg.mPartsName;
                         parts.mParts.remakeData();
                     }
                     //  Undo処理
@@ -781,7 +838,6 @@ namespace CadApp
                 dlg.Close();
             }
             mEntityData.updateData();
-            mEntityData.updateLayerList();
             return true;
         }
 
@@ -921,7 +977,127 @@ namespace CadApp
                 mEntityData.addEntity(entity);
             }
             mEntityData.updateData();
-            mEntityData.updateLayerList();
+        }
+
+        /// <summary>
+        /// 選択したシンボルの配置
+        /// </summary>
+        /// <param name="loc">配置位置</param>
+        public void createSymbol(PointD loc)
+        {
+            if (mCopyEntityList != null && 0 < mCopyEntityList.Count) {
+                PointD vec = loc - mCopyEntityList[0].mArea.getCenter();
+                Entity entity = mCopyEntityList[0].toCopy();
+                entity.translate(vec);
+                entity.mOperationCount = mEntityData.mOperationCouunt;
+                mEntityData.addEntity(entity);
+                mEntityData.updateData();
+            }
+        }
+
+        /// <summary>
+        /// シンボルの選択コピー
+        /// </summary>
+        public void selectSymbol()
+        {
+            SymbolDlg dlg = new SymbolDlg();
+            dlg.Owner = mMainWindow;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.mSymbolFolder = mMainWindow.mSymbolData.mSymbolFolder;
+            if (dlg.ShowDialog() == true) {
+                Entity ent = dlg.mEntity;
+                mCopyEntityList = new List<Entity>();
+                if (ent != null)
+                    mCopyEntityList.Add(ent);
+            }
+        }
+
+        /// <summary>
+        /// ピックした要素をシンボルに変換する
+        /// </summary>
+        /// <param name="pickEnt"></param>
+        public void cnvSymbol(List<(int no, PointD pos)> pickEnt)
+        {
+            List<LineD> lines = new List<LineD>();
+            List<ArcD> arcs = new List<ArcD>();
+            List<TextD> texts = new List<TextD>();
+            for (int i = 0; i < pickEnt.Count; i++) {
+                int no = pickEnt[i].no;
+                if (mEntityData.mEntityList[no].mEntityId == EntityId.Line) {
+                    LineEntity lineEnt = (LineEntity)mEntityData.mEntityList[no];
+                    lines.Add(lineEnt.mLine);
+                } else if (mEntityData.mEntityList[no].mEntityId == EntityId.Arc) {
+                    ArcEntity arcEnt = (ArcEntity)mEntityData.mEntityList[no];
+                    arcs.Add(arcEnt.mArc);
+                } else if (mEntityData.mEntityList[no].mEntityId == EntityId.Polyline) {
+                    PolylineEntity polylineEnt = (PolylineEntity)mEntityData.mEntityList[no];
+                    lines.AddRange(polylineEnt.mPolyline.toLineList());
+                } else if (mEntityData.mEntityList[no].mEntityId == EntityId.Polygon) {
+                    PolygonEntity polygonEnt = (PolygonEntity)mEntityData.mEntityList[no];
+                    lines.AddRange(polygonEnt.mPolygon.toLineList());
+                } else if (mEntityData.mEntityList[no].mEntityId == EntityId.Text) {
+                    TextEntity textEnt = (TextEntity)mEntityData.mEntityList[no];
+                    texts.Add(textEnt.mText);
+                }
+            }
+            if (0 == lines.Count && 0 == arcs.Count && 0 == texts.Count)
+                return;
+            InputBox dlg = new InputBox();
+            dlg.Owner = mMainWindow;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.Title = "シンボルの選択";
+            if (dlg.ShowDialog() == true) {
+                mEntityData.mOperationCouunt++;
+                string name = "__" + dlg.mEditText;
+                PartsEntity entity = new PartsEntity(name, lines, arcs, texts);
+                mEntityData.mEntityList.Add(entity);
+                entity.mOperationCount = mEntityData.mOperationCouunt;
+                for (int i = 0; i < pickEnt.Count; i++)
+                    mEntityData.removeEnt(pickEnt[i].no);
+                mEntityData.updateData();
+            }
+        }
+
+        /// <summary>
+        /// シンボルデータを登録する
+        /// </summary>
+        /// <param name="pickEnt">ピック要素</param>
+        public void setSymbol(List<(int no, PointD pos)> pickEnt)
+        {
+            for (int i = 0; i < pickEnt.Count; i++) {
+                Entity ent = mEntityData.mEntityList[pickEnt[i].no];
+                if (ent.mEntityId == EntityId.Parts) {
+                    PartsEntity parts = (PartsEntity)ent;
+                    if (2 < parts.mParts.mName.Length && parts.mParts.mName.Substring(0,2) == "__") {
+                        InputSelect dlg = new InputSelect();
+                        dlg.Owner = mMainWindow;
+                        dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                        dlg.Title = "シンボル登録";
+                        dlg.mTextList = mMainWindow.mSymbolData.getCategoryList();
+                        if (0 < dlg.mTextList.Count)
+                            dlg.mText = dlg.mTextList[0];
+                        if (dlg.ShowDialog() == true) {
+                            if (0 < dlg.mText.Length)
+                                mMainWindow.mSymbolData.registSymbol(dlg.mText, parts);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// シンボル管理
+        /// </summary>
+        public void manageSymbol()
+        {
+            SymbolDlg dlg = new SymbolDlg();
+            dlg.Owner = mMainWindow;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.mSymbolFolder = mMainWindow.mSymbolData.mSymbolFolder;
+            dlg.mCancelEnable = false;
+            if (dlg.ShowDialog() == true) {
+
+            }
         }
 
         /// <summary>
@@ -977,7 +1153,7 @@ namespace CadApp
             InputSelect dlg = new InputSelect();
             dlg.Owner = mMainWindow;
             dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            dlg.mTitle = "作成レイヤー";
+            dlg.Title = "作成レイヤー";
             dlg.mText = mPara.mCreateLayerName;
             dlg.mTextList = mEntityData.getLayerNameList();
             if (dlg.ShowDialog() == true) {
@@ -997,8 +1173,11 @@ namespace CadApp
             dlg.mChkList = mEntityData.getLayerChkList();
             if (dlg.ShowDialog() == true) {
                 mEntityData.setDispLayerBit(dlg.mChkList);
+                mEntityData.updateData();
+                mPara.mDispLayerBit = mEntityData.mPara.mDispLayerBit;
             }
         }
+
 
         /// <summary>
         /// 2要素の距離または角度を測定

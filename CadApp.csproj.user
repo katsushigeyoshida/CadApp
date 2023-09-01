@@ -16,6 +16,9 @@
     <Compile Update="SettingDlg.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="SymbolDlg.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="SysProperty.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -31,6 +34,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="SettingDlg.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="SymbolDlg.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="SysProperty.xaml">

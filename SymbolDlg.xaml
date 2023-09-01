@@ -1,0 +1,29 @@
+﻿<Window x:Class="CadApp.SymbolDlg"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CadApp"
+        mc:Ignorable="d"
+        Title="SymbolDlg" Height="250" Width="300" Loaded="Window_Loaded" Closing="Window_Closing" LayoutUpdated="Window_LayoutUpdated">
+    <Grid>
+        <Label Content="分類" HorizontalAlignment="Left" Margin="10,5,0,0" VerticalAlignment="Top" RenderTransformOrigin="-3.673,0.468" Width="42"/>
+        <ComboBox Name="cbCategory" IsEditable="True" Margin="50,8,10,0" VerticalAlignment="Top" SelectionChanged="cbCategory_SelectionChanged"/>
+        <ListBox Name="lbSymbolName" Width="100" Margin="0,36,0,30" HorizontalAlignment="Left" SelectionChanged="lbSymbolName_SelectionChanged">
+            <ListBox.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Name="lbSymbolNameRenameMenu" Header="名前の変更" Click="lbSymbolNameMenu_Click"  />
+                    <MenuItem Name="lbSymbolNameRemoveMenu" Header="削除" Click="lbSymbolNameMenu_Click" />
+                    <MenuItem Name="lbSymbolNameCopyMenu" Header="コピー" Click="lbSymbolNameMenu_Click" />
+                    <MenuItem Name="lbSymbolNameMoveMenu" Header="移動" Click="lbSymbolNameMenu_Click" />
+                </ContextMenu>
+            </ListBox.ContextMenu>
+        </ListBox>
+        <Canvas Name="cvSymbolCanvas" Margin="100,36,0,30"/>
+        <Button Name="btRotate" Content="回転" Margin="5,0,0,5" Width="40" Height="20" HorizontalAlignment="Left"  VerticalAlignment="Bottom" Click="btRotate_Click" />
+        <Button Name="btMirror" Content="左右反転" Margin="50,0,0,5" Width="53" Height="20" HorizontalAlignment="Left"  VerticalAlignment="Bottom" Click="btMirror_Click" />
+        <Button Name="btMirrorTopDown" Content="上下反転" Margin="110,0,0,5" Width="53" Height="20" HorizontalAlignment="Left"  VerticalAlignment="Bottom" Click="btMirror_Click" />
+        <Button Name="btOK" Content="OK" IsDefault="True" Margin="0,0,60,5" Width="40" Height="20" HorizontalAlignment="Right"  VerticalAlignment="Bottom" Click="btOK_Click"/>
+        <Button Name="btCancel" Content="Cancel" IsCancel="True" Margin="0,0,10,5" Width="40" Height="20" HorizontalAlignment="Right"  VerticalAlignment="Bottom" Click="btCancel_Click"/>
+    </Grid>
+</Window>

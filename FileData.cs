@@ -200,7 +200,7 @@ namespace CadApp
 
 
         /// <summary>
-        /// 分類のののコピー/移動
+        /// 分類のコピー/移動
         /// </summary>
         /// <param name="categoryName">図面名</param>
         /// <param name="move">移動の可否</param>
@@ -496,13 +496,19 @@ namespace CadApp
         /// </summary>
         public void dataBackUp()
         {
-            if (mBaseDataFolder == null || mBackupFolder.Length == 0 || !Directory.Exists(mBackupFolder)) {
+            if (mBaseDataFolder == null || mBackupFolder.Length == 0
+                || !Directory.Exists(mBackupFolder)) {
                 ylib.messageBox(mMainWindow, "バックアップのフォルダが設定されていません。");
                 return;
             }
-            DirectoryDiff directoryDiff = new DirectoryDiff(mBaseDataFolder, mBackupFolder);
-            int count = directoryDiff.syncFolder();
-            ylib.messageBox(mMainWindow, $"{count} ファイルのバックアップを更新しました。");
+            string backupFolder = Path.Combine(mBackupFolder, Path.GetFileName(mBaseDataFolder));
+            if (Path.GetFullPath(mBaseDataFolder) != Path.GetFullPath(backupFolder)) {
+                DirectoryDiff directoryDiff = new DirectoryDiff(mBaseDataFolder, backupFolder);
+                int count = directoryDiff.syncFolder();
+                ylib.messageBox(mMainWindow, $"{count} ファイルのバックアップを更新しました。");
+            } else {
+                ylib.messageBox(mMainWindow, "バックアップ先がデータフォルダと同じです");
+            }
         }
 
         /// <summary>
@@ -514,13 +520,14 @@ namespace CadApp
                 ylib.messageBox(mMainWindow, "バックアップのフォルダが設定されていません。");
                 return;
             }
+            string backupFolder = Path.Combine(mBackupFolder, Path.GetFileName(mBaseDataFolder));
             DiffFolder dlg = new DiffFolder();
             dlg.Owner = mMainWindow;
             dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             dlg.mSrcTitle = "比較元(データフォルダ)";
             dlg.mDestTitle = "比較先(バックアップ先)";
             dlg.mSrcFolder = mBaseDataFolder;
-            dlg.mDestFolder = mBackupFolder;
+            dlg.mDestFolder = backupFolder;
             dlg.mDiffTool = mDiffTool;
             dlg.ShowDialog();
         }

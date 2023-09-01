@@ -308,6 +308,17 @@ namespace CadApp
         }
 
         /// <summary>
+        /// 原点を指定して拡大縮小
+        /// </summary>
+        /// <param name="cp">原点</param>
+        /// <param name="scale">拡大率</param>
+        public override void scale(PointD cp, double scale)
+        {
+            mParts.scale(cp, scale);
+            mArea = mParts.getBox();
+        }
+
+        /// <summary>
         /// 要素のオフセット
         /// </summary>
         /// <param name="sp">始点座標</param>
@@ -365,7 +376,6 @@ namespace CadApp
         public override List<PointD> intersection(Entity entity)
         {
             List<PointD> plist = new List<PointD>();
-            PointD ip = null;
             switch (entity.mEntityId) {
                 case EntityId.Point:
                     PointEntity point = (PointEntity)entity;
@@ -416,7 +426,7 @@ namespace CadApp
         /// <returns>端点座標(不定値はisNaN()でチェック)</returns>
         public override PointD getEndPoint(PointD pickPos)
         {
-            return new PointD();
+            return mParts.nearPoint(pickPos);
         }
 
         /// <summary>
@@ -427,7 +437,7 @@ namespace CadApp
         /// <returns>端点座標</returns>
         public override PointD getEndPoint(PointD pickPos, PointD cp)
         {
-            return new PointD();
+            return mParts.nearPoint(pickPos);
         }
 
         /// <summary>

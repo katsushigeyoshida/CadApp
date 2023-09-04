@@ -879,6 +879,7 @@ namespace CadApp
         /// </summary>
         public void updateData()
         {
+            mLayerList.Clear();
             if (mEntityList != null && 0 < mEntityList.Count) {
                 mArea = null;
                 for (int i = 0; i < mEntityList.Count; i++) {
@@ -1063,6 +1064,25 @@ namespace CadApp
         }
 
         /// <summary>
+        /// 表示レイヤーの追加
+        /// </summary>
+        /// <param name="layerBit"></param>
+        public void addDispLayer(ulong layerBit)
+        {
+            mPara.mDispLayerBit |= layerBit;
+        }
+
+        /// <summary>
+        /// 表示レイヤーの追加
+        /// </summary>
+        /// <param name="layerName"></param>
+        public void addDispLayer(string layerName)
+        {
+            ulong layerbit = setLayerBit(layerName);
+            addDispLayer(layerbit);
+        }
+
+        /// <summary>
         /// 要素プロパティ(テキストデータ)をEntityデータに変換
         /// </summary>
         /// <param name="propertyStr">要素プロパティ(テキストデータ)</param>
@@ -1157,7 +1177,6 @@ namespace CadApp
                 }
             }
             updateData();
-            //updateLayerList();
         }
 
         /// <summary>

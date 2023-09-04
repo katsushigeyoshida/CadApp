@@ -16,25 +16,20 @@
 <img src="Image/MainWindow.png" width="80%">  
 
 ### 作図機能    
- <img src="Image/製図機能一覧.png
-" width="60%">  
+ <img src="Image/製図機能一覧.png" width="60%">  
 
- <img src="Image/コマンド機能一覧.png
-" width="80%">  
+ <img src="Image/コマンド機能一覧.png" width="80%">  
 
- <img src="Image/座標の指定方法一覧.png
-" width="40%">  
+ <img src="Image/座標の指定方法一覧.png" width="40%">  
 
- <img src="Image/モードとマウスボタン操作の関係.png
-" width="50%">  
+ <img src="Image/モードとマウスボタン操作の関係.png" width="50%">  
 
- <img src="Image/ショートカットキーの機能一覧.png
-" width="30%">  
+ <img src="Image/ショートカットキーの機能一覧.png" width="30%">  
 
 
 
 ### 履歴
-2023/09/02  楕円要素、シンボル要素の追加、レイヤー機能を追加
+2023/09/02  楕円要素、シンボル要素の追加、レイヤー機能を追加  
 2023/07/26  機能追加(数値計算、領域拡大、ファイルフォーマット、属性変更、要素データのコピー貼付け)  
 2023/07/15  実行環境初回登録(プロトタイプ)
 

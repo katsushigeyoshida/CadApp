@@ -121,7 +121,9 @@
                         <Image Source="Icon\Settings.png" ></Image>
                     </Button>
                     <TextBlock Text="コマンド" FontSize="11"/>
-                    <ComboBox x:Name="cbCommand" Width="400" IsEditable="True" />
+                    <ComboBox x:Name="cbCommand" Width="400" IsEditable="True" PreviewKeyDown="cbCommand_PreviewKeyDown" />
+                    <TextBlock Text="作成レイヤ" FontSize="11"/>
+                    <ComboBox x:Name="cbCreateLayer" Width="130" IsEditable="True" SelectionChanged="cbCreateLayer_SelectionChanged" PreviewKeyDown="cbCreateLayer_PreviewKeyDown" />
                     <StatusBarItem HorizontalAlignment="Right">
                         <TextBlock x:Name="tbStatusInfo" />
                     </StatusBarItem>

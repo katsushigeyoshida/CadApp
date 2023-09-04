@@ -260,6 +260,55 @@ namespace CadApp
         }
 
         /// <summary>
+        /// [作成レイヤー]コンボボックス
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void cbCreateLayer_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter) {
+                System.Diagnostics.Debug.WriteLine($"cbCreateLayer_PreviewKeyDown");
+                mCommandOpe.mPara.mCreateLayerName = cbCreateLayer.Text;
+                mEntityData.addDispLayer(mCommandOpe.mPara.mCreateLayerName);
+                mCommandOpe.mPara.mDispLayerBit = mEntityData.mPara.mDispLayerBit;
+                cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
+                cbCreateLayer.SelectedIndex = cbCreateLayer.Items.IndexOf(mEntityData.mPara.mCreateLayerName);
+            }
+        }
+
+        /// <summary>
+        /// 作成レイヤー
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void cbCreateLayer_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (0 <= cbCreateLayer.SelectedIndex) {
+                mCommandOpe.mPara.mCreateLayerName = cbCreateLayer.Items[cbCreateLayer.SelectedIndex].ToString();
+                mEntityData.addDispLayer(mCommandOpe.mPara.mCreateLayerName);
+                mCommandOpe.mPara.mDispLayerBit = mEntityData.mPara.mDispLayerBit;
+                mEntityData.updateData();
+                disp(mEntityData);
+            }
+        }
+
+        /// <summary>
+        /// [Keyコマンド]コンボボックス
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void cbCommand_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter) {
+                System.Diagnostics.Debug.WriteLine($"cbCommand_PreviewKeyDown");
+                if (mCommandOpe.keyCommand(cbCommand.Text)) {
+                    keyCommandList(cbCommand.Text);
+                    disp(mEntityData);
+                }
+            }
+        }
+
+        /// <summary>
         /// コマンドリストボックス選択変更
         /// </summary>
         /// <param name="sender"></param>
@@ -953,12 +1002,7 @@ namespace CadApp
             } else {
                 switch (key) {
                     case Key.Escape: commandClear(); break;             //  ESCキーでキャンセル
-                    case Key.Return:                                    //  キーコマンド実行
-                        if (mCommandOpe.keyCommand(cbCommand.Text)) {
-                            keyCommandList(cbCommand.Text);
-                            disp(mEntityData);
-                        }
-                        break;
+                    case Key.Return: break;                             //  コントロールごとに実行
                     case Key.F1: disp(mEntityData); break;                                  //  再表示
                     case Key.F2: mPrevMode = mLocMode; mLocMode = OPEMODE.areaDisp; break;  //  領域拡大
                     case Key.F3: dispFit(); break;                                          //  全体表示
@@ -1798,6 +1842,8 @@ namespace CadApp
                                          mCommandOpe.mPara.mHa == HorizontalAlignment.Center ? 1 : 2;
             cbTextVertical.SelectedIndex   = mCommandOpe.mPara.mVa == VerticalAlignment.Top ? 0 :
                                          mCommandOpe.mPara.mVa == VerticalAlignment.Center ? 1 : 2;
+            cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
+            cbCreateLayer.SelectedIndex = cbCreateLayer.Items.IndexOf(mEntityData.mPara.mCreateLayerName);
         }
 
         /// <summary>

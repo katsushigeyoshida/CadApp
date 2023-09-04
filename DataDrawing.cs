@@ -176,74 +176,64 @@ namespace CadApp
         /// <param name="operation">操作</param>
         public void dragging(EntityData entityData, List<PointD> points, List<(int no, PointD pos)> pickList, OPERATION operation)
         {
-            if (points.Count < 1)
+            if (points.Count < 1 || operation == OPERATION.non)
                 return;
 
             PartsD parts;
             ArcD arc;
+            preDragging();
             switch (operation) {
                 case OPERATION.createPoint:
-                    preDragging();
                     ydraw.drawWPoint(points[0]);
-                    break;
+                    return;
                 case OPERATION.createLine:
                     if (1 < points.Count) {
-                        preDragging();
                         ydraw.drawWLine(new LineD(points[0], points[1]));
                     }
                     break;
                 case OPERATION.createRect:
                     if (1 < points.Count) {
-                        preDragging();
                         Box b = new Box(points[0], points[1]);
                         List<PointD> plist = b.ToPointDList();
                         ydraw.drawWPolygon(plist);
                     }
                     break;
                 case OPERATION.createPolyline:
-                    preDragging();
                     ydraw.drawWPolyline(points);
                     break;
                 case OPERATION.createPolygon:
-                    preDragging();
                     ydraw.drawWPolygon(points, false);
                     break;
                 case OPERATION.createArc:
                     if (points.Count == 2) {
-                        preDragging();
                         ydraw.drawWLine(new LineD(points[0], points[1]));
                     } else if (points.Count == 3 && 0 < points[1].length(points[2])) {
                         arc = new ArcD(points[0], points[2], points[1]);
                         if (arc.mCp != null) {
-                            preDragging();
                             ydraw.drawWArc(arc, false);
                         }
                     }
                     break;
                 case OPERATION.createCircle:
                     if (1 < points.Count) {
-                        preDragging();
                         ydraw.drawWCircle(points[0], points[0].length(points[1]), false);
                     }
                     break;
                 case OPERATION.createEllipse:
                     if (1 < points.Count) {
                         EllipseD ellipse = new EllipseD(points[0], points[1]);
-                        preDragging();
                         ydraw.drawWEllipse(ellipse);
                     }
                     break;
                 case OPERATION.createTangentCircle:
                     arc = entityData.tangentCircle(pickList, points);
                     if (arc != null) {
-                        preDragging();
                         ydraw.drawWArc(arc);
                     }
                     break;
                 case OPERATION.createText:
                     TextD text = new TextD(mMainWindow.tbTextString.Text, points[0], mPara.mTextSize, 
                         mPara.mTextRotate, mPara.mHa, mPara.mVa, mPara.mLinePitchRate);
-                    preDragging();
                     ydraw.drawWText(text);
                     break;
                 case OPERATION.createArrow:
@@ -251,7 +241,6 @@ namespace CadApp
                     parts.mArrowSize = mPara.mArrowSize;
                     if (1 < points.Count) {
                         parts.createArrow(points[0], points[1]);
-                        preDragging();
                         drawWParts(parts);
                     }
                     break;
@@ -261,70 +250,56 @@ namespace CadApp
                     parts.mArrowSize = mPara.mArrowSize;
                     if (1 < points.Count) {
                         parts.createLabel(points, mMainWindow.tbTextString.Text);
-                        preDragging();
                         drawWParts(parts);
                     }
                     break;
                 case OPERATION.createLocDimension:
-                    preDragging();
                     locDimensionDragging(entityData, points, pickList);
                     break;
                 case OPERATION.createDimension:
-                    preDragging();
                     dimensionDragging(entityData, points, pickList);
                     break;
                 case OPERATION.createAngleDimension:
-                    preDragging();
                     angleDimensionDragging(entityData, points, pickList);
                     break;
                 case OPERATION.createDiameterDimension:
-                    preDragging();
                     diameterDimensionDragging(entityData, points, pickList);
                     break;
                 case OPERATION.createRadiusDimension:
-                    preDragging();
                     radiusDimensionDragging(entityData, points, pickList);
                     break;
                 case OPERATION.translate:
                 case OPERATION.copyTranslate:
-                    preDragging();
                     translateDragging(entityData, points, pickList);
                     break;
                 case OPERATION.rotate:
                 case OPERATION.copyRotate:
-                    preDragging();
                     rotateDragging(entityData, points, pickList);
                     break;
                 case OPERATION.mirror:
                 case OPERATION.copyMirror:
-                    preDragging();
                     mirrorDragging(entityData, points, pickList);
                     break;
                 case OPERATION.scale:
                 case OPERATION.copyScale:
-                    preDragging();
                     scaleDragging(entityData, points, pickList);
                     break;
                 case OPERATION.offset:
                 case OPERATION.copyOffset:
-                    preDragging();
                     offsetDragging(entityData, points, pickList);
                     break;
                 case OPERATION.trim:
                 case OPERATION.copyTrim:
-                    preDragging();
                     trimDragging(entityData, points, pickList);
                     break;
                 case OPERATION.divide:
                     break;
                 case OPERATION.stretch:
-                    preDragging();
                     stretchDragging(entityData, points, pickList);
                     break;
                 case OPERATION.entityPaste: {
                         Box b = new Box(points[0], mCopyArea.Size);
                         List<PointD> plist = b.ToPointDList();
-                        preDragging();
                         ydraw.drawWPolygon(plist);
                     }
                     break;
@@ -332,28 +307,23 @@ namespace CadApp
                         if (mCopyEntityList != null && 0 < mCopyEntityList.Count) {
                             PointD vec = points[0] - mCopyEntityList[0].mArea.getCenter();
                             Entity ent = mCopyEntityList[0].toCopy();
-                            preDragging();
                             ent.mColor = mDraggingColor;
                             ent.translate(vec);
                             ent.draw(ydraw);
                         }
                     }
                     break;
+                case OPERATION.measureDistance:
+                case OPERATION.measureAngle:
+                    break;
                 default:
                     return;
             }
             // ロケイト点表示
-            if (operation != OPERATION.createPoint
-                 && operation != OPERATION.createText
-                 && operation != OPERATION.entityPaste
-                 && operation != OPERATION.createSymbol) {
-                if (points.Count == 1)
-                    preDragging();
-                ydraw.mPointType = 2;
-                ydraw.mPointSize = 3;
-                for (int i = 0; i < points.Count; i++) {
-                    ydraw.drawWPoint(points[i]);
-                }
+            ydraw.mPointType = 2;
+            ydraw.mPointSize = 3;
+            for (int i = 0; i < points.Count; i++) {
+                ydraw.drawWPoint(points[i]);
             }
         }
 
@@ -739,7 +709,7 @@ namespace CadApp
                 ydraw.mBrush = ydraw.getColor("Black");
                 ydraw.mThickness = 1.0;
                 ydraw.mPointType = 0;
-                while (mGridMinmumSize > ydraw.world2screenXlength(size)) {
+                while (mGridMinmumSize > ydraw.world2screenXlength(size) && size < 1000) {
                     size *= 10;
                 }
                 if (mGridMinmumSize <= ydraw.world2screenXlength(size)) {

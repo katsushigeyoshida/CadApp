@@ -334,6 +334,8 @@ namespace CadApp
                 case OPERATION.copyScale:
                 case OPERATION.copyTrim:
                 case OPERATION.copyOffset:
+                case OPERATION.measureDistance:             //  距離測定
+                case OPERATION.measureAngle:                //  角度測定
                     locMode = MainWindow.OPEMODE.loc;
                     mLocPos.Clear();
                     commansInit = false;
@@ -380,10 +382,8 @@ namespace CadApp
                 case OPERATION.remove:                      //  削除
                     mEntityData.removeEnt(mPickEnt);
                     break;
-                case OPERATION.measureDistance:             //  距離・角度測定
+                case OPERATION.measure:                     //  距離・角度測定
                     measureDisp(mPickEnt);
-                    break;
-                case OPERATION.measureAngle:
                     break;
                 case OPERATION.info:                        //  要素情報
                     infoEntity(mPickEnt);
@@ -459,7 +459,8 @@ namespace CadApp
                 || operation == OPERATION.createPolyline || operation == OPERATION.createPolygon
                 || operation == OPERATION.createArrow || operation == OPERATION.createLabel
                 || operation == OPERATION.createLocDimension
-                || operation == OPERATION.entityPaste || operation == OPERATION.createSymbol) {
+                || operation == OPERATION.entityPaste || operation == OPERATION.createSymbol
+                || operation == OPERATION.measureDistance || operation == OPERATION.measureAngle) {
                 //  要素の追加 (Ctrlキーなし)
                 if (createData(locPos, operation)) {
                     return true;
@@ -566,6 +567,12 @@ namespace CadApp
             } else if (operation == OPERATION.createSymbol && points.Count == 1) {
                 //  シンボルの追加
                 createSymbol(points[0]);
+            } else if (operation == OPERATION.measureDistance && points.Count == 2) {
+                //  2点間の距離
+                measureDistance(points[0], points[1]);
+            } else if (operation == OPERATION.measureAngle && points.Count == 3) {
+                //  ３点の角度
+                measureAngle(points[0], points[1], points[2]);
             } else {
                 mEntityData.mOperationCouunt--;
                 return false;
@@ -1101,6 +1108,33 @@ namespace CadApp
         }
 
         /// <summary>
+        /// ２点間の距離
+        /// </summary>
+        /// <param name="ps">始点</param>
+        /// <param name="pe">終点</param>
+        public void measureDistance(PointD ps, PointD pe)
+        {
+            double dis = ps.length(pe);
+            string buf = "距離 : " + ylib.double2StrZeroSup(dis, "F8");
+            ylib.messageBox(mMainWindow, buf, "", "距離測定");
+        }
+
+        /// <summary>
+        /// 3点間の角度
+        /// </summary>
+        /// <param name="ps">始点</param>
+        /// <param name="pc">中心点</param>
+        /// <param name="pe">終点</param>
+        public void measureAngle(PointD ps, PointD pc, PointD pe)
+        {
+            LineD ls = new LineD(pc, ps);
+            LineD le = new LineD(pc, pe);
+            double ang = ls.angle2(le);
+            string buf = "角度 : " + ylib.double2StrZeroSup(ylib.R2D(ang), "F8") + "°";
+            ylib.messageBox(mMainWindow, buf, "", "角度測定");
+        }
+
+        /// <summary>
         /// 図面の属性値を設定
         /// </summary>
         /// <returns></returns>
@@ -1158,6 +1192,10 @@ namespace CadApp
             dlg.mTextList = mEntityData.getLayerNameList();
             if (dlg.ShowDialog() == true) {
                 mPara.mCreateLayerName = dlg.mText;
+                mEntityData.addDispLayer(mPara.mCreateLayerName);
+                mPara.mDispLayerBit = mEntityData.mPara.mDispLayerBit;
+                mMainWindow.cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
+                mMainWindow.cbCreateLayer.SelectedIndex = mMainWindow.cbCreateLayer.Items.IndexOf(mEntityData.mPara.mCreateLayerName);
             }
         }
 
@@ -1186,6 +1224,8 @@ namespace CadApp
         public void measureDisp(List<(int no, PointD pos)> pickEnt)
         {
             string buf = "";
+            double dis = -1;
+            double ang = -1;
             if (1 < pickEnt.Count) {
                 Entity entity0 = mEntityData.mEntityList[pickEnt[0].no];
                 Entity entity1 = mEntityData.mEntityList[pickEnt[1].no];
@@ -1200,28 +1240,28 @@ namespace CadApp
                         switch (entity1.mEntityId) {
                             case EntityId.Point:
                                 PointEntity pe1 = (PointEntity)entity1;
-                                buf += "距離 :" + point.length(pe1.mPoint);
+                                dis = point.length(pe1.mPoint);
                                 break;
                             case EntityId.Line:
                                 LineEntity le1 = (LineEntity)entity1;
-                                buf += "距離 :" + le1.mLine.distance(point).ToString();
+                                dis = le1.mLine.distance(point);
                                 break;
                             case EntityId.Arc:
                                 ArcEntity ae1 = (ArcEntity)entity1;
                                 ip = ae1.mArc.intersection(point);
-                                buf += "距離 :" + point.length(ip);
+                                dis = point.length(ip);
                                 break;
                             case EntityId.Polyline:
                                 PolylineEntity ple1 = (PolylineEntity)entity1;
                                 np = ple1.mPolyline.nearPeackPos(pickEnt[1].pos);
                                 ip = ple1.mPolyline.getLine(np).intersection(point);
-                                buf += "距離 :" + point.length(ip);
+                                dis = point.length(ip);
                                 break;
                             case EntityId.Polygon:
                                 PolygonEntity pge1 = (PolygonEntity)entity1;
                                 np = pge1.mPolygon.nearPeackPos(pickEnt[1].pos);
                                 ip = pge1.mPolygon.getLine(np).intersection(point);
-                                buf += "距離 :" + point.length(ip);
+                                dis = point.length(ip);
                                 break;
                         }
                         break;
@@ -1231,32 +1271,32 @@ namespace CadApp
                         switch (entity1.mEntityId) {
                             case EntityId.Point:
                                 PointEntity pe1 = (PointEntity)entity1;
-                                buf += "距離 :" + line.distance(pe1.mPoint);
+                                dis = line.distance(pe1.mPoint);
                                 break;
                             case EntityId.Line:
                                 LineEntity le1 = (LineEntity)entity1;
                                 if (line.angle(le1.mLine) < mEps)
-                                    buf += "距離 :" + line.distance(le1.mLine);
+                                    dis = line.distance(le1.mLine);
                                 else
-                                    buf += "角度 : " + ylib.R2D(line.angle(le1.mLine));
+                                    ang = line.angle(le1.mLine);
                                 break;
                             case EntityId.Polyline:
                                 PolylineEntity ple1 = (PolylineEntity)entity1;
                                 LineD polylineLine = ple1.mPolyline.nearLine(pickEnt[1].pos);
                                 ip = polylineLine.intersection(line.ps);
                                 if (line.angle(polylineLine) < mEps)
-                                    buf += "距離 :" + ip.length(line.ps);
+                                    dis = ip.length(line.ps);
                                 else
-                                    buf += "角度 : " + ylib.R2D(line.angle(polylineLine));
+                                    ang = line.angle(polylineLine);
                                 break;
                             case EntityId.Polygon:
                                 PolygonEntity pge1 = (PolygonEntity)entity1;
                                 LineD polygonLine = pge1.mPolygon.nearLine(pickEnt[1].pos);
                                 ip = polygonLine.intersection(line.ps);
                                 if (line.angle(polygonLine) < mEps)
-                                    buf += "距離 :" + ip.length(line.ps);
+                                    dis = ip.length(line.ps);
                                 else
-                                    buf += "角度 : " + ylib.R2D(line.angle(polygonLine));
+                                    ang = line.angle(polygonLine);
                                 break;
                         }
                         break;
@@ -1266,32 +1306,32 @@ namespace CadApp
                         switch (entity1.mEntityId) {
                             case EntityId.Point:
                                 PointEntity pe1 = (PointEntity)entity1;
-                                buf += "距離 :" + pline.distance(pe1.mPoint);
+                                dis = pline.distance(pe1.mPoint);
                                 break;
                             case EntityId.Line:
                                 LineEntity le1 = (LineEntity)entity1;
                                 if (pline.angle(le1.mLine) < mEps)
-                                    buf += "距離 :" + pline.distance(le1.mLine);
+                                    dis = pline.distance(le1.mLine);
                                 else
-                                    buf += "角度 : " + ylib.R2D(pline.angle(le1.mLine));
+                                    ang = pline.angle(le1.mLine);
                                 break;
                             case EntityId.Polyline:
                                 PolylineEntity ple1 = (PolylineEntity)entity1;
                                 LineD polylineLine = ple1.mPolyline.nearLine(pickEnt[1].pos);
                                 ip = polylineLine.intersection(pline.ps);
                                 if (pline.angle(polylineLine) < mEps)
-                                    buf += "距離 :" + ip.length(pline.ps);
+                                    dis = ip.length(pline.ps);
                                 else
-                                    buf += "角度 : " + ylib.R2D(pline.angle(polylineLine));
+                                    ang = pline.angle(polylineLine);
                                 break;
                             case EntityId.Polygon:
                                 PolygonEntity pge1 = (PolygonEntity)entity1;
                                 LineD polygonLine = pge1.mPolygon.nearLine(pickEnt[1].pos);
                                 ip = polygonLine.intersection(pline.ps);
                                 if (pline.angle(polygonLine) < mEps)
-                                    buf += "距離 :" + ip.length(pline.ps);
+                                    dis = ip.length(pline.ps);
                                 else
-                                    buf += "角度 : " + ylib.R2D(pline.angle(polygonLine));
+                                    ang = pline.angle(polygonLine);
                                 break;
                         }
                         break;
@@ -1301,32 +1341,32 @@ namespace CadApp
                         switch (entity1.mEntityId) {
                             case EntityId.Point:
                                 PointEntity pe1 = (PointEntity)entity1;
-                                buf += "距離 :" + pgLine.distance(pe1.mPoint);
+                                dis = pgLine.distance(pe1.mPoint);
                                 break;
                             case EntityId.Line:
                                 LineEntity le1 = (LineEntity)entity1;
                                 if (pgLine.angle(le1.mLine) < mEps)
-                                    buf += "距離 :" + pgLine.distance(le1.mLine);
+                                    dis = pgLine.distance(le1.mLine);
                                 else
-                                    buf += "角度 : " + ylib.R2D(pgLine.angle(le1.mLine));
+                                    ang = pgLine.angle(le1.mLine);
                                 break;
                             case EntityId.Polyline:
                                 PolylineEntity ple1 = (PolylineEntity)entity1;
                                 LineD polylineLine = ple1.mPolyline.nearLine(pickEnt[1].pos);
                                 ip = polylineLine.intersection(pgLine.ps);
                                 if (pgLine.angle(polylineLine) < mEps)
-                                    buf += "距離 :" + ip.length(pgLine.ps);
+                                    dis = ip.length(pgLine.ps);
                                 else
-                                    buf += "角度 : " + ylib.R2D(pgLine.angle(polylineLine));
+                                    ang = pgLine.angle(polylineLine);
                                 break;
                             case EntityId.Polygon:
                                 PolygonEntity pge1 = (PolygonEntity)entity1;
                                 LineD polygonLine = pge1.mPolygon.nearLine(pickEnt[1].pos);
                                 ip = polygonLine.intersection(pgLine.ps);
                                 if (pgLine.angle(polygonLine) < mEps)
-                                    buf += "距離 :" + ip.length(pgLine.ps);
+                                    dis = ip.length(pgLine.ps);
                                 else
-                                    buf += "角度 : " + ylib.R2D(pgLine.angle(polygonLine));
+                                    ang = pgLine.angle(polygonLine);
                                 break;
                         }
                         break;
@@ -1345,7 +1385,11 @@ namespace CadApp
                         }
                         break;
                 }
-                ylib.messageBox(mMainWindow, buf, "距離測定");
+                if (0 <= dis)
+                    buf += "距離 : " + ylib.double2StrZeroSup(dis, "F8");
+                if (0 <= ang)
+                    buf += (0 <= dis ? "\n" : "") + "角度 : " + ylib.double2StrZeroSup(ylib.R2D(ang), "F8");
+                ylib.messageBox(mMainWindow, buf, "距離・角度測定");
             }
         }
 

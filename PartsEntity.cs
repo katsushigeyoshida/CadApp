@@ -399,6 +399,10 @@ namespace CadApp
                     break;
                 case EntityId.Text:
                     break;
+                case EntityId.Ellipse:
+                    EllipseEntity ellipse = (EllipseEntity)entity;
+                    plist = mParts.intersection(ellipse.mEllipse);
+                    break;
                 case EntityId.Parts:
                     break;
             }

@@ -12,8 +12,6 @@ namespace CadApp
         public string mBackupFolder = "";
         public List<string> mSymbolFiles = new List<string>();
         public Dictionary<string, Entity> mSymbolList = new Dictionary<string, Entity>();
-        public string mCurSymbolFile;
-        public string mCurCategory;
         public string mDiffTool = "";
 
         public Window mMainWindow;
@@ -30,11 +28,6 @@ namespace CadApp
                 Directory.CreateDirectory(mSymbolFolder);
             //  シンボルデータの取得
             mSymbolFiles = getSymbolFileList(mSymbolFolder);
-            if (0 < mSymbolFiles.Count) {
-                mCurSymbolFile = mSymbolFiles[0];
-                mSymbolList = loadSymbolList(mCurSymbolFile);
-                mCurCategory = Path.GetFileNameWithoutExtension(mCurSymbolFile);
-            }
         }
 
         /// <summary>
@@ -44,27 +37,17 @@ namespace CadApp
         /// <param name="parts">パーツデータ</param>
         public void registSymbol(string category, PartsEntity parts)
         {
-            string curCategory = Path.GetFileNameWithoutExtension(mCurSymbolFile);
-            if (curCategory == category) {
-                if (mSymbolList.ContainsKey(parts.mParts.mName)) {
-                    mSymbolList[parts.mParts.mName] = parts;
-                } else {
-                    mSymbolList.Add(parts.mParts.mName, parts);
-                }
-                saveSymbolList(mSymbolList, mCurSymbolFile);
-            } else {
-                Dictionary<string, Entity> symbolList = new Dictionary<string, Entity>();
-                string path = getSymbolFilePath(category);
-                if (File.Exists(path)) {
-                    symbolList = loadSymbolList(path);
-                }
-                if (symbolList.ContainsKey(parts.mParts.mName)) {
-                    symbolList[parts.mParts.mName] = parts;
-                } else {
-                    symbolList.Add(parts.mParts.mName, parts);
-                }
-                saveSymbolList(symbolList, path);
+            string path = getSymbolFilePath(category);
+            Dictionary<string, Entity> symbolList = new Dictionary<string, Entity>();
+            if (File.Exists(path)) {
+                symbolList = loadSymbolList(path);
             }
+            if (symbolList.ContainsKey(parts.mParts.mName)) {
+                symbolList[parts.mParts.mName] = parts;
+            } else {
+                symbolList.Add(parts.mParts.mName, parts);
+            }
+            saveSymbolList(symbolList, path);
         }
 
         /// <summary>
@@ -166,12 +149,14 @@ namespace CadApp
         /// </summary>
         /// <param name="symbolList">シンボルリスト</param>
         /// <returns>シンボル名リスト</returns>
-        public List<string> getSymbolNameList(Dictionary<string, Entity> symbolList)
+        public List<string> getSymbolNameList(Dictionary<string, Entity> symbolList, bool sort = false)
         {
             List<string> nameList = new List<string>();
             foreach (string s in symbolList.Keys) {
                 nameList.Add(s.TrimStart('_'));
             }
+            if (sort)
+                nameList.Sort();
             return nameList;
         }
 
@@ -209,10 +194,10 @@ namespace CadApp
         /// </summary>
         /// <param name="path">ファイルパス</param>
         /// <returns>シンボル名リスト</returns>
-        public List<string> getSymbolList(string path)
+        public List<string> getSymbolList(string path, bool sort = false)
         {
             Dictionary<string, Entity> symbolList = loadSymbolList(path);
-            return getSymbolNameList(symbolList);
+            return getSymbolNameList(symbolList, sort);
         }
 
         /// <summary>
@@ -279,26 +264,6 @@ namespace CadApp
                 }
             }
             return null;
-        }
-
-        /// <summary>
-        /// 要素リストをシンボルリスト(Dictionary)に変換
-        /// </summary>
-        /// <param name="entityList">要素リスト</param>
-        /// <returns>シンボルリスト</returns>
-        public Dictionary<string, Entity> getSymbolList(List<Entity> entityList)
-        {
-            Dictionary<string, Entity> symbolList = new Dictionary<string, Entity>();
-            for (int i = 0; i < entityList.Count; i++) {
-                if (entityList[i].mEntityId == EntityId.Parts) {
-                    PartsEntity parts = (PartsEntity)entityList[i];
-                    if (parts.mParts.mName.Substring(0,2).CompareTo("__") == 0 &&
-                        !symbolList.ContainsKey(parts.mParts.mName)) {
-                        symbolList.Add(parts.mParts.mName, parts);
-                    }
-                }
-            }
-            return symbolList;
         }
 
         /// <summary>

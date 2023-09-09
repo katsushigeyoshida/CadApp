@@ -29,6 +29,7 @@ namespace CadApp
         {
             mEntityId = EntityId.Polyline;
             mPolyline = new PolylineD(polyline);
+            mPolyline.squeeze();
             mArea = mPolyline.getBox();
         }
 
@@ -69,6 +70,7 @@ namespace CadApp
                     ps.y = double.Parse(data[i + 1]);
                     mPolyline.Add(ps);
                 }
+                mPolyline.squeeze();
                 mArea = mPolyline.getBox();
             }
         }
@@ -246,7 +248,7 @@ namespace CadApp
         /// <returns>垂点</returns>
         public override PointD onPoint(PointD pos)
         {
-            return mPolyline.nearPoint(pos);
+            return mPolyline.nearCrossPoint(pos);
         }
 
         /// <summary>

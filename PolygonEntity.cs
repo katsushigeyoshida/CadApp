@@ -30,6 +30,7 @@ namespace CadApp
         {
             mEntityId = EntityId.Polygon;
             mPolygon = new PolygonD(polygon);
+            mPolygon.squeeze();
             mArea = new Box(mPolygon.mPolygon);
         }
 
@@ -70,6 +71,7 @@ namespace CadApp
                     ps.y = double.Parse(data[i + 1]);
                     mPolygon.Add(ps);
                 }
+                mPolygon.squeeze();
                 mArea = new Box(mPolygon.mPolygon);
             }
         }
@@ -240,7 +242,7 @@ namespace CadApp
         /// <returns>垂点</returns>
         public override PointD onPoint(PointD pos)
         {
-            return mPolygon.nearPoint(pos);
+            return mPolygon.nearCrossPoint(pos);
         }
 
         /// <summary>

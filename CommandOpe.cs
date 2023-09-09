@@ -1,6 +1,7 @@
 ﻿using CoreLib;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 
@@ -271,6 +272,16 @@ namespace CadApp
         }
 
         /// <summary>
+        /// ロケイト点の追加
+        /// </summary>
+        /// <param name="loc">ロケイト点</param>
+        public void addLoc(PointD loc)
+        {
+            if (0 == mLocPos.Count || !mLocPos[mLocPos.Count - 1].isEqual(loc))
+                mLocPos.Add(loc);
+        }
+
+        /// <summary>
         /// ピック要素Noの追加
         /// すでに登録されている場合は削除する(アンピック)
         /// </summary>
@@ -300,6 +311,7 @@ namespace CadApp
             switch (operation) {
                 case OPERATION.createPoint:
                 case OPERATION.createLine:
+                case OPERATION.createHVLine:
                 case OPERATION.createRect:
                 case OPERATION.createPolyline:
                 case OPERATION.createPolygon:
@@ -409,10 +421,10 @@ namespace CadApp
                     mEntityData.mPara.mDispLayerBit = mPara.mDispLayerBit;
                     mEntityData.updateData();
                     break;
-                case OPERATION.setSymbol:
+                case OPERATION.setSymbol:                   //  シンボル登録
                     setSymbol(mPickEnt);
                     break;
-                case OPERATION.manageSymbol:
+                case OPERATION.manageSymbol:                //  シンボル管理
                     manageSymbol();
                     break;
                 case OPERATION.allClear:
@@ -431,10 +443,9 @@ namespace CadApp
                     mPickEnt.Clear();
                     break;
                 case OPERATION.close:                       //  終了
-                    if (ylib.messageBox(mMainWindow, "終了します", "", "確認",MessageBoxButton.OKCancel) == MessageBoxResult.OK)
-                        mMainWindow.Close();
+                    mMainWindow.Close();
                     break;
-                case OPERATION.gridSize:
+                case OPERATION.gridSize:                    //  グリッド設定
                     gridSet();
                     break;
             }
@@ -455,7 +466,7 @@ namespace CadApp
             if (operation == OPERATION.createPoint || operation == OPERATION.createLine
                 || operation == OPERATION.createRect || operation == OPERATION.createArc
                 || operation == OPERATION.createCircle || operation == OPERATION.createEllipse
-                || operation == OPERATION.createText
+                || operation == OPERATION.createText || operation == OPERATION.createHVLine
                 || operation == OPERATION.createPolyline || operation == OPERATION.createPolygon
                 || operation == OPERATION.createArrow || operation == OPERATION.createLabel
                 || operation == OPERATION.createLocDimension
@@ -536,6 +547,15 @@ namespace CadApp
                 TextD text = new TextD(mTextString, points[0], mPara.mTextSize, mPara.mTextRotate,
                     mPara.mHa, mPara.mVa, mPara.mLinePitchRate);
                 mEntityData.addText(text);
+            } else if (operation == OPERATION.createHVLine) {
+                //  水平垂直線分
+                if (1 < points.Count) {
+                    PolylineD polyline = new PolylineD(points);
+                    mEntityData.addPolyline(polyline.toHVLine());
+                } else {
+                    mEntityData.mOperationCouunt--;
+                    return false;
+                }
             } else if (operation == OPERATION.createPolyline) {
                 //  ポリライン要素の作成
                 if (1 < points.Count)
@@ -766,6 +786,8 @@ namespace CadApp
                 }
             }
             mEntityData.updateData();
+            mMainWindow.cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
+            mMainWindow.cbCreateLayer.SelectedIndex = mMainWindow.cbCreateLayer.Items.IndexOf(mEntityData.mPara.mCreateLayerName);
             return true;
         }
 
@@ -845,6 +867,8 @@ namespace CadApp
                 dlg.Close();
             }
             mEntityData.updateData();
+            mMainWindow.cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
+            mMainWindow.cbCreateLayer.SelectedIndex = mMainWindow.cbCreateLayer.Items.IndexOf(mEntityData.mPara.mCreateLayerName);
             return true;
         }
 
@@ -1010,6 +1034,7 @@ namespace CadApp
             SymbolDlg dlg = new SymbolDlg();
             dlg.Owner = mMainWindow;
             dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.Title = "シンボル選択";
             dlg.mSymbolFolder = mMainWindow.mSymbolData.mSymbolFolder;
             if (dlg.ShowDialog() == true) {
                 Entity ent = dlg.mEntity;
@@ -1100,6 +1125,7 @@ namespace CadApp
             SymbolDlg dlg = new SymbolDlg();
             dlg.Owner = mMainWindow;
             dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.Title = "シンボル管理";
             dlg.mSymbolFolder = mMainWindow.mSymbolData.mSymbolFolder;
             dlg.mCancelEnable = false;
             if (dlg.ShowDialog() == true) {

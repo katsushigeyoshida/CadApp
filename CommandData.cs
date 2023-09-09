@@ -4,7 +4,7 @@ namespace CadApp
 {
     public enum ENTITY { non, all, point, line, polyline, polygon, arc, ellipse, text, parts, any }
     public enum OPERATION { non, loc, pic,
-        createPoint, createLine, createRect, createPolyline, createPolygon, 
+        createPoint, createLine, createRect, createPolyline, createPolygon, createHVLine,
         createArc, createCircle, createTangentCircle, createEllipse, createText, createArrow,
         createLabel, createLocDimension, createDimension, createAngleDimension,
         createDiameterDimension, createRadiusDimension,
@@ -51,6 +51,7 @@ namespace CadApp
             //          main,       sub,            para,  operation,                   entity
             new Command("作成",      "点",          "", OPERATION.createPoint,          ENTITY.point),
             new Command("作成",      "線分",        "", OPERATION.createLine,           ENTITY.line),
+            new Command("作成",      "水平垂直線分","", OPERATION.createHVLine,           ENTITY.line),
             new Command("作成",      "四角",        "", OPERATION.createRect,           ENTITY.line),
             new Command("作成",      "ポリライン",  "", OPERATION.createPolyline,       ENTITY.polyline),
             new Command("作成",      "ポリゴン",    "", OPERATION.createPolygon,        ENTITY.polygon),

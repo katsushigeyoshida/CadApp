@@ -952,7 +952,9 @@ namespace CadApp
         {
             Entity ent1 = mEntityList[entNo1];
             Entity ent2 = mEntityList[entNo2];
-            if (ent2.mEntityId == EntityId.Ellipse)
+            if (ent2.mEntityId == EntityId.Parts)
+                return ent2.intersection(ent1);
+            else if (ent2.mEntityId == EntityId.Ellipse)
                 return ent2.intersection(ent1);
             else
                 return ent1.intersection(ent2);

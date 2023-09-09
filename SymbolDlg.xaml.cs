@@ -1,5 +1,4 @@
 ﻿using CoreLib;
-using System;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -45,7 +44,7 @@ namespace CadApp
             if (0 < cbCategory.Items.Count) {
                 cbCategory.SelectedIndex = 0;
                 string path = mSymbolData.getSymbolFilePath(cbCategory.Items[cbCategory.SelectedIndex].ToString() ?? "");
-                lbSymbolName.ItemsSource = mSymbolData.getSymbolList(path);
+                lbSymbolName.ItemsSource = mSymbolData.getSymbolList(path, true);
             }
             btCancel.Visibility = mCancelEnable ? Visibility.Visible : Visibility.Collapsed;
             Thickness margin = btOK.Margin;
@@ -147,7 +146,7 @@ namespace CadApp
                 string newName = dlg.mEditText;
                 if (mSymbolData.renameSymbolData(category, symbolName, newName)) {
                     string path = mSymbolData.getSymbolFilePath(category);
-                    lbSymbolName.ItemsSource = mSymbolData.getSymbolList(path);
+                    lbSymbolName.ItemsSource = mSymbolData.getSymbolList(path, true);
                     int index = lbSymbolName.Items.IndexOf(newName);
                     lbSymbolName.SelectedIndex = index;
                 }
@@ -164,7 +163,7 @@ namespace CadApp
             if (ylib.messageBox(this, symbolName + " 削除します", "", "確認", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
                 if (mSymbolData.removeSymbolData(category, symbolName)) {
                     string path = mSymbolData.getSymbolFilePath(category);
-                    lbSymbolName.ItemsSource = mSymbolData.getSymbolList(path);
+                    lbSymbolName.ItemsSource = mSymbolData.getSymbolList(path, true);
                     if (0 < lbSymbolName.Items.Count)
                         lbSymbolName.SelectedIndex = 0;
                 }

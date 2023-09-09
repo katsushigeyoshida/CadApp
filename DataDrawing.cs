@@ -56,8 +56,6 @@ namespace CadApp
             ydraw.mAspectFix = true;
             ydraw.mClipping = true;
             ydraw.setWorldWindow(dispArea);
-            System.Diagnostics.Debug.WriteLine($"View: {ydraw.mView}");
-            System.Diagnostics.Debug.WriteLine($"World: {ydraw.mWorld.ToString("f2")}");
         }
 
         /// <summary>
@@ -76,15 +74,11 @@ namespace CadApp
             ticket.PageOrientation = orient;
             //  印刷領域
             var area = queue.GetPrintCapabilities().PageImageableArea;
-            //if (area == null) {
-            //    MessageBox.Show("印刷可能領域の取得に失敗 ...");
-            //    return;
-            //}
 
             //  Canvasにデータを設定
             Canvas canvas = new Canvas();
-            double width = area.ExtentWidth;    // ticket.PageMediaSize.Width.Value;
-            double height = area.ExtentHeight;  // ticket.PageMediaSize.Height.Value;
+            double width = area.ExtentWidth;
+            double height = area.ExtentHeight;
             if (ticket.PageOrientation == PageOrientation.Landscape) {
                 YLib.Swap(ref width, ref height);
             }
@@ -189,6 +183,13 @@ namespace CadApp
                 case OPERATION.createLine:
                     if (1 < points.Count) {
                         ydraw.drawWLine(new LineD(points[0], points[1]));
+                    }
+                    break;
+                case OPERATION.createHVLine:
+                    {
+                        PolylineD polyline = new PolylineD(points);
+                        List<PointD> plist = polyline.toHVLine();
+                        ydraw.drawWPolyline(plist);
                     }
                     break;
                 case OPERATION.createRect:
@@ -297,7 +298,8 @@ namespace CadApp
                 case OPERATION.stretch:
                     stretchDragging(entityData, points, pickList);
                     break;
-                case OPERATION.entityPaste: {
+                case OPERATION.entityPaste:
+                    if (mCopyArea != null) {
                         Box b = new Box(points[0], mCopyArea.Size);
                         List<PointD> plist = b.ToPointDList();
                         ydraw.drawWPolygon(plist);
@@ -470,11 +472,13 @@ namespace CadApp
             for (int i = 1; i < loc.Count; i++) {
                 PointD vec = loc[0].vector(loc[i]);
 
-                foreach ((int, PointD) entNo in pickList) {
-                    Entity ent = entityData.mEntityList[entNo.Item1].toCopy();
-                    ent.mColor = mDraggingColor;
-                    ent.translate(vec);
-                    ent.draw(ydraw);
+                foreach ((int no, PointD pos) pickEnt in pickList) {
+                    if (pickEnt.no < entityData.mEntityList.Count) {
+                        Entity ent = entityData.mEntityList[pickEnt.no].toCopy();
+                        ent.mColor = mDraggingColor;
+                        ent.translate(vec);
+                        ent.draw(ydraw);
+                    }
                 }
             }
         }
@@ -491,11 +495,13 @@ namespace CadApp
 
             ydraw.mBrush = mDraggingColor;
             for (int i = 1; i< loc.Count; i++) {
-                foreach ((int, PointD) entNo in pickList) {
-                    Entity ent = entityData.mEntityList[entNo.Item1].toCopy();
-                    ent.mColor = mDraggingColor;
-                    ent.rotate(loc[0], loc[i]);
-                    ent.draw(ydraw);
+                foreach ((int no, PointD pos) pickEnt in pickList) {
+                    if (pickEnt.no < entityData.mEntityList.Count) {
+                        Entity ent = entityData.mEntityList[pickEnt.no].toCopy();
+                        ent.mColor = mDraggingColor;
+                        ent.rotate(loc[0], loc[i]);
+                        ent.draw(ydraw);
+                    }
                 }
             }
         }
@@ -512,11 +518,13 @@ namespace CadApp
 
             ydraw.mBrush = mDraggingColor;
 
-            foreach ((int, PointD) entNo in pickList) {
-                Entity ent = entityData.mEntityList[entNo.Item1].toCopy();
-                ent.mColor = mDraggingColor;
-                ent.mirror(loc[0], loc[1]);
-                ent.draw(ydraw);
+            foreach ((int no, PointD pos) pickEnt in pickList) {
+                if (pickEnt.no < entityData.mEntityList.Count) {
+                    Entity ent = entityData.mEntityList[pickEnt.no].toCopy();
+                    ent.mColor = mDraggingColor;
+                    ent.mirror(loc[0], loc[1]);
+                    ent.draw(ydraw);
+                }
             }
         }
 
@@ -533,11 +541,13 @@ namespace CadApp
             ydraw.mBrush = mDraggingColor;
             double scale = loc[0].length(loc[2]) / loc[0].length(loc[1]);
 
-            foreach ((int, PointD) entNo in pickList) {
-                Entity ent = entityData.mEntityList[entNo.Item1].toCopy();
-                ent.mColor = mDraggingColor;
-                ent.scale(loc[0], scale);
-                ent.draw(ydraw);
+            foreach ((int no, PointD pos) pickEnt in pickList) {
+                if (pickEnt.no < entityData.mEntityList.Count) {
+                    Entity ent = entityData.mEntityList[pickEnt.no].toCopy();
+                    ent.mColor = mDraggingColor;
+                    ent.scale(loc[0], scale);
+                    ent.draw(ydraw);
+                }
             }
         }
 
@@ -553,11 +563,13 @@ namespace CadApp
 
             ydraw.mBrush = mDraggingColor;
 
-            foreach ((int, PointD) entNo in pickList) {
-                Entity ent = entityData.mEntityList[entNo.Item1].toCopy();
-                ent.mColor = mDraggingColor;
-                ent.offset(loc[0], loc[1]);
-                ent.draw(ydraw);
+            foreach ((int no, PointD pos) pickEnt in pickList) {
+                if (pickEnt.no < entityData.mEntityList.Count) {
+                    Entity ent = entityData.mEntityList[pickEnt.no].toCopy();
+                    ent.mColor = mDraggingColor;
+                    ent.offset(loc[0], loc[1]);
+                    ent.draw(ydraw);
+                }
             }
         }
 
@@ -573,11 +585,13 @@ namespace CadApp
 
             ydraw.mBrush = mDraggingColor;
 
-            foreach ((int, PointD) entNo in pickList) {
-                Entity ent = entityData.mEntityList[entNo.Item1].toCopy();
-                ent.mColor = mDraggingColor;
-                ent.trim(loc[0], loc[1]);
-                ent.draw(ydraw);
+            foreach ((int no, PointD pos) pickEnt in pickList) {
+                if (pickEnt.no < entityData.mEntityList.Count) {
+                    Entity ent = entityData.mEntityList[pickEnt.no].toCopy();
+                    ent.mColor = mDraggingColor;
+                    ent.trim(loc[0], loc[1]);
+                    ent.draw(ydraw);
+                }
             }
         }
 
@@ -595,10 +609,12 @@ namespace CadApp
             PointD vec = loc[0].vector(loc[loc.Count - 1]);
 
             foreach ((int no, PointD pos) pickEnt in pickList) {
-                Entity ent = entityData.mEntityList[pickEnt.no].toCopy();
-                ent.mColor = mDraggingColor;
-                ent.stretch(vec, pickEnt.pos);
-                ent.draw(ydraw);
+                if (pickEnt.no < entityData.mEntityList.Count) {
+                    Entity ent = entityData.mEntityList[pickEnt.no].toCopy();
+                    ent.mColor = mDraggingColor;
+                    ent.stretch(vec, pickEnt.pos);
+                    ent.draw(ydraw);
+                }
             }
         }
 

@@ -44,6 +44,9 @@ namespace CadApp
         };
         private string[] mHorizontalAlignmentMenu = { "左", "中", "右" };
         private string[] mVerticalAlignmentMenu = { "上", "中", "下" };
+        private double[] mTextRotateMenu = { 
+            0, 30, 45, 75, 90, 120, 135, 150, 180, 210, 235, 240, 270, 300, 315, 330
+        };
         private List<string> mLocMenu = new List<string>() {
             "座標入力", "相対座標入力"
         };
@@ -114,6 +117,7 @@ namespace CadApp
             cbTextSize.ItemsSource    = mTextSizeMenu;
             cbTextHorizontal.ItemsSource = mHorizontalAlignmentMenu;
             cbTextVertical.ItemsSource   = mVerticalAlignmentMenu;
+            cbTextRotate.ItemsSource     = mTextRotateMenu;
 
             setZumenProperty();
 
@@ -133,10 +137,10 @@ namespace CadApp
                 }
             } else {
                 if (0 < cbGenre.Items.Count) {
-                    mFileData.mGenreName = cbGenre.Items[0].ToString();
+                    mFileData.mGenreName = cbGenre.Items[0].ToString() ?? "";
                     lbCategoryList.ItemsSource = mFileData.getCategoryList();
                     if (0 < lbCategoryList.Items.Count) {
-                        mFileData.mCategoryName = lbCategoryList.Items[0].ToString();
+                        mFileData.mCategoryName = lbCategoryList.Items[0].ToString() ?? "";
                         lbItemList.ItemsSource = mFileData.getItemFileList();
                     }
                 }
@@ -182,8 +186,9 @@ namespace CadApp
         /// <param name="e"></param>
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            //if (ylib.messageBox(this, "終了します", "", "確認", MessageBoxButton.OKCancel) != MessageBoxResult.OK)
+            //    e.Cancel = true;
             mCommandOpe.saveFile(true);
-
             WindowFormSave();
         }
 
@@ -260,6 +265,18 @@ namespace CadApp
         }
 
         /// <summary>
+        /// [文字入力欄]のキー入力処理
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void tbTextString_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter && e.KeyboardDevice.Modifiers == ModifierKeys.Control) {
+                textInput();
+            }
+        }
+
+        /// <summary>
         /// [作成レイヤー]コンボボックス
         /// </summary>
         /// <param name="sender"></param>
@@ -267,7 +284,6 @@ namespace CadApp
         private void cbCreateLayer_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter) {
-                System.Diagnostics.Debug.WriteLine($"cbCreateLayer_PreviewKeyDown");
                 mCommandOpe.mPara.mCreateLayerName = cbCreateLayer.Text;
                 mEntityData.addDispLayer(mCommandOpe.mPara.mCreateLayerName);
                 mCommandOpe.mPara.mDispLayerBit = mEntityData.mPara.mDispLayerBit;
@@ -284,8 +300,8 @@ namespace CadApp
         private void cbCreateLayer_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (0 <= cbCreateLayer.SelectedIndex) {
-                mCommandOpe.mPara.mCreateLayerName = cbCreateLayer.Items[cbCreateLayer.SelectedIndex].ToString();
-                mEntityData.addDispLayer(mCommandOpe.mPara.mCreateLayerName);
+                mCommandOpe.mPara.mCreateLayerName = cbCreateLayer.Items[cbCreateLayer.SelectedIndex].ToString() ?? "";
+                mEntityData.addDispLayer(mCommandOpe.mPara.mCreateLayerName ?? "");
                 mCommandOpe.mPara.mDispLayerBit = mEntityData.mPara.mDispLayerBit;
                 mEntityData.updateData();
                 disp(mEntityData);
@@ -319,7 +335,7 @@ namespace CadApp
                 return;
             int index = lbCommand.SelectedIndex;
             if (lbCommand.Items !=null && 0 <= index) {
-                commandMenu(lbCommand.Items[index].ToString());
+                commandMenu(lbCommand.Items[index].ToString() ?? "");
             }
         }
 
@@ -345,6 +361,7 @@ namespace CadApp
                 mCommandOpe.mTextString = tbTextString.Text;
                 if (mOperation != OPERATION.createPolyline
                     && mOperation != OPERATION.createPolygon
+                    && mOperation != OPERATION.createHVLine
                     && mOperation != OPERATION.copyTranslate
                     && mOperation != OPERATION.copyRotate) {
                     if (mCommandOpe.entityCommand(mOperation, mCommandOpe.mLocPos, mCommandOpe.mPickEnt))
@@ -366,10 +383,11 @@ namespace CadApp
             PointD pickPos = mDataDrawing.cnvScreen2World(new PointD(e.GetPosition(cvCanvas)));
             List<int> picks = getPickNo(pickPos);
             if (mLocMode == OPEMODE.loc) {
-                //  ロケイト処理
+                //  ロケイトモード
                 if (0 < mCommandOpe.mLocPos.Count &&
                     (mOperation == OPERATION.createPolyline
                     || mOperation == OPERATION.createPolygon
+                    || mOperation == OPERATION.createHVLine
                     || mOperation == OPERATION.copyTranslate
                     || mOperation == OPERATION.copyRotate)) {
                     //  ロケイト数不定の要素作成(ポリライン、ポリゴン)
@@ -396,7 +414,7 @@ namespace CadApp
                         commandClear();
                 }
             } else {
-                //  ピック処理
+                //  ピックモード
                 if (0 < picks.Count) {
                     int pickNo = pickSelect(picks);
                     if (0 <= pickNo) {
@@ -478,15 +496,7 @@ namespace CadApp
         /// <param name="e"></param>
         private void tbTextString_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            InputBox dlg = new InputBox();
-            dlg.Owner = this;
-            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            dlg.mMultiLine = true;
-            dlg.Title = "文字列入力";
-            dlg.mEditText = tbTextString.Text;
-            if (dlg.ShowDialog() == true) {
-                tbTextString.Text = dlg.mEditText;
-            }
+            textInput();
         }
 
         /// <summary>
@@ -498,7 +508,7 @@ namespace CadApp
         {
             int index = cbGenre.SelectedIndex;
             if (0 <= index) {
-                mFileData.setGenreFolder(cbGenre.SelectedItem.ToString());
+                mFileData.setGenreFolder(cbGenre.SelectedItem.ToString() ?? "");
                 lbCategoryList.ItemsSource = mFileData.getCategoryList();
             }
         }
@@ -522,7 +532,7 @@ namespace CadApp
                 }
             } else if (menuItem.Name.CompareTo("cbGenreRenameMenu") == 0) {
                 //  大分類名の変更
-                string genre = mFileData.renameGenre(cbGenre.SelectedItem.ToString());
+                string genre = mFileData.renameGenre(cbGenre.SelectedItem.ToString() ?? "");
                 if (0 < genre.Length) {
                     cbGenre.ItemsSource = mFileData.getGenreList();
                     int index = cbGenre.Items.IndexOf(genre);
@@ -531,7 +541,7 @@ namespace CadApp
                 }
             } else if (menuItem.Name.CompareTo("cbGenreRemoveMenu") == 0) {
                 //  大分類名の削除
-                if (mFileData.removeGenre(cbGenre.SelectedItem.ToString())) {
+                if (mFileData.removeGenre(cbGenre.SelectedItem.ToString() ?? "")) {
                     cbGenre.ItemsSource = mFileData.getGenreList();
                     if (0 < cbGenre.Items.Count)
                         cbGenre.SelectedIndex = 0;
@@ -548,7 +558,7 @@ namespace CadApp
         {
             int index = lbCategoryList.SelectedIndex;
             if (0 <= index) {
-                mFileData.setCategoryFolder(lbCategoryList.SelectedItem.ToString());
+                mFileData.setCategoryFolder(lbCategoryList.SelectedItem.ToString() ?? "");
                 lbItemList.ItemsSource = mFileData.getItemFileList();
             }
         }
@@ -563,7 +573,7 @@ namespace CadApp
             MenuItem menuItem = (MenuItem)e.Source;
             string category = "";
             if (0 <= lbCategoryList.SelectedIndex)
-                category = lbCategoryList.SelectedItem.ToString();
+                category = lbCategoryList.SelectedItem.ToString() ?? "";
 
             if (menuItem.Name.CompareTo("lbCategoryAddMenu") == 0) {
                 //  分類(Category)の追加
@@ -586,7 +596,7 @@ namespace CadApp
                 }
             } else if (menuItem.Name.CompareTo("lbCategoryRemoveMenu") == 0) {
                 //  分類の削除
-                if (mFileData.removeCategory(lbCategoryList.SelectedItem.ToString())) {
+                if (mFileData.removeCategory(lbCategoryList.SelectedItem.ToString() ?? "")) {
                     lbCategoryList.SelectedIndex = -1;
                     lbCategoryList.ItemsSource = mFileData.getCategoryList();
                     if (0 < lbCategoryList.Items.Count)
@@ -616,8 +626,8 @@ namespace CadApp
             int index = lbItemList.SelectedIndex;
             if (0 <= index) {
                 mCommandOpe.saveFile(true);
-                if (mCommandOpe.openFile(mFileData.getItemFilePath(lbItemList.Items[index].ToString()))) {
-                    mFileData.mDataName = lbItemList.Items[index].ToString();
+                if (mCommandOpe.openFile(mFileData.getItemFilePath(lbItemList.Items[index].ToString() ?? ""))) {
+                    mFileData.mDataName = lbItemList.Items[index].ToString() ?? "";
                     Title = lbItemList.Items[index].ToString();
                     setZumenProperty();
                     commandClear();
@@ -637,7 +647,7 @@ namespace CadApp
             MenuItem menuItem = (MenuItem)e.Source;
             string itemName = null;
             if (0 <= lbItemList.SelectedIndex)
-                itemName = lbItemList.SelectedItem.ToString();
+                itemName = lbItemList.SelectedItem.ToString() ?? "";
 
             mCommandOpe.saveFile(true);
             if (menuItem.Name.CompareTo("lbItemAddMenu") == 0) {
@@ -804,6 +814,19 @@ namespace CadApp
             int index = cbTextVertical.SelectedIndex;
             if (0 <= index) {
                 mCommandOpe.mPara.mVa = index == 1 ? VerticalAlignment.Center : index == 2 ? VerticalAlignment.Bottom : VerticalAlignment.Top;
+            }
+        }
+
+        /// <summary>
+        /// 文字列の回転角の設定
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void cbTextRotate_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            int index = cbTextRotate.SelectedIndex;
+            if (0 <= index) {
+                mCommandOpe.mPara.mTextRotate = ylib.D2R(mTextRotateMenu[index]);
             }
         }
 
@@ -1058,6 +1081,7 @@ namespace CadApp
                 //  領域決定
                 if (1 < mAreaLoc.Count) {
                     Box dispArea = new Box(mAreaLoc[0], mAreaLoc[1]);
+                    dispArea.normalize();
                     if (1 < mDataDrawing.world2creenXlength(dispArea.Width)) {
                         if (opeMode == OPEMODE.areaDisp) {
                             //  領域拡大表示
@@ -1166,7 +1190,7 @@ namespace CadApp
         /// <returns>ロケイト位置</returns>
         private PointD autoLoc(PointD pickPos, List<int> picks)
         {
-            PointD wp = null;
+            PointD? wp = null;
             if (onControlKey()) {
                 //  Ctrlキーでのメニュー表示で位置を選定
                 wp = locSelect(pickPos, picks);
@@ -1232,7 +1256,7 @@ namespace CadApp
                     break;
                 case EntityId.Parts:
                     PartsEntity parts = (PartsEntity)ent;
-                    pos = parts.mParts.nearPoint(p);
+                    pos = parts.mParts.nearPoint(p, 4);
                     break;
             }
             return pos;
@@ -1287,6 +1311,8 @@ namespace CadApp
                     locMenu.Add("中心点");
                     locMenu.Add("頂点");
                     locMenu.Add("接点");
+                } else if (ent.mEntityId == EntityId.Parts) {
+                    locMenu.Add("中心点");
                 }
             } else if (1 < picks.Count) {
                 locMenu.Add("交点");
@@ -1361,6 +1387,8 @@ namespace CadApp
                     } else if (ent.mEntityId == EntityId.Ellipse) {
                         EllipseEntity ellipseEnt = (EllipseEntity)ent;
                         pos = ellipseEnt.mEllipse.mCp;
+                    } else if (ent.mEntityId == EntityId.Parts) {
+                        pos = ent.mArea.getCenter();
                     }
                     break;
                 case "交点":
@@ -1586,6 +1614,22 @@ namespace CadApp
                             commandClear();
                         break;
                 }
+            }
+        }
+
+        /// <summary>
+        /// 文字入力欄の文字列入力ダイヤログを開く
+        /// </summary>
+        private void textInput()
+        {
+            InputBox dlg = new InputBox();
+            dlg.Owner = this;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.mMultiLine = true;
+            dlg.Title = "文字列入力";
+            dlg.mEditText = tbTextString.Text;
+            if (dlg.ShowDialog() == true) {
+                tbTextString.Text = dlg.mEditText;
             }
         }
 
@@ -1842,7 +1886,8 @@ namespace CadApp
                                          mCommandOpe.mPara.mHa == HorizontalAlignment.Center ? 1 : 2;
             cbTextVertical.SelectedIndex   = mCommandOpe.mPara.mVa == VerticalAlignment.Top ? 0 :
                                          mCommandOpe.mPara.mVa == VerticalAlignment.Center ? 1 : 2;
-            cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
+            cbTextRotate.SelectedIndex  = mTextRotateMenu.FindIndex(p => ylib.R2D(mCommandOpe.mPara.mTextRotate) <= p);
+            cbCreateLayer.ItemsSource   = mEntityData.getLayerNameList();
             cbCreateLayer.SelectedIndex = cbCreateLayer.Items.IndexOf(mEntityData.mPara.mCreateLayerName);
         }
 

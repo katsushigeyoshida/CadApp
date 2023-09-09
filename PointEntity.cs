@@ -233,12 +233,12 @@ namespace CadApp
                     break;
                 case EntityId.Polyline:
                     PolylineEntity polyline = (PolylineEntity)entity;
-                    ip = polyline.mPolyline.nearPoint(mPoint);
+                    ip = polyline.mPolyline.nearCrossPoint(mPoint);
                     plist.Add(ip);
                     break;
                 case EntityId.Polygon:
                     PolygonEntity polygon = (PolygonEntity)entity;
-                    ip = polygon.mPolygon.nearPoint(mPoint);
+                    ip = polygon.mPolygon.nearCrossPoint(mPoint);
                     plist.Add(ip);
                     break;
                 case EntityId.Text:

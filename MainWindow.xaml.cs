@@ -25,12 +25,14 @@ namespace CadApp
         private WindowState mWindowState = WindowState.Normal;  //  ウィンドウの状態(最大化/最小化)
 
         private string mHelpFile = "CadAppManual.pdf";       //  PDFのヘルプファイル
+        private string mShortCutPath = "ShortCut.csv";
         private double[] mGridSizeMenu = {
             0, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000
         };
         private double[] mTextSizeMenu = {
-            0.1, 0.2, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16,
-            18, 20, 24, 28, 32, 36, 40, 48, 56, 64, 96, 128, 196, 256, 384,
+            0.1, 0.2, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 9, 
+            10, 11, 12, 13, 14, 16, 18, 20, 24, 28, 32, 36,
+            40, 48, 56, 64, 96, 128, 196, 256, 384,
             512, 768, 1024, 1536, 2048, 3072, 4096, 6144, 8192, 12288, 16384
         };
         private double[] mEntSizeMenu = {
@@ -75,9 +77,9 @@ namespace CadApp
         };
         private CommandOpe mCommandOpe;
         private CommandData mCommandData = new CommandData();
-        private OPERATION mOperation = OPERATION.non;
-        private OPEMODE mLocMode = OPEMODE.pick;            //  マウスのLocモードとPickモード
-        private OPEMODE mPrevMode = OPEMODE.pick;
+        public OPERATION mOperation = OPERATION.non;
+        public OPEMODE mLocMode = OPEMODE.pick;            //  マウスのLocモードとPickモード
+        public OPEMODE mPrevMode = OPEMODE.pick;
 
         private FileData mFileData;
         private DataDrawing mDataDrawing;
@@ -95,6 +97,7 @@ namespace CadApp
             mCommandOpe  = new CommandOpe(mEntityData, this);
             mFileData    = new FileData(this);
             mSymbolData  = new SymbolData(this);
+            mCommandData.loadShortCut(mShortCutPath);
 
             WindowFormLoad();
         }
@@ -188,7 +191,13 @@ namespace CadApp
         {
             //if (ylib.messageBox(this, "終了します", "", "確認", MessageBoxButton.OKCancel) != MessageBoxResult.OK)
             //    e.Cancel = true;
+            if (mCommandOpe.mChkListDlg != null)
+                mCommandOpe.mChkListDlg.Close();
+            if (mCommandOpe.mSymbolDlg != null)
+                mCommandOpe.mSymbolDlg.Close();
             mCommandOpe.saveFile(true);
+            if (!File.Exists(mShortCutPath))
+                mCommandData.saveShortCut(mShortCutPath);
             WindowFormSave();
         }
 
@@ -284,11 +293,7 @@ namespace CadApp
         private void cbCreateLayer_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter) {
-                mCommandOpe.mPara.mCreateLayerName = cbCreateLayer.Text;
-                mEntityData.addDispLayer(mCommandOpe.mPara.mCreateLayerName);
-                mCommandOpe.mPara.mDispLayerBit = mEntityData.mPara.mDispLayerBit;
-                cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
-                cbCreateLayer.SelectedIndex = cbCreateLayer.Items.IndexOf(mEntityData.mPara.mCreateLayerName);
+                setCreateLayer(cbCreateLayer.Text);
             }
         }
 
@@ -300,11 +305,7 @@ namespace CadApp
         private void cbCreateLayer_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (0 <= cbCreateLayer.SelectedIndex) {
-                mCommandOpe.mPara.mCreateLayerName = cbCreateLayer.Items[cbCreateLayer.SelectedIndex].ToString() ?? "";
-                mEntityData.addDispLayer(mCommandOpe.mPara.mCreateLayerName ?? "");
-                mCommandOpe.mPara.mDispLayerBit = mEntityData.mPara.mDispLayerBit;
-                mEntityData.updateData();
-                disp(mEntityData);
+                setCreateLayer(cbCreateLayer.Items[cbCreateLayer.SelectedIndex].ToString() ?? "");
             }
         }
 
@@ -484,8 +485,7 @@ namespace CadApp
                 double scaleStep = e.Delta > 0 ? 1.2 : 1 / 1.2;
                 Point point = e.GetPosition(cvCanvas);
                 PointD wp = mDataDrawing.cnvScreen2World(new PointD(point));
-                mDataDrawing.setWorldZoom(wp, scaleStep, true);
-                disp(mEntityData);
+                zoom(wp, scaleStep);
             }
         }
 
@@ -626,6 +626,8 @@ namespace CadApp
             int index = lbItemList.SelectedIndex;
             if (0 <= index) {
                 mCommandOpe.saveFile(true);
+                if (mCommandOpe.mChkListDlg != null)
+                    mCommandOpe.mChkListDlg.Close();
                 if (mCommandOpe.openFile(mFileData.getItemFilePath(lbItemList.Items[index].ToString() ?? ""))) {
                     mFileData.mDataName = lbItemList.Items[index].ToString() ?? "";
                     Title = lbItemList.Items[index].ToString();
@@ -1009,28 +1011,35 @@ namespace CadApp
                     case Key.F3: break;
                     case Key.F4: break;
                     case Key.F5: break;
-                    case Key.Left: mDataDrawing.scroll(mEntityData, mScrollSize, 0, mCommandOpe.mPara.mGridSize); break;
-                    case Key.Right: mDataDrawing.scroll(mEntityData, -mScrollSize, 0, mCommandOpe.mPara.mGridSize); break;
-                    case Key.Up: mDataDrawing.scroll(mEntityData, 0, mScrollSize, mCommandOpe.mPara.mGridSize); break;
-                    case Key.Down: mDataDrawing.scroll(mEntityData, 0, -mScrollSize, mCommandOpe.mPara.mGridSize); break;
-                    case Key.A: commandExec(OPERATION.createLine); break;
-                    case Key.Q: commandExec(OPERATION.createText); break;
-                    case Key.S: mCommandOpe.saveFile(); break;
-                    case Key.Z: mEntityData.undo(); disp(mEntityData); break;
+                    case Key.Left: scroll(mScrollSize, 0); break;
+                    case Key.Right: scroll(-mScrollSize, 0); break;
+                    case Key.Up: scroll(0, mScrollSize); break;
+                    case Key.Down: scroll(0, -mScrollSize); break;
+                    case Key.PageUp: zoom(1.1); break;
+                    case Key.PageDown: zoom(1 / 1.1); break;
+                    //case Key.A: commandExec(OPERATION.createLine); break;
+                    //case Key.Q: commandExec(OPERATION.createText); break;
+                    //case Key.S: commandExec(OPERATION.save); break;
+                    //case Key.Z: commandExec(OPERATION.undo); break;
+                    default:
+                        if (mCommandData.mShortCutList.ContainsKey(key))
+                            commandExec(mCommandData.mShortCutList[key]);
+                        break;
                 }
             } else if (shift) {
                 switch (key) {
                     case Key.F1: break;
+                    default: break;
                 }
             } else {
                 switch (key) {
                     case Key.Escape: commandClear(); break;             //  ESCキーでキャンセル
                     case Key.Return: break;                             //  コントロールごとに実行
-                    case Key.F1: disp(mEntityData); break;                                  //  再表示
+                    case Key.F1: disp(mEntityData); break;              //  再表示
                     case Key.F2: mPrevMode = mLocMode; mLocMode = OPEMODE.areaDisp; break;  //  領域拡大
-                    case Key.F3: dispFit(); break;                                          //  全体表示
-                    case Key.F4: mDataDrawing.setWorldZoom(1.2); disp(mEntityData); break;  //  拡大表示
-                    case Key.F5: mDataDrawing.setWorldZoom(1/1.2); disp(mEntityData); break; //  縮小表示
+                    case Key.F3: dispFit(); break;                      //  全体表示
+                    case Key.F4: zoom(1.2); break;                      //  拡大表示
+                    case Key.F5: zoom(1 / 1.2); break;                  //  縮小表示
                     case Key.F6: mPrevMode = mLocMode; mLocMode = OPEMODE.areaPick; break;  //  領域ピック
                     case Key.F7: break;
                     case Key.F8: break;
@@ -1045,8 +1054,10 @@ namespace CadApp
                         }
                         break;
                     case Key.Apps: locMenu(); break;                    //  コンテキストメニューキー
+                    default: break;
                 }
             }
+            dispMode();
         }
 
         /// <summary>
@@ -1626,11 +1637,32 @@ namespace CadApp
             dlg.Owner = this;
             dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             dlg.mMultiLine = true;
+            dlg.mWindowSizeOutSet = true;
             dlg.Title = "文字列入力";
             dlg.mEditText = tbTextString.Text;
             if (dlg.ShowDialog() == true) {
                 tbTextString.Text = dlg.mEditText;
             }
+        }
+
+        /// <summary>
+        /// 作成レイヤーを設定する
+        /// </summary>
+        /// <param name="layerName">作成レイヤー名</param>
+        private void setCreateLayer(string layerName)
+        {
+            mEntityData.addDispLayer(layerName);
+            mEntityData.mPara.mCreateLayerName = layerName;
+            mCommandOpe.mPara.mCreateLayerName = layerName;
+            mCommandOpe.mPara.mDispLayerBit = mEntityData.mPara.mDispLayerBit;
+            if (0 > cbCreateLayer.Items.IndexOf(layerName)) {
+                cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
+            } else {
+                if (mCommandOpe.mChkListDlg != null && mCommandOpe.mChkListDlg.IsVisible)
+                    mCommandOpe.setDispLayer();
+                disp(mEntityData);
+            }
+            cbCreateLayer.SelectedIndex = cbCreateLayer.Items.IndexOf(mCommandOpe.mPara.mCreateLayerName);
         }
 
         /// <summary>
@@ -1721,6 +1753,7 @@ namespace CadApp
         private void disp(EntityData entyityData)
         {
             mDataDrawing.disp(entyityData, mCommandOpe.mBackColor, mCommandOpe.mPara.mGridSize);
+            mDataDrawing.pickDisp(mEntityData, mCommandOpe.mPickEnt);
         }
 
         /// <summary>
@@ -1744,7 +1777,39 @@ namespace CadApp
         {
             double dx = pe.X - ps.X;
             double dy = pe.Y - ps.Y;
+            scroll(dx, dy);
+        }
+
+        /// <summary>
+        /// 画面スクロール
+        /// </summary>
+        /// <param name="dx">X移動量</param>
+        /// <param name="dy">Y移動量</param>
+        private void scroll(double dx, double dy)
+        {
             mDataDrawing.scroll(mEntityData, dx, dy, mCommandOpe.mPara.mGridSize);
+            mDataDrawing.pickDisp(mEntityData, mCommandOpe.mPickEnt);
+        }
+
+        /// <summary>
+        /// 画面の拡大縮小
+        /// </summary>
+        /// <param name="scaleStep">拡大率</param>
+        private void zoom(double scaleStep)
+        {
+            PointD wp = mDataDrawing.getWorldArea().getCenter();
+            zoom(wp, scaleStep);
+        }
+
+        /// <summary>
+        /// 画面の拡大縮小
+        /// </summary>
+        /// <param name="wp">スケール中心</param>
+        /// <param name="scaleStep">拡大率</param>
+        private void zoom(PointD wp, double scaleStep)
+        {
+            mDataDrawing.setWorldZoom(wp, scaleStep, true);
+            disp(mEntityData);
         }
 
         /// <summary>
@@ -1887,8 +1952,8 @@ namespace CadApp
             cbTextVertical.SelectedIndex   = mCommandOpe.mPara.mVa == VerticalAlignment.Top ? 0 :
                                          mCommandOpe.mPara.mVa == VerticalAlignment.Center ? 1 : 2;
             cbTextRotate.SelectedIndex  = mTextRotateMenu.FindIndex(p => ylib.R2D(mCommandOpe.mPara.mTextRotate) <= p);
-            cbCreateLayer.ItemsSource   = mEntityData.getLayerNameList();
-            cbCreateLayer.SelectedIndex = cbCreateLayer.Items.IndexOf(mEntityData.mPara.mCreateLayerName);
+            cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
+            setCreateLayer(mEntityData.mPara.mCreateLayerName);
         }
 
         /// <summary>

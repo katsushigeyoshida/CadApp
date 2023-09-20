@@ -346,5 +346,53 @@ namespace CadApp.Properties {
                 this["SymbolFolder"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public double SymbolDlgWidth {
+            get {
+                return ((double)(this["SymbolDlgWidth"]));
+            }
+            set {
+                this["SymbolDlgWidth"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public double SymbolDlgHeight {
+            get {
+                return ((double)(this["SymbolDlgHeight"]));
+            }
+            set {
+                this["SymbolDlgHeight"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public double SymbolDlgTop {
+            get {
+                return ((double)(this["SymbolDlgTop"]));
+            }
+            set {
+                this["SymbolDlgTop"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public double SymbolDlgLeft {
+            get {
+                return ((double)(this["SymbolDlgLeft"]));
+            }
+            set {
+                this["SymbolDlgLeft"] = value;
+            }
+        }
     }
 }

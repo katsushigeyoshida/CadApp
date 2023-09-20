@@ -214,7 +214,6 @@ namespace CadApp
 
         public string mTextString = "";                             //  文字列データ
         public DrawingPara mPara = new DrawingPara();
-        //public DrawingPara mSysPara = new DrawingPara();
 
         public string mCurFilePath = "";                            //  編集中のファイルパス
         public int mGridMinmumSize = 10;                            //  グリッドの最小表示スクリーンサイズ
@@ -230,6 +229,10 @@ namespace CadApp
         private readonly double mEps = 1E-8;
 
         private KeyCommand mKeyCommand = new();
+
+        public ChkListDialog mChkListDlg = null;                    //  表示レイヤー設定ダイヤログ
+        public SymbolDlg mSymbolDlg = null;                         //  シンボル選択配置ダイヤログ
+        public int mSymbolCategoryIndex = 0;
 
         public MainWindow mMainWindow;
 
@@ -267,7 +270,9 @@ namespace CadApp
         {
             mCurFilePath = filePath;
             mEntityData.clear();
-            mEntityData.mArea = new Box(mInitArea);
+            mEntityData.mPara = new DrawingPara();
+            //mEntityData.mArea = new Box(mInitArea);
+            mMainWindow.setSystemProperty();
             saveFile();
         }
 
@@ -353,10 +358,8 @@ namespace CadApp
                     commansInit = false;
                     break;
                 case OPERATION.createSymbol:                //  シンボル配置
-                    selectSymbol();
-                    locMode = MainWindow.OPEMODE.loc;
-                    mLocPos.Clear();
-                    commansInit = false;
+                    if (mSymbolDlg == null || !mSymbolDlg.IsActive)
+                        setSymbol();
                     break;
                 case OPERATION.textChange:                  //  文字列変更
                     changeText(mPickEnt);
@@ -389,10 +392,18 @@ namespace CadApp
                     cnvSymbol(mPickEnt);
                     break;
                 case OPERATION.disassemble:                 //  分解
-                    mEntityData.disassemble(mPickEnt);
+                    if (0 < mPickEnt.Count) {
+                        mEntityData.mOperationCouunt++;
+                        mEntityData.disassemble(mPickEnt);
+                    }
                     break;
                 case OPERATION.remove:                      //  削除
-                    mEntityData.removeEnt(mPickEnt);
+                    if (0 < mPickEnt.Count) {
+                        mEntityData.mOperationCouunt++;
+                        mEntityData.removeEnt(mPickEnt);
+                    }
+                    break;
+                case OPERATION.removeAll:                   //  全削除
                     break;
                 case OPERATION.measure:                     //  距離・角度測定
                     measureDisp(mPickEnt);
@@ -427,13 +438,11 @@ namespace CadApp
                 case OPERATION.manageSymbol:                //  シンボル管理
                     manageSymbol();
                     break;
-                case OPERATION.allClear:
-                    break;
                 case OPERATION.undo:                        //  アンドゥ
                     mEntityData.undo();
                     mEntityData.updateData();
                     break;
-                case OPERATION.redo:
+                case OPERATION.redo:                        //  リドゥ
                     break;
                 case OPERATION.print:                       //  印刷
                     mMainWindow.print();
@@ -444,6 +453,12 @@ namespace CadApp
                     break;
                 case OPERATION.close:                       //  終了
                     mMainWindow.Close();
+                    break;
+                case OPERATION.save:                        //  図面データ保存
+                    saveFile();
+                    break;
+                case OPERATION.saveAs:                      //  図面データ保存
+                    saveAsFile();
                     break;
                 case OPERATION.gridSize:                    //  グリッド設定
                     gridSet();
@@ -591,7 +606,7 @@ namespace CadApp
                 //  2点間の距離
                 measureDistance(points[0], points[1]);
             } else if (operation == OPERATION.measureAngle && points.Count == 3) {
-                //  ３点の角度
+                //  3点の角度
                 measureAngle(points[0], points[1], points[2]);
             } else {
                 mEntityData.mOperationCouunt--;
@@ -729,6 +744,7 @@ namespace CadApp
                 dlg.Owner = mMainWindow;
                 dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
                 dlg.mMultiLine = true;
+                dlg.mWindowSizeOutSet = true;
                 dlg.Title = "文字列変更";
                 if (mEntityData.mEntityList[pickNo.no].mEntityId == EntityId.Text) {
                     //  文字列要素
@@ -940,6 +956,8 @@ namespace CadApp
                 }
             }
             mEntityData.updateData();
+            mMainWindow.cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
+            mMainWindow.cbCreateLayer.SelectedIndex = mMainWindow.cbCreateLayer.Items.IndexOf(mEntityData.mPara.mCreateLayerName);
             return true;
         }
 
@@ -1036,13 +1054,50 @@ namespace CadApp
             dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             dlg.Title = "シンボル選択";
             dlg.mSymbolFolder = mMainWindow.mSymbolData.mSymbolFolder;
+            dlg.mDefualtCategory = mSymbolCategoryIndex;
             if (dlg.ShowDialog() == true) {
                 Entity ent = dlg.mEntity;
+                ent.setProperty(mPara);
                 mCopyEntityList = new List<Entity>();
                 if (ent != null)
                     mCopyEntityList.Add(ent);
+                mSymbolCategoryIndex = dlg.mDefualtCategory;
             }
         }
+
+        /// <summary>
+        /// シンボル選択のモードレスダイヤログ
+        /// </summary>
+        public void setSymbol()
+        {
+            if (mSymbolDlg != null)
+                mSymbolDlg.Close();
+            mSymbolDlg = new SymbolDlg();
+            mSymbolDlg.Topmost = true;
+            mSymbolDlg.Title = "シンボル選択";
+            mSymbolDlg.mSymbolFolder = mMainWindow.mSymbolData.mSymbolFolder;
+            mSymbolDlg.mDefualtCategory = mSymbolCategoryIndex;
+            mSymbolDlg.mCallBackOn = true;
+            mSymbolDlg.callback = setSymbolData;
+            mSymbolDlg.Show();
+        }
+
+        /// <summary>
+        /// シンボル配置の実行関数(SymbolDlgから呼ばれる)
+        /// </summary>
+        public void setSymbolData()
+        {
+            Entity ent = mSymbolDlg.mEntity;
+            ent.setProperty(mPara);
+            mCopyEntityList = new List<Entity>();
+            if (ent != null)
+                mCopyEntityList.Add(ent);
+            mSymbolCategoryIndex = mSymbolDlg.mDefualtCategory;
+            mMainWindow.mOperation = OPERATION.createSymbol;
+            mMainWindow.mLocMode = MainWindow.OPEMODE.loc;
+            mLocPos.Clear();
+        }
+
 
         /// <summary>
         /// ピックした要素をシンボルに変換する
@@ -1082,6 +1137,7 @@ namespace CadApp
                 mEntityData.mOperationCouunt++;
                 string name = "__" + dlg.mEditText;
                 PartsEntity entity = new PartsEntity(name, lines, arcs, texts);
+                entity.setProperty(mPara);
                 mEntityData.mEntityList.Add(entity);
                 entity.mOperationCount = mEntityData.mOperationCouunt;
                 for (int i = 0; i < pickEnt.Count; i++)
@@ -1226,20 +1282,30 @@ namespace CadApp
         }
 
         /// <summary>
-        /// 表示レイヤーをダイヤログで設定
+        /// 表示レイヤーのモードレスダイヤログを表示
         /// </summary>
         public void setDispLayer()
         {
-            ChkListDialog dlg = new ChkListDialog();
-            dlg.Owner = mMainWindow;
-            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            dlg.mTitle = "表示レイヤー";
-            dlg.mChkList = mEntityData.getLayerChkList();
-            if (dlg.ShowDialog() == true) {
-                mEntityData.setDispLayerBit(dlg.mChkList);
-                mEntityData.updateData();
-                mPara.mDispLayerBit = mEntityData.mPara.mDispLayerBit;
-            }
+            if (mChkListDlg != null)
+                mChkListDlg.Close();
+            mChkListDlg = new ChkListDialog();
+            mChkListDlg.Topmost = true;
+            mChkListDlg.mTitle = "表示レイヤー";
+            mChkListDlg.mChkList = mEntityData.getLayerChkList();
+            mChkListDlg.mCallBackOn = true;
+            mChkListDlg.callback = setLayerChk;
+            mChkListDlg.Show();
+        }
+
+        /// <summary>
+        /// レイヤーチェックリストに表示を更新
+        /// </summary>
+        public void setLayerChk()
+        {
+            mEntityData.setDispLayerBit(mChkListDlg.mChkList);
+            mEntityData.updateData();
+            mPara.mDispLayerBit = mEntityData.mPara.mDispLayerBit;
+            mMainWindow.commandClear();
         }
 
 
@@ -1470,6 +1536,7 @@ namespace CadApp
             dlg.Owner = mMainWindow;
             dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             dlg.mMultiLine = true;
+            dlg.mWindowSizeOutSet = true;
             dlg.Title = "図面のコメント";
             dlg.mEditText = mPara.mComment;
             if (dlg.ShowDialog() == true) {

@@ -148,6 +148,7 @@ namespace CadApp
         /// シンボルリストからシンボル名リストを取得
         /// </summary>
         /// <param name="symbolList">シンボルリスト</param>
+        /// <param name="sort">ソート</param>
         /// <returns>シンボル名リスト</returns>
         public List<string> getSymbolNameList(Dictionary<string, Entity> symbolList, bool sort = false)
         {
@@ -184,7 +185,7 @@ namespace CadApp
             List<List<string>> symbolList = new List<List<string>>();
             foreach (string category in categoryList) {
                 string path = getSymbolFilePath(category);
-                symbolList.Add(getSymbolList(path));
+                symbolList.Add(getSymbolList(path, true));
             }
             return symbolList;
         }
@@ -193,6 +194,7 @@ namespace CadApp
         /// シンボルファイルからシンボル名のリストに変換
         /// </summary>
         /// <param name="path">ファイルパス</param>
+        /// <param name="sort">ソート</param>
         /// <returns>シンボル名リスト</returns>
         public List<string> getSymbolList(string path, bool sort = false)
         {

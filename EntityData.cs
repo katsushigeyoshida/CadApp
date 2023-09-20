@@ -764,7 +764,6 @@ namespace CadApp
         /// <returns></returns>
         public bool disassemble(List<(int no, PointD pos)> pickList)
         {
-            mOperationCouunt++;
             List<LineD> lines;
             foreach ((int no, PointD pos) entNo in pickList) {
                 Entity entity = mEntityList[entNo.no];
@@ -881,24 +880,25 @@ namespace CadApp
         {
             mLayerList.Clear();
             if (mEntityList != null && 0 < mEntityList.Count) {
+                //  レイヤービットの更新
+                for (int i = 0; i < mEntityList.Count; i++) {
+                    if (mEntityList[i].mLayerName.Length == 0)
+                        mEntityList[i].mLayerName = mPara.mCreateLayerName;
+                    mEntityList[i].mLayerBit = setLayerBit(mEntityList[i].mLayerName);
+                }
+                //  要素領域と要素番号の更新
                 mArea = null;
                 for (int i = 0; i < mEntityList.Count; i++) {
                     if (!mEntityList[i].mRemove && mEntityList[i].mEntityId != EntityId.Link
                         && (mEntityList[i].mLayerBit & mPara.mDispLayerBit) != 0) {
-                        //  要素領域の更新
                         if (mArea == null) {
                             mArea = mEntityList[i].mArea.toCopy();
                         } else {
                             mEntityList[i].updateArea();
                             mArea.extension(mEntityList[i].mArea);
                         }
-                        //  要素番号
-                        mEntityList[i].mNo = i;
+                        mEntityList[i].mNo = i;     //  要素番号
                     }
-                    //  レイヤービットの更新
-                    if (mEntityList[i].mLayerName.Length == 0)
-                        mEntityList[i].mLayerName = mPara.mCreateLayerName;
-                    mEntityList[i].mLayerBit = setLayerBit(mEntityList[i].mLayerName);
                 }
             }
         }
@@ -1019,6 +1019,7 @@ namespace CadApp
             foreach (string key in mLayerList.Keys) {
                 layerList.Add(key);
             }
+            layerList.Sort();
             return layerList;
         }
 
@@ -1029,11 +1030,13 @@ namespace CadApp
         public List<CheckBoxListItem> getLayerChkList()
         {
             updateLayerList();
+            addDispLayer(mPara.mCreateLayerName);
             List<CheckBoxListItem> chkList = new List<CheckBoxListItem>();
             foreach (KeyValuePair<string, ulong> item in mLayerList) {
                 CheckBoxListItem chkItem = new CheckBoxListItem((mPara.mDispLayerBit & item.Value) != 0, item.Key);
                 chkList.Add(chkItem);
             }
+            chkList.Sort((a,b) => a.Text.CompareTo(b.Text));
             return chkList;
         }
 

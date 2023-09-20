@@ -1,30 +1,34 @@
-﻿using System.Collections.Generic;
+﻿using CoreLib;
+using System;
+using System.Collections.Generic;
+using System.Windows.Input;
 
 namespace CadApp
 {
     public enum ENTITY { non, all, point, line, polyline, polygon, arc, ellipse, text, parts, any }
     public enum OPERATION { non, loc, pic,
         createPoint, createLine, createRect, createPolyline, createPolygon, createHVLine,
-        createArc, createCircle, createTangentCircle, createEllipse, createText, createArrow,
-        createLabel, createLocDimension, createDimension, createAngleDimension,
+        createArc, createCircle, createTangentCircle, createEllipse, createText,
+        createArrow, createLabel, createSymbol, 
+        createLocDimension, createDimension, createAngleDimension,
         createDiameterDimension, createRadiusDimension,
-        createSymbol,
 
-        translate, rotate, mirror, scale, trim, divide, stretch, offset,
-        copyTranslate, copyRotate, copyMirror, copyScale, copyTrim, copyOffset,
+        translate, rotate, mirror, scale, trim, divide, stretch, offset, symbolAssemble,
         disassemble, textChange, radiusChange, changeProperty, changeProperties,
-        symbolAssemble, setSymbol, manageSymbol,
+
+        copyTranslate, copyRotate, copyMirror, copyScale, copyTrim, copyOffset,
+        entityCopy, entityPaste, screenCopy, screenSave,
 
         info, infoData, zumenComment,
         measure, measureDistance, measureAngle,
         remove, removeAll,
-        zumenInfo,
-        undo, redo,
-        back, cancel, close, print,
-        save, saveAs, open, screenCopy, screenSave, entityCopy, entityPaste,
+        zumenInfo, createLayer, setDispLayer, setAllDispLayer, setSymbol, manageSymbol,
+
+        undo, redo, print, cancel, close,
+        back, save, saveAs, open,
+
         colorChange, thicknessChange, textSizeChange, pointTypeChange, lineTypeChange,
-        color, thickness, textSize, gridSize, createLayer, setDispLayer, setAllDispLayer,
-        allClear,
+        color, thickness, textSize, gridSize, 
     }
 
     class Command
@@ -123,6 +127,35 @@ namespace CadApp
         public int mCommandLevel = 0;
         public string mMain = "";
         public string mSub = "";
+        public Dictionary<Key, OPERATION> mShortCutList = new Dictionary<Key, OPERATION>() {
+            { Key.A, OPERATION.createLine },
+            { Key.Q, OPERATION.createText },
+            { Key.S, OPERATION.save },
+            { Key.Z, OPERATION.undo},
+        };
+        private string[] mShortCutFormat = { "Key", "Command" };
+        private List<string> mShortCutComment = new List<string>() {
+            "ショートカットキーの設定ファイル",
+            "Command",
+            "createPoint, createLine, createRect, createPolyline, createPolygon, createHVLine",
+            "createArc, createCircle, createTangentCircle, createEllipse, createText",
+            "createArrow, createLabel, createSymbol",
+            "createLocDimension, createDimension, createAngleDimension",
+            "createDiameterDimension, createRadiusDimension",
+            "translate, rotate, mirror, scale, trim, divide, stretch, offset, symbolAssemble",
+            "disassemble, textChange, radiusChange, changeProperty, changeProperties",
+            "copyTranslate, copyRotate, copyMirror, copyScale, copyTrim, copyOffset",
+            "entityCopy, entityPaste, screenCopy, screenSave",
+            "info, infoData, zumenComment",
+            "measure, measureDistance, measureAngle",
+            "remove",
+            "zumenInfo, createLayer, setDispLayer, setAllDispLayer, setSymbol, manageSymbol",
+            "undo, print, cancel, close",
+            "back, save, saveAs, open, gridSize",
+            "",
+        };
+
+        private YLib ylib = new YLib();
 
         /// <summary>
         /// メインコマンドのリスト取得
@@ -178,6 +211,73 @@ namespace CadApp
                         return cmd;
             }
             return new Command("","","",OPERATION.non, ENTITY.non);
+        }
+
+        /// <summary>
+        /// 文字列をenum型OPERATIONに変換
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public OPERATION str2Operatin(string str)
+        {
+            return (OPERATION)Enum.Parse(typeof(OPERATION), str);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public Key str2Key(string c)
+        {
+            return (Key)Enum.Parse(typeof(Key), c);
+        }
+
+        /// <summary>
+        /// enum型OPERATIONを文字列ですべて取得
+        /// </summary>
+        /// <returns></returns>
+        public List<string> getOperationCommandList()
+        {
+            List<string> list = new List<string>();
+            //  enum(列挙型)のすべての値や名前を取得
+            foreach (var enumval in Enum.GetValues(typeof(OPERATION))) {
+                list.Add(enumval.ToString());
+                //Console.WriteLine($"{enumval} {Enum.GetName(typeof(OPERATION), enumval)}");
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// ShortCutキーファイルの読込
+        /// </summary>
+        /// <param name="path">ファイルパス</param>
+        public void loadShortCut(string path)
+        {
+            List<string[]> shortcutList = ylib.loadCsvData(path, mShortCutFormat, false, false);
+            if (0 < shortcutList.Count) {
+                mShortCutList.Clear();
+                foreach (var shortcut in shortcutList) {
+                    if (1 < shortcut.Length)
+                        mShortCutList.Add(str2Key(shortcut[0]), str2Operatin(shortcut[1]));
+                }
+            }
+        }
+
+        /// <summary>
+        /// ShortCutキーファイル-保存
+        /// </summary>
+        /// <param name="path">ファイルパス</param>
+        public void saveShortCut(string path)
+        {
+            List<string[]> shortcutList = new List<string[]>();
+            foreach (var keyvalue in mShortCutList) {
+                string[] buf = new string[] {
+                    keyvalue.Key.ToString(), keyvalue.Value.ToString()
+                };
+                shortcutList.Add(buf);
+            }
+            ylib.saveCsvData(path, mShortCutFormat, shortcutList, mShortCutComment);
         }
     }
 }

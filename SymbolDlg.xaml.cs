@@ -1,4 +1,5 @@
 ﻿using CoreLib;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -20,10 +21,14 @@ namespace CadApp
         public string mSymbolFolder;
         public string mCategory;
         public string mSymbolName;
+        public int mDefualtCategory = 0;
         public Entity mEntity;
 
         public SymbolData mSymbolData;
-        public bool mCancelEnable = true;
+        public bool mCancelEnable = true;                       //  cancelボタンの有効/無効
+        public bool mCallBackOn = false;                        //  コールバック有り
+        public Action callback;                                 //  コールバック関数
+
         private YWorldDraw ydraw;
         private Canvas mCanvas;
         private YLib ylib = new YLib();
@@ -32,6 +37,7 @@ namespace CadApp
         {
             InitializeComponent();
 
+            WindowFormLoad();
             mSymbolData = new SymbolData(this);
             mCanvas = cvSymbolCanvas;
             ydraw = new YWorldDraw(mCanvas);
@@ -42,13 +48,20 @@ namespace CadApp
             mSymbolData.mSymbolFolder = mSymbolFolder;
             cbCategory.ItemsSource = mSymbolData.getCategoryList();
             if (0 < cbCategory.Items.Count) {
-                cbCategory.SelectedIndex = 0;
+                cbCategory.SelectedIndex = mDefualtCategory;
                 string path = mSymbolData.getSymbolFilePath(cbCategory.Items[cbCategory.SelectedIndex].ToString() ?? "");
                 lbSymbolName.ItemsSource = mSymbolData.getSymbolList(path, true);
             }
-            btCancel.Visibility = mCancelEnable ? Visibility.Visible : Visibility.Collapsed;
-            Thickness margin = btOK.Margin;
-            btOK.Margin = new Thickness(margin.Left, margin.Top, mCancelEnable ? margin.Right : 20, margin.Bottom);
+            if (mCallBackOn) {
+                btOK.Visibility = Visibility.Collapsed;
+                btCancel.Visibility = Visibility.Collapsed;
+            } else {
+                btCancel.Visibility = mCancelEnable ? Visibility.Visible : Visibility.Collapsed;
+                Thickness margin = btOK.Margin;
+                btOK.Margin = new Thickness(margin.Left, margin.Top, mCancelEnable ? margin.Right : 20, margin.Bottom);
+                btLoc.Visibility = Visibility.Collapsed;
+                btClose.Visibility = Visibility.Collapsed;
+            }
 
             if (0 < lbSymbolName.Items.Count)
                 lbSymbolName.SelectedIndex = 0;
@@ -56,6 +69,7 @@ namespace CadApp
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            WindowFormSave();
         }
 
         private void Window_LayoutUpdated(object sender, System.EventArgs e)
@@ -78,6 +92,38 @@ namespace CadApp
 
             dispSymbol(mCategory, mSymbolName);
         }
+        /// <summary>
+        /// Windowの状態を前回の状態にする
+        /// </summary>
+        private void WindowFormLoad()
+        {
+            //  前回のWindowの位置とサイズを復元する(登録項目をPropeties.settingsに登録して使用する)
+            Properties.Settings.Default.Reload();
+            if (Properties.Settings.Default.SymbolDlgWidth < 100 ||
+                Properties.Settings.Default.SymbolDlgHeight < 100 ||
+                SystemParameters.WorkArea.Height < Properties.Settings.Default.SymbolDlgHeight) {
+                Properties.Settings.Default.SymbolDlgWidth = mWindowWidth;
+                Properties.Settings.Default.SymbolDlgHeight = mWindowHeight;
+            } else {
+                Top = Properties.Settings.Default.SymbolDlgTop;
+                Left = Properties.Settings.Default.SymbolDlgLeft;
+                Width = Properties.Settings.Default.SymbolDlgWidth;
+                Height = Properties.Settings.Default.SymbolDlgHeight;
+            }
+        }
+
+        /// <summary>
+        /// Window状態を保存する
+        /// </summary>
+        private void WindowFormSave()
+        {
+            //  Windowの位置とサイズを保存(登録項目をPropeties.settingsに登録して使用する)
+            Properties.Settings.Default.SymbolDlgTop = Top;
+            Properties.Settings.Default.SymbolDlgLeft = Left;
+            Properties.Settings.Default.SymbolDlgWidth = Width;
+            Properties.Settings.Default.SymbolDlgHeight = Height;
+            Properties.Settings.Default.Save();
+        }
 
         /// <summary>
         /// [分類]の変更
@@ -88,7 +134,7 @@ namespace CadApp
         {
             if (0 <= cbCategory.SelectedIndex) {
                 string path = mSymbolData.getSymbolFilePath(cbCategory.Items[cbCategory.SelectedIndex].ToString() ?? "");
-                lbSymbolName.ItemsSource = mSymbolData.getSymbolList(path);
+                lbSymbolName.ItemsSource = mSymbolData.getSymbolList(path, true);
             }
         }
 
@@ -198,6 +244,7 @@ namespace CadApp
         /// <param name="e"></param>
         private void btOK_Click(object sender, RoutedEventArgs e)
         {
+            mDefualtCategory = cbCategory.SelectedIndex;
             DialogResult = true;
             Close();
         }
@@ -210,6 +257,28 @@ namespace CadApp
         private void btCancel_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
+            Close();
+        }
+
+        /// <summary>
+        /// [配置]ボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btLoc_Click(object sender, RoutedEventArgs e)
+        {
+            mDefualtCategory = cbCategory.SelectedIndex;
+            if (mCallBackOn)
+                callback();
+        }
+
+        /// <summary>
+        /// [終了]ボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btClose_Click(object sender, RoutedEventArgs e)
+        {
             Close();
         }
 

@@ -25,5 +25,7 @@
         <Button Name="btMirrorTopDown" Content="上下反転" Margin="110,0,0,5" Width="53" Height="20" HorizontalAlignment="Left"  VerticalAlignment="Bottom" Click="btMirror_Click" />
         <Button Name="btOK" Content="OK" IsDefault="True" Margin="0,0,60,5" Width="40" Height="20" HorizontalAlignment="Right"  VerticalAlignment="Bottom" Click="btOK_Click"/>
         <Button Name="btCancel" Content="Cancel" IsCancel="True" Margin="0,0,10,5" Width="40" Height="20" HorizontalAlignment="Right"  VerticalAlignment="Bottom" Click="btCancel_Click"/>
+        <Button Name="btLoc" Content="配置" IsDefault="True" Margin="0,0,60,5" Width="40" Height="20" HorizontalAlignment="Right"  VerticalAlignment="Bottom" Click="btLoc_Click" />
+        <Button Name="btClose" Content="終了" IsCancel="True" Margin="0,0,10,5" Width="40" Height="20" HorizontalAlignment="Right"  VerticalAlignment="Bottom" Click="btClose_Click" />
     </Grid>
 </Window>

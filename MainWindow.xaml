@@ -42,28 +42,32 @@
                     </Button>
                 </ToolBar>
                 <ToolBar Height="25" >
-                    <Button x:Name="btZoomArea" Width="25" Height="25" Click="btZoomArea_Click"
+                    <Button x:Name="btZoomArea" Width="25" Height="25" Click="btZoom_Click"
                             ToolTip="領域拡大 F2" >
                         <Image Source="Icon\ZoomOriginalSize.png" ></Image>
                     </Button>
-                    <Button x:Name="btZoomIn" Width="25" Height="25" Click="btZoomIn_Click"
+                    <Button x:Name="btZoomIn" Width="25" Height="25" Click="btZoom_Click"
                             ToolTip="拡大表示 F4" >
                         <Image Source="Icon\ZoomIn.png" ></Image>
                     </Button>
-                    <Button x:Name="btZoomOut" Width="25" Height="25" Click="btZoomOut_Click"
-                            ToolTip="首相表示 F5" >
+                    <Button x:Name="btZoomOut" Width="25" Height="25" Click="btZoom_Click"
+                            ToolTip="縮小表示 F5" >
                         <Image Source="Icon\ZoomOut.png" ></Image>
                     </Button>
-                    <Button x:Name="btZoomFit" Width="25" Height="25" Click="btZoomFit_Click"
+                    <Button x:Name="btZoomFit" Width="25" Height="25" Click="btZoom_Click"
                             ToolTip="全体表示 F3" >
                         <Image Source="Icon\ZoomToFit.png" ></Image>
                     </Button>
+                    <Button x:Name="btZoomWidthFit" Width="25" Height="25" Click="btZoom_Click"
+                            ToolTip="全幅表示 F6" >
+                        <Image Source="Icon\ZoomToWidth.png" ></Image>
+                    </Button>
                     <Button x:Name="btMenu" Width="25" Height="25" Click="btMenu_Click" 
-                            ToolTip="ロケイトメニュー">
+                            ToolTip="ロケイトメニュー F6">
                         <Image Source="Icon\MenuItem.png" ></Image>
                     </Button>
-                    <Button x:Name="btAreaPick" ToolTip="領域ピック" Width="25" Height="25" Click="btAreaPick_Click"  >
-                        <Image Source="Icon\SelectAll.png" ></Image>
+                    <Button x:Name="btAreaPick" ToolTip="領域ピック F7" Width="25" Height="25" Click="btAreaPick_Click"  >
+                        <Image Source="Icon\WebPartZone.png" ></Image>
                     </Button>
                 </ToolBar>
                 <ToolBar Height="25" >
@@ -100,6 +104,7 @@
             </ToolBarTray>
             <StackPanel DockPanel.Dock="Bottom" Height="56">
                 <StatusBar Height="26" >
+                    <Button x:Name="btDummy" Width="0" Height="20" Visibility="Hidden" />
                     <Button x:Name="btHelp" Width="20" Height="20" Click="btHelp_Click"
                             ToolTip="ヘルプファイルを開く" >
                         <Image Source="Icon\StatusHelpOutline.png" ></Image>
@@ -119,6 +124,7 @@
                     </StatusBarItem>
                 </StatusBar>
                 <StatusBar Height="30" >
+                    <Button x:Name="btDummy2" Width="0" Height="20" Visibility="Hidden" />
                     <Button x:Name="btSetting" Width="20" Height="20" Click="btSetting_Click"
                             ToolTip="システム設定" >
                         <Image Source="Icon\Settings.png" ></Image>
@@ -129,6 +135,7 @@
                     <TextBlock Text="作成レイヤ" FontSize="11"/>
                     <ComboBox x:Name="cbCreateLayer" Width="130" IsEditable="True" SelectionChanged="cbCreateLayer_SelectionChanged" PreviewKeyDown="cbCreateLayer_PreviewKeyDown"
                               ToolTip="作成レイヤの選択または新規レイヤの設定(Enterキーで実行)" />
+                    <CheckBox x:Name="chOneLayer" Content="1レイヤ表示" Click="chOneLayer_Click" />
                     <StatusBarItem HorizontalAlignment="Right">
                         <TextBlock x:Name="tbStatusInfo" />
                     </StatusBarItem>

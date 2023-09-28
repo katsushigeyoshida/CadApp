@@ -14,20 +14,21 @@ namespace CadApp
         createDiameterDimension, createRadiusDimension,
 
         translate, rotate, mirror, scale, trim, divide, stretch, offset, symbolAssemble,
-        disassemble, textChange, radiusChange, changeProperty, changeProperties,
+        disassemble, changeText, changeRadius, changeProperty, changeProperties,
 
         copyTranslate, copyRotate, copyMirror, copyScale, copyTrim, copyOffset,
-        entityCopy, entityPaste, screenCopy, screenSave,
+        copyEntity, pasteEntity, copyScreen, saveScreen,
 
         info, infoData, zumenComment,
         measure, measureDistance, measureAngle,
         remove, removeAll,
-        zumenInfo, createLayer, setDispLayer, setAllDispLayer, setSymbol, manageSymbol,
+        zumenInfo, createLayer, setDispLayer, setAllDispLayer, oneLayerDisp, changeLayerName,
+        setSymbol, manageSymbol,
 
         undo, redo, print, cancel, close,
         back, save, saveAs, open,
 
-        colorChange, thicknessChange, textSizeChange, pointTypeChange, lineTypeChange,
+        changeColor, changeThickness, changeTextSize, changePointType, changeLineType,
         color, thickness, textSize, gridSize, 
     }
 
@@ -83,8 +84,8 @@ namespace CadApp
             new Command("編集",      "オフセット",  "", OPERATION.offset,               ENTITY.any),
             new Command("編集",      "シンボル変換","", OPERATION.symbolAssemble,       ENTITY.any),
             new Command("編集",      "分解",        "", OPERATION.disassemble,          ENTITY.any),
-            new Command("編集",      "文字列変更",  "", OPERATION.textChange,           ENTITY.text),
-            new Command("編集",      "半径変更"  ,  "", OPERATION.radiusChange,         ENTITY.arc),
+            new Command("編集",      "文字列変更",  "", OPERATION.changeText,           ENTITY.text),
+            new Command("編集",      "半径変更"  ,  "", OPERATION.changeRadius,         ENTITY.arc),
             new Command("編集",      "属性変更",    "", OPERATION.changeProperty,       ENTITY.any),
             new Command("編集",      "属性一括変更","", OPERATION.changeProperties,     ENTITY.any),
             new Command("編集",      "戻る",        "", OPERATION.back,                 ENTITY.non),
@@ -94,10 +95,10 @@ namespace CadApp
             new Command("コピー",    "拡大縮小",    "", OPERATION.copyScale,            ENTITY.any),
             new Command("コピー",    "トリム",      "", OPERATION.copyTrim,             ENTITY.any),
             new Command("コピー",    "オフセット",  "", OPERATION.copyOffset,           ENTITY.any),
-            new Command("コピー",    "要素コピー",  "", OPERATION.entityCopy,           ENTITY.non),
-            new Command("コピー",    "要素貼付け",  "", OPERATION.entityPaste,          ENTITY.non),
-            new Command("コピー",    "画面コピー",  "", OPERATION.screenCopy,           ENTITY.non),
-            new Command("コピー",    "画面保存",    "", OPERATION.screenSave,           ENTITY.non),
+            new Command("コピー",    "要素コピー",  "", OPERATION.copyEntity,           ENTITY.non),
+            new Command("コピー",    "要素貼付け",  "", OPERATION.pasteEntity,          ENTITY.non),
+            new Command("コピー",    "画面コピー",  "", OPERATION.copyScreen,           ENTITY.non),
+            new Command("コピー",    "画面保存",    "", OPERATION.saveScreen,           ENTITY.non),
             new Command("コピー",    "戻る",        "", OPERATION.back,                 ENTITY.any),
             new Command("情報",      "要素",        "", OPERATION.info,                 ENTITY.any),
             new Command("情報",      "要素データ",  "", OPERATION.infoData,             ENTITY.any),
@@ -112,6 +113,8 @@ namespace CadApp
             new Command("設定",      "作成レイヤー","", OPERATION.createLayer,          ENTITY.non),
             new Command("設定",      "表示レイヤー","", OPERATION.setDispLayer,         ENTITY.non),
             new Command("設定",      "全レイヤー表示",   "", OPERATION.setAllDispLayer, ENTITY.non),
+            new Command("設定",      "1レイヤー表示", "", OPERATION.oneLayerDisp,       ENTITY.non),
+            new Command("設定",      "レイヤ名変更","", OPERATION.changeLayerName,      ENTITY.non),
             new Command("設定",      "シンボル登録","", OPERATION.setSymbol,            ENTITY.parts),
             new Command("設定",      "シンボル管理","", OPERATION.manageSymbol,         ENTITY.non),
             new Command("設定",      "戻る",        "", OPERATION.back,                 ENTITY.non),
@@ -143,13 +146,14 @@ namespace CadApp
             "createLocDimension, createDimension, createAngleDimension",
             "createDiameterDimension, createRadiusDimension",
             "translate, rotate, mirror, scale, trim, divide, stretch, offset, symbolAssemble",
-            "disassemble, textChange, radiusChange, changeProperty, changeProperties",
+            "disassemble, changeText, changeRadius, changeProperty, changeProperties",
             "copyTranslate, copyRotate, copyMirror, copyScale, copyTrim, copyOffset",
-            "entityCopy, entityPaste, screenCopy, screenSave",
+            "copyEntity, pasteEntity, copyScreen, saveScreen",
             "info, infoData, zumenComment",
             "measure, measureDistance, measureAngle",
             "remove",
-            "zumenInfo, createLayer, setDispLayer, setAllDispLayer, setSymbol, manageSymbol",
+            "zumenInfo, createLayer, setDispLayer, setAllDispLayer, oneLayerDisp, changeLayerName",
+            "setSymbol, manageSymbol",
             "undo, print, cancel, close",
             "back, save, saveAs, open, gridSize",
             "",
@@ -220,7 +224,11 @@ namespace CadApp
         /// <returns></returns>
         public OPERATION str2Operatin(string str)
         {
-            return (OPERATION)Enum.Parse(typeof(OPERATION), str);
+            OPERATION ope;
+            if (Enum.TryParse(str, out ope))
+                return ope;
+            else
+                return OPERATION.non;
         }
 
         /// <summary>
@@ -230,7 +238,11 @@ namespace CadApp
         /// <returns></returns>
         public Key str2Key(string c)
         {
-            return (Key)Enum.Parse(typeof(Key), c);
+            Key key;
+            if (Enum.TryParse(c, out key))
+                return key;
+            else
+                return Key.None;
         }
 
         /// <summary>

@@ -28,6 +28,7 @@ namespace CadApp
         public string mComment = "";                                //  図面のコメント
         public ulong mDispLayerBit = 0xffffffff;                    //  表示レイヤービットフィルタ
         public string mCreateLayerName = "BaseLayer";               //  作成レイヤー名
+        public bool mOneLayerDisp = false;                          //  1レイヤーのみの表示
 
         private YLib ylib = new YLib();
 
@@ -59,6 +60,7 @@ namespace CadApp
             para.mComment = mComment;
             para.mDispLayerBit = mDispLayerBit;
             para.mCreateLayerName = mCreateLayerName;
+            para.mOneLayerDisp = mOneLayerDisp;
             return para;
         }
 
@@ -83,6 +85,7 @@ namespace CadApp
             mComment = "";                                  //  図面のコメント
             mDispLayerBit = 0xffffffff;                     //  表示レイヤービットフィルタ
             mCreateLayerName = "BaseLayer";                 //  作成レイヤー名
+            mOneLayerDisp = false;                          //  1レイヤーのみの表示
         }
 
         /// <summary>
@@ -95,7 +98,7 @@ namespace CadApp
                 $"LineType,{mLineType},Thickness,{mThickness},TextSize,{mTextSize}," +
                 $"TextRotate,{mTextRotate},LinePitchRate,{mLinePitchRate},HA,{mHa},VA,{mVa}," +
                 $"ArrowSize,{mArrowSize},ArrowAngle,{mArrowAngle},GridSize,{mGridSize},DispLaerBit,{mDispLayerBit}," +
-                $"CreateLayer,{ylib.strControlCodeCnv(mCreateLayerName)}";
+                $"CreateLayer,{ylib.strControlCodeCnv(mCreateLayerName)},OneLayerDisp,{mOneLayerDisp}";
         }
 
         /// <summary>
@@ -161,6 +164,9 @@ namespace CadApp
                                 break;
                             case "CreateLayer":
                                 mCreateLayerName = ylib.strControlCodeRev(data[++i]);
+                                break;
+                            case "OneLayerDisp":
+                                mOneLayerDisp = bool.Parse(data[++i]);
                                 break;
                         }
                     }
@@ -361,10 +367,10 @@ namespace CadApp
                     if (mSymbolDlg == null || !mSymbolDlg.IsActive)
                         setSymbol();
                     break;
-                case OPERATION.textChange:                  //  文字列変更
+                case OPERATION.changeText:                  //  文字列変更
                     changeText(mPickEnt);
                     break;
-                case OPERATION.radiusChange:                //  半径変更
+                case OPERATION.changeRadius:                //  半径変更
                     changeRadius(mPickEnt);
                     break;
                 case OPERATION.changeProperty:              //  属性変更
@@ -373,16 +379,16 @@ namespace CadApp
                 case OPERATION.changeProperties:            //  属性一括変更
                     changeProperties(mPickEnt);
                     break;
-                case OPERATION.screenCopy:                  //  製図領域のイメージコピー
+                case OPERATION.copyScreen:                  //  製図領域のイメージコピー
                     mMainWindow.screenCopy();
                     break;
-                case OPERATION.screenSave:                  //  製図領域のイメージ保存
+                case OPERATION.saveScreen:                  //  製図領域のイメージ保存
                     mMainWindow.screenSave();
                     break;
-                case OPERATION.entityCopy:                  //  要素コピー
+                case OPERATION.copyEntity:                  //  要素コピー
                     entitiesCopy(mPickEnt);
                     break;
-                case OPERATION.entityPaste:                 //  要素貼付け
+                case OPERATION.pasteEntity:                 //  要素貼付け
                     entitiesPaste();
                     locMode = MainWindow.OPEMODE.loc;
                     mLocPos.Clear();
@@ -431,6 +437,12 @@ namespace CadApp
                     mPara.mDispLayerBit = 0xffffffff;
                     mEntityData.mPara.mDispLayerBit = mPara.mDispLayerBit;
                     mEntityData.updateData();
+                    break;
+                case OPERATION.oneLayerDisp:
+                    setOneLayerDisp(!mPara.mOneLayerDisp);
+                    break;
+                case OPERATION.changeLayerName:
+                    changeLayerName();
                     break;
                 case OPERATION.setSymbol:                   //  シンボル登録
                     setSymbol(mPickEnt);
@@ -485,7 +497,7 @@ namespace CadApp
                 || operation == OPERATION.createPolyline || operation == OPERATION.createPolygon
                 || operation == OPERATION.createArrow || operation == OPERATION.createLabel
                 || operation == OPERATION.createLocDimension
-                || operation == OPERATION.entityPaste || operation == OPERATION.createSymbol
+                || operation == OPERATION.pasteEntity || operation == OPERATION.createSymbol
                 || operation == OPERATION.measureDistance || operation == OPERATION.measureAngle) {
                 //  要素の追加 (Ctrlキーなし)
                 if (createData(locPos, operation)) {
@@ -596,7 +608,7 @@ namespace CadApp
             } else if (operation == OPERATION.createLocDimension && points.Count == 3) {
                 //  寸法線の作成
                 mEntityData.addLocDimension(points[0], points[1], points[2]);
-            } else if (operation == OPERATION.entityPaste && points.Count == 1) {
+            } else if (operation == OPERATION.pasteEntity && points.Count == 1) {
                 //  クリップボードの要素を貼り付け
                 entityPaste(points[0]);
             } else if (operation == OPERATION.createSymbol && points.Count == 1) {
@@ -1005,6 +1017,7 @@ namespace CadApp
                             continue;
                         string[] data = ylib.csvData2ArrayStr(dataList[++i]);
                         Entity ent = mEntityData.setStringEntityData(property, data);
+                        ent.mLayerName = mPara.mCreateLayerName;
                         if (ent != null)
                             mCopyEntityList.Add(ent);
                     }
@@ -1303,9 +1316,50 @@ namespace CadApp
         public void setLayerChk()
         {
             mEntityData.setDispLayerBit(mChkListDlg.mChkList);
+            if (mPara.mDispLayerBit != mEntityData.getLayerBit(mPara.mCreateLayerName)) {
+                mPara.mOneLayerDisp = false;
+                mEntityData.mPara.mOneLayerDisp = false;
+            }
             mEntityData.updateData();
             mPara.mDispLayerBit = mEntityData.mPara.mDispLayerBit;
             mMainWindow.commandClear();
+        }
+
+        /// <summary>
+        /// レイヤーを1レイヤー表示に切り替える
+        /// </summary>
+        /// <param name="oneLayer">１レイヤー</param>
+        public void setOneLayerDisp(bool oneLayer)
+        {
+            if (oneLayer) {
+                mPara.mDispLayerBit &= mEntityData.getLayerBit(mPara.mCreateLayerName);
+                mPara.mOneLayerDisp = true;
+                mEntityData.mPara = mPara.toCopy();
+            } else {
+                mPara.mOneLayerDisp = true;
+            }
+        }
+
+        /// <summary>
+        /// レイヤー名を変更する
+        /// </summary>
+        public void changeLayerName()
+        {
+            InputSelect2 dlg = new InputSelect2();
+            dlg.Owner = mMainWindow;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.Title = "レイヤー名の変更";
+            dlg.mTitle1 = "変更前";
+            dlg.mTitle2 = "変更後";
+            dlg.mSelectList = mEntityData.getLayerNameList();
+            if (dlg.ShowDialog()==true) {
+                mEntityData.mOperationCouunt++;
+                mEntityData.changeLayerName(dlg.mSelectText, dlg.mEditText);
+                mPara.mCreateLayerName = mEntityData.mPara.mCreateLayerName;
+                mMainWindow.cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
+                mMainWindow.cbCreateLayer.SelectedIndex = mMainWindow.cbCreateLayer.Items.IndexOf(mEntityData.mPara.mCreateLayerName);
+                mMainWindow.btDummy.Focus();    //  ダミーフォーカス
+            }
         }
 
 

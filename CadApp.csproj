@@ -29,6 +29,7 @@
     <None Remove="Icon\StatusHelp.png" />
     <None Remove="Icon\StatusHelpOutline.png" />
     <None Remove="Icon\undo.png" />
+    <None Remove="Icon\WebPartZone.png" />
     <None Remove="Icon\Zoom.png" />
     <None Remove="Icon\ZoomIn.png" />
     <None Remove="Icon\ZoomOriginalSize.png" />
@@ -80,6 +81,7 @@
     <Resource Include="Icon\StatusHelp.png" />
     <Resource Include="Icon\StatusHelpOutline.png" />
     <Resource Include="Icon\undo.png" />
+    <Resource Include="Icon\WebPartZone.png" />
     <Resource Include="Icon\Zoom.png" />
     <Resource Include="Icon\ZoomIn.png" />
     <Resource Include="Icon\ZoomOriginalSize.png" />

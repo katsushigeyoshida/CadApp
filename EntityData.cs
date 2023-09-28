@@ -882,9 +882,11 @@ namespace CadApp
             if (mEntityList != null && 0 < mEntityList.Count) {
                 //  レイヤービットの更新
                 for (int i = 0; i < mEntityList.Count; i++) {
-                    if (mEntityList[i].mLayerName.Length == 0)
-                        mEntityList[i].mLayerName = mPara.mCreateLayerName;
-                    mEntityList[i].mLayerBit = setLayerBit(mEntityList[i].mLayerName);
+                    if (!mEntityList[i].mRemove && mEntityList[i].mEntityId != EntityId.Link) {
+                        if (mEntityList[i].mLayerName.Length == 0)
+                            mEntityList[i].mLayerName = mPara.mCreateLayerName;
+                        mEntityList[i].mLayerBit = setLayerBit(mEntityList[i].mLayerName);
+                    }
                 }
                 //  要素領域と要素番号の更新
                 mArea = null;
@@ -901,6 +903,7 @@ namespace CadApp
                     }
                 }
             }
+            addDispLayer(mPara.mCreateLayerName);
         }
 
         /// <summary>
@@ -1016,6 +1019,7 @@ namespace CadApp
         public List<string> getLayerNameList()
         {
             List<string> layerList = new List<string>();
+            updateLayerList();
             foreach (string key in mLayerList.Keys) {
                 layerList.Add(key);
             }
@@ -1061,11 +1065,15 @@ namespace CadApp
         {
             mLayerList.Clear();
             foreach (Entity ent in mEntityList) {
-                if (ent.mLayerName.Length == 0) {
-                    ent.mLayerName = mPara.mCreateLayerName;
+                if (ent.mRemove == false && ent.mEntityId != EntityId.Link) {
+                    if (ent.mLayerName.Length == 0) {
+                        ent.mLayerName = mPara.mCreateLayerName;
+                    }
+                    ent.mLayerBit = setLayerBit(ent.mLayerName);
                 }
-                ent.mLayerBit = setLayerBit(ent.mLayerName);
             }
+            if (!mLayerList.ContainsKey(mPara.mCreateLayerName))
+                setLayerBit(mPara.mCreateLayerName);
         }
 
         /// <summary>
@@ -1085,6 +1093,33 @@ namespace CadApp
         {
             ulong layerbit = setLayerBit(layerName);
             addDispLayer(layerbit);
+        }
+
+        /// <summary>
+        /// レイヤー名を変更する
+        /// </summary>
+        /// <param name="oldName">元のレイヤー名</param>
+        /// <param name="newName">新しいレイヤー名</param>
+        /// <returns></returns>
+        public bool changeLayerName(string oldName, string newName)
+        {
+            for (int i = 0; i < mEntityList.Count; i++) {
+                Entity entity = mEntityList[i];
+                if (entity != null && !entity.mRemove && entity.mEntityId != EntityId.Non) {
+                    if (entity.mLayerName == oldName) {
+                        Entity newEntity = entity.toCopy();
+                        newEntity.mLayerName = newName;
+                        newEntity.mOperationCount = mOperationCouunt;
+                        mEntityList.Add(newEntity);
+                        removeEnt(i);
+                    }
+                }
+            }
+            if (mPara.mCreateLayerName == oldName) {
+                mPara.mCreateLayerName = newName;
+            }
+            updateData();
+            return true;
         }
 
         /// <summary>

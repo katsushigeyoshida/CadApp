@@ -298,7 +298,7 @@ namespace CadApp
                 case OPERATION.stretch:
                     stretchDragging(entityData, points, pickList);
                     break;
-                case OPERATION.entityPaste:
+                case OPERATION.pasteEntity:
                     if (mCopyArea != null) {
                         Box b = new Box(points[0], mCopyArea.Size);
                         List<PointD> plist = b.ToPointDList();

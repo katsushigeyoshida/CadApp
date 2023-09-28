@@ -69,6 +69,9 @@ namespace CadApp
         private int mScrollSize = 19;                       //  キーによるスクロール単位
         private List<string> mKeyCommandList = new();       //  キー入力コマンドの履歴
 
+        private double mDispLeftMargine = 0.01;             //  全体表示の左マージン
+        private double mDispRightMargine = 0.03;            //  全体表示の右マージン
+
         private EntityData mEntityData;                     //  要素データ
 
         public enum OPEMODE { non, pick, loc, areaDisp, areaPick }
@@ -307,6 +310,21 @@ namespace CadApp
             if (0 <= cbCreateLayer.SelectedIndex) {
                 setCreateLayer(cbCreateLayer.Items[cbCreateLayer.SelectedIndex].ToString() ?? "");
             }
+        }
+
+        /// <summary>
+        /// 単レイヤー表示
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void chOneLayer_Click(object sender, RoutedEventArgs e)
+        {
+            if (chOneLayer.IsChecked == true) {
+                mCommandOpe.setOneLayerDisp(true);
+            } else {
+                mCommandOpe.setOneLayerDisp(false);
+            }
+            disp(mEntityData);
         }
 
         /// <summary>
@@ -843,80 +861,27 @@ namespace CadApp
         }
 
         /// <summary>
-        /// 再表示
+        /// 表示ズームボタン
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void btZoomOriginal_Click(object sender, RoutedEventArgs e)
+        private void btZoom_Click(object sender, RoutedEventArgs e)
         {
-            disp(mEntityData);
-        }
-
-        /// <summary>
-        /// 領域拡大
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btZoomArea_Click(object sender, RoutedEventArgs e)
-        {
-            mPrevMode = mLocMode;
-            mLocMode = OPEMODE.areaDisp;
-        }
-
-        /// <summary>
-        /// [ZoomIn] 拡大表示
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btZoomIn_Click(object sender, RoutedEventArgs e)
-        {
-            mDataDrawing.setWorldZoom(1.5);
-            disp(mEntityData);
-        }
-
-        /// <summary>
-        /// [ZoomOut] 縮小表示
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btZoomOut_Click(object sender, RoutedEventArgs e)
-        {
-            mDataDrawing.setWorldZoom(0.75);
-            disp(mEntityData);
-        }
-
-        /// <summary>
-        /// [ZoomFit] 表示領域に全体を表示
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btZoomFit_Click(object sender, RoutedEventArgs e)
-        {
-            dispFit();
-        }
-
-        /// <summary>
-        /// [Open] データの読込
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btOpen_Click(object sender, RoutedEventArgs e)
-        {
-            mOperation = OPERATION.open;
-            mLocMode = mCommandOpe.executeCmd(mOperation);
-            dispMode();
-        }
-
-        /// <summary>
-        /// [Save] データの保存
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btSave_Click(object sender, RoutedEventArgs e)
-        {
-            mOperation = OPERATION.save;
-            mLocMode = mCommandOpe.executeCmd(mOperation);
-            dispMode();
+            Button button = (Button)sender;
+            if (button.Name.CompareTo("btZoomArea") == 0) {
+                mPrevMode = mLocMode;
+                mLocMode = OPEMODE.areaDisp;
+            } else if (button.Name.CompareTo("btZoomIn") == 0) {
+                mDataDrawing.setWorldZoom(1.5);
+                disp(mEntityData);
+            } else if (button.Name.CompareTo("btZoomOut") == 0) {
+                mDataDrawing.setWorldZoom(0.75);
+                disp(mEntityData);
+            } else if (button.Name.CompareTo("btZoomFit") == 0) {
+                dispFit();
+            } else if (button.Name.CompareTo("btZoomWidthFit") == 0) {
+                dispWidthFit();
+            }
         }
 
         /// <summary>
@@ -938,7 +903,7 @@ namespace CadApp
         /// <param name="e"></param>
         private void btEntityCopy_Click(object sender, RoutedEventArgs e)
         {
-            mOperation = OPERATION.entityCopy;
+            mOperation = OPERATION.copyEntity;
             mLocMode = mCommandOpe.executeCmd(mOperation);
             dispMode();
         }
@@ -950,7 +915,7 @@ namespace CadApp
         /// <param name="e"></param>
         private void btEntityPaste_Click(object sender, RoutedEventArgs e)
         {
-            mOperation = OPERATION.entityPaste;
+            mOperation = OPERATION.pasteEntity;
             mLocMode = mCommandOpe.executeCmd(mOperation);
             dispMode();
         }
@@ -1006,7 +971,7 @@ namespace CadApp
         {
             if (control) {
                 switch (key) {
-                    case Key.F1: mCommandOpe.mPara.mGridSize *= -1; disp(mEntityData); break;        //  グリッド表示反転
+                    case Key.F1: mCommandOpe.mPara.mGridSize *= -1; disp(mEntityData); break;   //  グリッド表示反転
                     case Key.F2: break;
                     case Key.F3: break;
                     case Key.F4: break;
@@ -1017,11 +982,8 @@ namespace CadApp
                     case Key.Down: scroll(0, -mScrollSize); break;
                     case Key.PageUp: zoom(1.1); break;
                     case Key.PageDown: zoom(1 / 1.1); break;
-                    //case Key.A: commandExec(OPERATION.createLine); break;
-                    //case Key.Q: commandExec(OPERATION.createText); break;
-                    //case Key.S: commandExec(OPERATION.save); break;
-                    //case Key.Z: commandExec(OPERATION.undo); break;
                     default:
+                        //  ショートカットキー(Ctrl + 〇)
                         if (mCommandData.mShortCutList.ContainsKey(key))
                             commandExec(mCommandData.mShortCutList[key]);
                         break;
@@ -1040,9 +1002,9 @@ namespace CadApp
                     case Key.F3: dispFit(); break;                      //  全体表示
                     case Key.F4: zoom(1.2); break;                      //  拡大表示
                     case Key.F5: zoom(1 / 1.2); break;                  //  縮小表示
-                    case Key.F6: mPrevMode = mLocMode; mLocMode = OPEMODE.areaPick; break;  //  領域ピック
-                    case Key.F7: break;
-                    case Key.F8: break;
+                    case Key.F6: dispWidthFit(); break;                 //  全幅表示
+                    case Key.F7: locMenu(); break;                      //  ロケイトメニュー
+                    case Key.F8: mPrevMode = mLocMode; mLocMode = OPEMODE.areaPick; break;  //  領域ピック
                     case Key.F9: break;
                     case Key.F10: break;
                     case Key.F11: tbTextString.Focus(); break;          //  テキスト入力ボックスにフォーカス
@@ -1190,6 +1152,7 @@ namespace CadApp
             mOperation = OPERATION.non;
             lbCommand.ItemsSource = mCommandData.getMainCommand();
             lbCommand.SelectedIndex = -1;
+            chOneLayer.IsChecked = mCommandOpe.mPara.mOneLayerDisp;
             disp(mEntityData);
         }
 
@@ -1654,15 +1617,20 @@ namespace CadApp
             mEntityData.addDispLayer(layerName);
             mEntityData.mPara.mCreateLayerName = layerName;
             mCommandOpe.mPara.mCreateLayerName = layerName;
-            mCommandOpe.mPara.mDispLayerBit = mEntityData.mPara.mDispLayerBit;
-            if (0 > cbCreateLayer.Items.IndexOf(layerName)) {
-                cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
-            } else {
-                if (mCommandOpe.mChkListDlg != null && mCommandOpe.mChkListDlg.IsVisible)
-                    mCommandOpe.setDispLayer();
-                disp(mEntityData);
+            if (mCommandOpe.mPara.mOneLayerDisp) {
+                //  1レイヤー表示
+                mEntityData.mPara.mDispLayerBit &= mEntityData.getLayerBit(layerName);
             }
+            mCommandOpe.mPara.mDispLayerBit = mEntityData.mPara.mDispLayerBit;
+            cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
             cbCreateLayer.SelectedIndex = cbCreateLayer.Items.IndexOf(mCommandOpe.mPara.mCreateLayerName);
+            if (mCommandOpe.mChkListDlg != null && mCommandOpe.mChkListDlg.IsVisible) {
+                //  表示レイヤーダイヤログ表示
+                mCommandOpe.setDispLayer();
+            }
+            mEntityData.updateData();
+            disp(mEntityData);
+            btDummy.Focus();         //  ダミーでフォーカスを外す
         }
 
         /// <summary>
@@ -1762,7 +1730,36 @@ namespace CadApp
         private void dispFit()
         {
             if (mEntityData.mArea != null) {
-                mCommandOpe.setDispArea(mEntityData.mArea);
+                mEntityData.mArea.normalize();
+                Box area = mEntityData.mArea.toCopy();
+                area.Left = mEntityData.mArea.Left - mEntityData.mArea.Width * mDispLeftMargine;
+                area.Right = mEntityData.mArea.Right + mEntityData.mArea.Width * mDispRightMargine;
+                mCommandOpe.setDispArea(area);
+                mDataDrawing.initDraw(mCommandOpe.mDispArea);
+                disp(mEntityData);
+            }
+        }
+
+        /// <summary>
+        /// 図面幅に合わせて表示
+        /// </summary>
+        private void dispWidthFit()
+        {
+            if (mEntityData.mArea != null) {
+                mEntityData.mArea.normalize();
+                Box area = mDataDrawing.getWorldArea().toCopy();
+                PointD center = area.getCenter();
+                double rate = mEntityData.mArea.Width * area.Height / area.Width / mEntityData.mArea.Height;
+                area.Left = mEntityData.mArea.Left - mEntityData.mArea.Width * mDispLeftMargine;
+                area.Right = mEntityData.mArea.Right + mEntityData.mArea.Width * mDispRightMargine;
+                if (rate < 1) {
+                    area.Top = (area.Top - center.y) * rate + center.y;
+                    area.Bottom = (area.Bottom - center.y) * rate + center.y;
+                } else {
+                    area.Top = mEntityData.mArea.Top;
+                    area.Bottom = mEntityData.mArea.Bottom;
+                }
+                mCommandOpe.setDispArea(area);
                 mDataDrawing.initDraw(mCommandOpe.mDispArea);
                 disp(mEntityData);
             }

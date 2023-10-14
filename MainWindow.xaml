@@ -8,7 +8,7 @@
         Title="MainWindow" Height="450" Width="800"  Loaded="Window_Loaded" Closing="Window_Closing"
         MouseLeftButtonDown="Window_MouseLeftButtonDown" MouseMove="Window_MouseMove" LayoutUpdated="Window_LayoutUpdated"
         MouseLeftButtonUp="Window_MouseLeftButtonUp" MouseWheel="Window_MouseWheel" MouseRightButtonDown="Window_MouseRightButtonDown"
-        PreviewKeyDown="Window_PreviewKeyDown" >
+        PreviewKeyDown="Window_PreviewKeyDown" MouseDoubleClick="Window_MouseDoubleClick" >
     <Grid>
         <DockPanel >
             <ToolBarTray x:Name="tbToolbarTray" DockPanel.Dock="Top" >
@@ -104,7 +104,7 @@
             </ToolBarTray>
             <StackPanel DockPanel.Dock="Bottom" Height="56">
                 <StatusBar Height="26" >
-                    <Button x:Name="btDummy" Width="0" Height="20" Visibility="Hidden" />
+                    <Button x:Name="btDummy" Width="0" Height="20" />
                     <Button x:Name="btHelp" Width="20" Height="20" Click="btHelp_Click"
                             ToolTip="ヘルプファイルを開く" >
                         <Image Source="Icon\StatusHelpOutline.png" ></Image>
@@ -124,7 +124,7 @@
                     </StatusBarItem>
                 </StatusBar>
                 <StatusBar Height="30" >
-                    <Button x:Name="btDummy2" Width="0" Height="20" Visibility="Hidden" />
+                    <Button x:Name="btDummy2" Width="0" Height="20" />
                     <Button x:Name="btSetting" Width="20" Height="20" Click="btSetting_Click"
                             ToolTip="システム設定" >
                         <Image Source="Icon\Settings.png" ></Image>

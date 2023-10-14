@@ -321,6 +321,9 @@ namespace CadApp
         {
             if (chOneLayer.IsChecked == true) {
                 mCommandOpe.setOneLayerDisp(true);
+                //  表示レイヤーダイヤログ表示
+                if (mCommandOpe.mChkListDlg != null && mCommandOpe.mChkListDlg.IsVisible)
+                    mCommandOpe.setDispLayer();
             } else {
                 mCommandOpe.setOneLayerDisp(false);
             }
@@ -335,8 +338,7 @@ namespace CadApp
         private void cbCommand_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter) {
-                System.Diagnostics.Debug.WriteLine($"cbCommand_PreviewKeyDown");
-                if (mCommandOpe.keyCommand(cbCommand.Text)) {
+                if (mCommandOpe.keyCommand(cbCommand.Text, tbTextString.Text)) {
                     keyCommandList(cbCommand.Text);
                     disp(mEntityData);
                 }
@@ -359,6 +361,20 @@ namespace CadApp
         }
 
         /// <summary>
+        /// [マウスのダブルクリック]処理
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Window_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (mLocMode == OPEMODE.pick) {
+                PointD wp = mDataDrawing.cnvScreen2World(new PointD(e.GetPosition(cvCanvas)));
+                doubleClicKOpe(wp);
+                dispMode();
+            }
+        }
+
+        /// <summary>
         /// [マウス左ボタンダウン] Window_MouseLeftButtonDown 
         /// ロケイト点処理
         /// </summary>
@@ -372,8 +388,8 @@ namespace CadApp
                 //  領域拡大、領域ピック
                 if (areaOpe(wp, mLocMode))
                     mLocMode = mPrevMode;
-            } else if (!onControlKey()) {
-                //  要素追加
+            } else if (mLocMode == OPEMODE.loc && !onControlKey()) {
+                //  要素追加(ロケイト数不定コマンドを除く)
                 if (0 < mCommandOpe.mPara.mGridSize)
                     wp.round(Math.Abs(mCommandOpe.mPara.mGridSize));
                 mCommandOpe.mLocPos.Add(wp);
@@ -1003,8 +1019,8 @@ namespace CadApp
                     case Key.F4: zoom(1.2); break;                      //  拡大表示
                     case Key.F5: zoom(1 / 1.2); break;                  //  縮小表示
                     case Key.F6: dispWidthFit(); break;                 //  全幅表示
-                    case Key.F7: locMenu(); break;                      //  ロケイトメニュー
-                    case Key.F8: mPrevMode = mLocMode; mLocMode = OPEMODE.areaPick; break;  //  領域ピック
+                    case Key.F7: mPrevMode = mLocMode; mLocMode = OPEMODE.areaPick; break;  //  領域ピック
+                    case Key.F8: locMenu(); break;                      //  ロケイトメニュー
                     case Key.F9: break;
                     case Key.F10: break;
                     case Key.F11: tbTextString.Focus(); break;          //  テキスト入力ボックスにフォーカス
@@ -1127,6 +1143,26 @@ namespace CadApp
                 commandExec(cmd.operation);
             }
             dispMode();
+        }
+
+        /// <summary>
+        /// マウスのダブルクリックの処理
+        /// ピックした要素の文字列変更または属性変更
+        /// </summary>
+        /// <param name="pickPos">ピック位置</param>
+        private void doubleClicKOpe(PointD pickPos)
+        {
+            List<int> picks = getPickNo(pickPos);
+            if (0 < picks.Count) {
+                int pickNo = pickSelect(picks);
+                if (0 <= pickNo) {
+                    List<(int no, PointD pos)> pickEnt = new();
+                    pickEnt.Add((pickNo, pickPos.toCopy()));
+                    if (!mCommandOpe.changeText(pickEnt))
+                        mCommandOpe.changeProperty(pickEnt);
+                }
+                commandClear();
+            }
         }
 
         /// <summary>
@@ -1337,7 +1373,7 @@ namespace CadApp
                         EllipseEntity ellipseEnt = (EllipseEntity)ent;
                         plist = ellipseEnt.mEllipse.tangentPoint(lastLoc);
                     }
-                    if (0 < plist.Count)
+                    if (plist != null && 0 < plist.Count)
                         pos = plist.MinBy(p => p.length(pos));  //  最短位置
                     break;
                 case "頂点":
@@ -1348,7 +1384,7 @@ namespace CadApp
                         EllipseEntity ellipseEnt = (EllipseEntity)ent;
                         plist = ellipseEnt.mEllipse.toPeakList();
                     }
-                    if (0 < plist.Count)
+                    if (plist != null && 0 < plist.Count)
                         pos = plist.MinBy(p => p.length(pos));  //  最短位置
                     break;
                 case "端点距離":
@@ -1439,6 +1475,8 @@ namespace CadApp
                     locMenu.Add("半径");
                 } else if (mOperation == OPERATION.rotate || mOperation == OPERATION.copyRotate) {
                     locMenu.Add("回転角,繰返し数");
+                } else if (mOperation == OPERATION.scale) {
+                    locMenu.Add("スケール");
                 }
                 MenuDialog dlg = new MenuDialog();
                 dlg.Title = "ロケイトメニュー";
@@ -1586,6 +1624,22 @@ namespace CadApp
                         }
                         if (mCommandOpe.entityCommand(mOperation, mCommandOpe.mLocPos, mCommandOpe.mPickEnt))
                             commandClear();
+                        break;
+                    case "スケール":
+                        valstr = dlg.mEditText.Split(',');
+                        val = ycalc.expression(valstr[0]);
+                        if (1 == mCommandOpe.mLocPos.Count) {
+                            wp = lastLoc + new PointD(1, 0);
+                            mCommandOpe.mLocPos.Add(wp);
+                        } 
+                        if (2 == mCommandOpe.mLocPos.Count) {
+                            double dis = mCommandOpe.mLocPos[0].length(mCommandOpe.mLocPos[1]);
+                            line = new LineD(mCommandOpe.mLocPos[0], mCommandOpe.mLocPos[1]);
+                            line.setLength(dis * val);
+                            mCommandOpe.mLocPos.Add(line.pe);
+                            if (mCommandOpe.entityCommand(mOperation, mCommandOpe.mLocPos, mCommandOpe.mPickEnt))
+                                commandClear();
+                        }
                         break;
                 }
             }

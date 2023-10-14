@@ -13,16 +13,8 @@ namespace CadApp
     {
         public EntityData mEntityData;                              //  要素データ
 
-        public int mPointType = 0;                                  //  点種
-        public int mLineType = 0;                                   //  線種
-        public double mEntSize = 1;                                 //  線の太さ
-        public double mPointSize = 1;                               //  点の大きさ
-        public double mTextSize = 12;                               //  文字サイズ
-        public double mTextRotate = 0;                              //  文字列の回転角
         public string mTextString = "";                             //  文字列データ
-        public HorizontalAlignment mHa = HorizontalAlignment.Left;  //  水平アライメント
-        public VerticalAlignment mVa = VerticalAlignment.Top;       //  垂直アライメント
-        public Brush mCreateColor = Brushes.Black;                  //  要素の色
+        public DrawingPara mPara = new DrawingPara();               //  要素属性
 
         private List<string> mMainCmd = new List<string>() {
             "point", "line", "rect", "polyline", "polygon", "arc", "circle", "text",
@@ -51,10 +43,11 @@ namespace CadApp
         /// コマンド文字列の設定
         /// </summary>
         /// <param name="command"></param>
-        public bool setCommand(string command)
+        public bool setCommand(string command, DrawingPara para)
         {
             if (0 < command.Length) {
                 mCommandStr = command;
+                mPara = para;
                 return getEntity();
             }
             return false;
@@ -69,6 +62,14 @@ namespace CadApp
         {
             if (entity != null) {
                 entity.mOperationCount = mEntityData.mOperationCouunt;
+                entity.mColor = mPara.mColor;
+                entity.mThickness = mPara.mThickness;
+                entity.mType = mPara.mLineType;
+                if (entity.mEntityId == EntityId.Point) {
+                    entity.mThickness = mPara.mPointSize;
+                    entity.mType = mPara.mPointType;
+                }
+                entity.mLayerName = mPara.mCreateLayerName;
                 mEntityData.mEntityList.Add(entity);
                 mEntityData.updateData();
                 return true;
@@ -133,8 +134,8 @@ namespace CadApp
                     }
                     break;
                 case "text":         //  text
-                    if (0 < mValString.Length && 0 < mPoints.Count) {
-                        TextD text = new TextD(mValString, mPoints[0]);
+                    if (0 < mTextString.Length && 0 < mPoints.Count) {
+                        TextD text = new TextD(mTextString, mPoints[0], mPara.mTextSize, mPara.mTextRotate, mPara.mHa, mPara.mVa, mPara.mLinePitchRate);
                         entity = new TextEntity(text);
                         return createEntity(entity);
                     }
@@ -183,22 +184,22 @@ namespace CadApp
                 case "scaling":
                     break;
                 case "color":         //  color
-                    mCreateColor = ylib.mColorList.Find(p => p.colorTitle == mValString).brush;
+                    mPara.mColor = ylib.mColorList.Find(p => p.colorTitle == mValString).brush;
                     break;
                 case "linetype":         //  linetype
-                    mLineType = (int)mValue;
+                    mPara.mLineType = (int)mValue;
                     break;
                 case "thickness":        //  thickness
-                    mEntSize = mValue;
+                    mPara.mThickness = mValue;
                     break;
                 case "pointtype":        //  pointtype
-                    mPointType = (int)mValue;
+                    mPara.mPointType = (int)mValue;
                     break;
                 case "pointsize":        //  pointsize
-                    mPointSize = mValue;
+                    mPara.mPointSize = mValue;
                     break;
                 case "textsize":        //  textsize
-                    mTextSize = mValue;
+                    mPara.mTextSize = mValue;
                     break;
             }
             return false;
@@ -220,31 +221,39 @@ namespace CadApp
             mPoints.Clear();
             List<string> cmd = commandSplit(command);
             for (int i = 0; i < cmd.Count; i++) {
-                cmd[i] = cmd[i].ToLower();
+                if (0 > cmd[i].IndexOf("\""))
+                    cmd[i] = cmd[i].ToLower();
                 if (mCommandNo < 0) {
                     mCommandNo = mMainCmd.FindIndex(p => 0 <= p.IndexOf(cmd[i]));
                     continue;
                 }
-                if (0 == cmd[i].IndexOf("dx") && 0 < mPoints.Count) {
-                    PointD dp = getPoint(cmd[i], "dx", "dy");       //  相対座標
-                    dp.offset(mPoints[mPoints.Count - 1]);
+                if (0 == cmd[i].IndexOf("x") || 0 == cmd[i].IndexOf("y") ||
+                    0 == cmd[i].IndexOf("dx") || 0 == cmd[i].IndexOf("dy")) {
+                    //  座標/相対座標
+                    PointD dp = getPoint(cmd[i],
+                        mPoints.Count < 1 ? new PointD(0, 0) : mPoints[mPoints.Count - 1]);
                     mPoints.Add(dp);
                 } else if (0 == cmd[i].IndexOf("p")) {
-                    mPickEnt.Add(getIntPara(cmd[i], "p"));          //  要素番号
-                } else if (0 == cmd[i].IndexOf("x")) {
-                    mPoints.Add(getPoint(cmd[i]));                  //  座標
+                    //  要素番号
+                    mPickEnt.Add(getIntPara(cmd[i], "p"));
                 } else if (0 == cmd[i].IndexOf("r")) {
-                    mRadius = getPara(cmd[i], "r");                 //  半径
+                    //  半径
+                    mRadius = getPara(cmd[i], "r");
                 } else if (0 == cmd[i].IndexOf("sa")) {
-                    mSa = getPara(cmd[i], "sa");                    //  始角
+                    //  始角
+                    mSa = getPara(cmd[i], "sa");
                 } else if (0 == cmd[i].IndexOf("ea")) {
-                    mEa = getPara(cmd[i], "ea");                    //  終角
+                    //  終角
+                    mEa = getPara(cmd[i], "ea");
                 }else if (char.IsDigit(cmd[i][0]) || cmd[i][0]== '-') {
-                    mValue = ylib.string2double(cmd[i]);            //  数値
+                    //  数値
+                    mValue = ylib.string2double(cmd[i]);
                 } else if (cmd[i][0] == '"') {
-                    mValString = cmd[i].Trim('"');                  //  文字列
+                    //  文字列
+                    mTextString = cmd[i].Trim('"');
                 } else {
-                    mValString = cmd[i];                            //  文字列
+                    //  その他の文字列
+                    mValString = cmd[i];
                 }
             }
         }
@@ -263,6 +272,32 @@ namespace CadApp
             double x = ycalc.expression(xy.Substring(xn + a.Length,yn - a.Length));
             double y = ycalc.expression(xy.Substring(yn + b.Length));
             return new PointD(x, y);
+        }
+
+        /// <summary>
+        /// パラメータ文字列(座標/相対座標)からPointDの値に変換(計算式可)
+        /// </summary>
+        /// <param name="xy">パラメータ文字列</param>
+        /// <param name="prev">前座標</param>
+        /// <returns>座標</returns>
+        private PointD getPoint(string xy, PointD prev)
+        {
+            PointD p = new PointD();
+            string[] sep = { "x", "y", "dx", "dy", ",", " " };
+            List<string> list = ylib.splitString(xy, sep);
+            for (int i = 0; i < list.Count; i++) {
+                if (list[i] == "x" && i + 1 < list.Count) {
+                    p.x = ycalc.expression(list[++i]);
+                } else if (list[i] == "y" && i + 1 < list.Count) {
+                    p.y = ycalc.expression(list[++i]);
+                } else if (list[i] == "dx" && i + 1 < list.Count) {
+                    p.x = ycalc.expression(list[++i]) + prev.x;
+                } else if (list[i] == "dy" && i + 1 < list.Count) {
+                    p.y = ycalc.expression(list[++i]) + prev.y;
+                }
+            }
+
+            return p;
         }
 
         /// <summary>

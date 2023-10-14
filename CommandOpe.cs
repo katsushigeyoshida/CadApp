@@ -1,7 +1,6 @@
 ﻿using CoreLib;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 
@@ -21,6 +20,10 @@ namespace CadApp
         public double mLinePitchRate = 1.2;                         //  文字列の改行幅率
         public HorizontalAlignment mHa = HorizontalAlignment.Left;  //  水平アライメント
         public VerticalAlignment mVa = VerticalAlignment.Top;       //  垂直アライメント
+        public string mFontFamily = "";                             //  フォント種別(Yu Gothic UI)
+        public FontStyle mFontStyle = FontStyles.Normal;            //  斜体 Normal,Italic
+        public FontWeight mFontWeight = FontWeights.Normal;         //  太字 Thin,Normal,Bold
+
         public double mArrowAngle = Math.PI / 6;                    //  矢印の角度
         public double mArrowSize = 5;                               //  矢印の大きさ
         public Brush mColor = Brushes.Black;                        //  要素の色
@@ -35,7 +38,10 @@ namespace CadApp
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        public DrawingPara() { }
+        public DrawingPara()
+        {
+            mFontFamily = SystemFonts.MessageFontFamily.Source;
+        }
 
         /// <summary>
         /// コピーを作成
@@ -53,6 +59,9 @@ namespace CadApp
             para.mLinePitchRate = mLinePitchRate;
             para.mHa = mHa;
             para.mVa = mVa;
+            para.mFontFamily = mFontFamily;
+            para.mFontStyle = mFontStyle;
+            para.mFontWeight = mFontWeight;
             para.mArrowAngle = mArrowAngle;
             para.mArrowSize = mArrowSize;
             para.mColor = mColor;
@@ -78,6 +87,9 @@ namespace CadApp
             mLinePitchRate = 1.2;                           //  文字列の改行幅率
             mHa = HorizontalAlignment.Left;                 //  水平アライメント
             mVa = VerticalAlignment.Top;                    //  垂直アライメント
+            mFontFamily = SystemFonts.MessageFontFamily.Source; //  フォントファミリ
+            mFontStyle = FontStyles.Normal;                 //  斜体
+            mFontWeight = FontWeights.Normal;               //  太さ
             mArrowAngle = Math.PI / 6;                      //  矢印の角度
             mArrowSize = 5;                                 //  矢印の大きさ
             mColor = Brushes.Black;                         //  要素の色
@@ -98,7 +110,8 @@ namespace CadApp
                 $"LineType,{mLineType},Thickness,{mThickness},TextSize,{mTextSize}," +
                 $"TextRotate,{mTextRotate},LinePitchRate,{mLinePitchRate},HA,{mHa},VA,{mVa}," +
                 $"ArrowSize,{mArrowSize},ArrowAngle,{mArrowAngle},GridSize,{mGridSize},DispLaerBit,{mDispLayerBit}," +
-                $"CreateLayer,{ylib.strControlCodeCnv(mCreateLayerName)},OneLayerDisp,{mOneLayerDisp}";
+                $"CreateLayer,{ylib.strControlCodeCnv(mCreateLayerName)},OneLayerDisp,{mOneLayerDisp}," +
+                $"FontFamily,{mFontFamily},FontStyle,{mFontStyle},FontWeight,{mFontWeight}";
         }
 
         /// <summary>
@@ -149,6 +162,15 @@ namespace CadApp
                                 break;
                             case "VA":
                                 mVa = (VerticalAlignment)Enum.Parse(typeof(VerticalAlignment), data[++i]);
+                                break;
+                            case "FontFamily":
+                                mFontFamily = data[++i];
+                                break;
+                            case "FontStyle":
+                                mFontStyle = ylib.convFontStyle(data[++i]);
+                                break;
+                            case "FontWeight":
+                                mFontWeight = ylib.convFontWeight(data[++i]);
                                 break;
                             case "ArrowSize":
                                 mArrowSize = double.Parse(data[++i]);
@@ -277,7 +299,6 @@ namespace CadApp
             mCurFilePath = filePath;
             mEntityData.clear();
             mEntityData.mPara = new DrawingPara();
-            //mEntityData.mArea = new Box(mInitArea);
             mMainWindow.setSystemProperty();
             saveFile();
         }
@@ -339,7 +360,7 @@ namespace CadApp
                     commansInit = false;
                     break;
                 case OPERATION.createTangentCircle:
-                case OPERATION.createDimension:
+                case OPERATION.createLinearDimension:
                 case OPERATION.createAngleDimension:
                 case OPERATION.createDiameterDimension:
                 case OPERATION.createRadiusDimension:
@@ -362,6 +383,9 @@ namespace CadApp
                     locMode = MainWindow.OPEMODE.loc;
                     mLocPos.Clear();
                     commansInit = false;
+                    break;
+                case OPERATION.createTangentLine:           //  接線
+                    createTangentLine(mPickEnt);
                     break;
                 case OPERATION.createSymbol:                //  シンボル配置
                     if (mSymbolDlg == null || !mSymbolDlg.IsActive)
@@ -425,23 +449,21 @@ namespace CadApp
                     break;
                 case OPERATION.zumenInfo:                   //  図面設定
                     if (zumenProperty(mPara))
-                        mMainWindow.setZumenProperty();    //  コントロールバーの設定
+                        mMainWindow.setZumenProperty();     //  コントロールバーの設定
                     break;
-                case OPERATION.createLayer:                //  作成レイヤー設定
+                case OPERATION.createLayer:                 //  作成レイヤー設定
                     setCreateLayer();
                     break;
                 case OPERATION.setDispLayer:                //  表示レイヤー設定
                     setDispLayer();
                     break;
                 case OPERATION.setAllDispLayer:             //  全レイヤー表示
-                    mPara.mDispLayerBit = 0xffffffff;
-                    mEntityData.mPara.mDispLayerBit = mPara.mDispLayerBit;
-                    mEntityData.updateData();
+                    setFulleDispLayer();
                     break;
-                case OPERATION.oneLayerDisp:
+                case OPERATION.oneLayerDisp:                //  1レイヤー表示
                     setOneLayerDisp(!mPara.mOneLayerDisp);
                     break;
-                case OPERATION.changeLayerName:
+                case OPERATION.changeLayerName:             //  レイヤー名変更
                     changeLayerName();
                     break;
                 case OPERATION.setSymbol:                   //  シンボル登録
@@ -505,7 +527,7 @@ namespace CadApp
                 }
             } else if (locPos.Count == 1 &&
                 (operation == OPERATION.divide || operation == OPERATION.createTangentCircle
-                || operation == OPERATION.createDimension
+                || operation == OPERATION.createLinearDimension
                 || operation == OPERATION.createAngleDimension
                 || operation == OPERATION.createDiameterDimension
                 || operation == OPERATION.createRadiusDimension)) {
@@ -645,7 +667,7 @@ namespace CadApp
                     ArcD arc = mEntityData.tangentCircle(pickEnt, loc);
                     if (arc != null)
                         mEntityData.addArc(arc);
-                } else if (operation == OPERATION.createDimension) {
+                } else if (operation == OPERATION.createLinearDimension) {
                     //  寸法線
                     mEntityData.addDimension(pickEnt, loc[0]);
                 } else if (operation == OPERATION.createAngleDimension) {
@@ -737,10 +759,11 @@ namespace CadApp
         /// </summary>
         /// <param name="command">コマンド文字列</param>
         /// <returns></returns>
-        public bool keyCommand(string command)
+        public bool keyCommand(string command, string text)
         {
             mEntityData.mOperationCouunt++;
-            return mKeyCommand.setCommand(command);
+            mKeyCommand.mTextString = text;
+            return mKeyCommand.setCommand(command, mPara);
         }
 
         /// <summary>
@@ -751,6 +774,7 @@ namespace CadApp
         public bool changeText(List<(int, PointD)> pickEnt)
         {
             mEntityData.mOperationCouunt++;
+            int changeCount = 0;
             foreach ((int no, PointD pos) pickNo in pickEnt) {
                 InputBox dlg = new InputBox();
                 dlg.Owner = mMainWindow;
@@ -758,34 +782,45 @@ namespace CadApp
                 dlg.mMultiLine = true;
                 dlg.mWindowSizeOutSet = true;
                 dlg.Title = "文字列変更";
+                if (mEntityData.mEntityList[pickNo.no].mRemove)
+                    continue;
                 if (mEntityData.mEntityList[pickNo.no].mEntityId == EntityId.Text) {
                     //  文字列要素
                     TextEntity text = (TextEntity)mEntityData.mEntityList[pickNo.no];
                     dlg.mEditText = text.mText.mText;
                     if (dlg.ShowDialog() == true) {
-                        mEntityData.mEntityList.Add(mEntityData.mEntityList[pickNo.no].toCopy());
-                        text = (TextEntity)mEntityData.mEntityList[mEntityData.mEntityList.Count - 1];
-                        text.mText.mText = dlg.mEditText;
-                        mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mOperationCount = mEntityData.mOperationCouunt;
-                        mEntityData.removeEnt(pickNo.no);
+                        if (0 < dlg.mEditText.Length) {
+                            mEntityData.mEntityList.Add(mEntityData.mEntityList[pickNo.no].toCopy());
+                            text = (TextEntity)mEntityData.mEntityList[mEntityData.mEntityList.Count - 1];
+                            text.mText.mText = dlg.mEditText;
+                            mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mOperationCount = mEntityData.mOperationCouunt;
+                            mEntityData.removeEnt(pickNo.no);
+                        }
+                        changeCount++;
                     }
                 } else if (mEntityData.mEntityList[pickNo.no].mEntityId == EntityId.Parts) {
                     //  パーツ要素
                     PartsEntity parts = (PartsEntity)mEntityData.mEntityList[pickNo.no];
                     if (0 < parts.mParts.mTexts.Count) {
-                        dlg.mEditText = parts.mParts.mTexts[0].mText;
-                        if (dlg.ShowDialog() == true) {
-                            mEntityData.mEntityList.Add(mEntityData.mEntityList[pickNo.no].toCopy());
-                            parts = (PartsEntity)mEntityData.mEntityList[mEntityData.mEntityList.Count - 1];
-                            parts.mParts.mTexts[0].mText = dlg.mEditText;
-                            mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mOperationCount = mEntityData.mOperationCouunt;
-                            mEntityData.removeEnt(pickNo.no);
+                        (int no, dlg.mEditText) = parts.mParts.getPickText(pickNo.pos);
+                        if (0 <= no && dlg.ShowDialog() == true) {
+                            if (0 < dlg.mEditText.Length) {
+                                mEntityData.mEntityList.Add(mEntityData.mEntityList[pickNo.no].toCopy());
+                                parts = (PartsEntity)mEntityData.mEntityList[mEntityData.mEntityList.Count - 1];
+                                parts.mParts.mTexts[no].mText = dlg.mEditText;
+                                mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mOperationCount = mEntityData.mOperationCouunt;
+                                mEntityData.removeEnt(pickNo.no);
+                            }
+                            changeCount++;
                         }
                     }
                 }
             }
             mEntityData.updateData();
-            return true;
+            if (0 < changeCount)
+                return true;
+            else
+                return false;
         }
 
         /// <summary>
@@ -847,6 +882,9 @@ namespace CadApp
                     dlg.mVa         = text.mText.mVa;
                     dlg.mTextRotate = text.mText.mRotate;
                     dlg.mLinePitchRate = text.mText.mLinePitchRate;
+                    dlg.mFontFamily = text.mText.mFontFamily;
+                    dlg.mFontStyle  = text.mText.mFontStyle.ToString();
+                    dlg.mFontWeight = text.mText.mFontWeight.ToString();
                 }
                 //  Parts要素
                 if (entity.mEntityId == EntityId.Parts) {
@@ -857,6 +895,9 @@ namespace CadApp
                     dlg.mArrowSize     = parts.mParts.mArrowSize;
                     dlg.mArrowAngle    = parts.mParts.mArrowAngle;
                     dlg.mPartsName     = parts.mParts.mName;
+                    dlg.mFontFamily    = parts.mParts.mFontFamily;
+                    dlg.mFontStyle     = parts.mParts.mFontStyle.ToString();
+                    dlg.mFontWeight    = parts.mParts.mFontWeight.ToString();
                 }
                 if (dlg.ShowDialog() == true) {
                     //  共通属性
@@ -875,6 +916,9 @@ namespace CadApp
                         text.mText.mVa            = dlg.mVa;
                         text.mText.mRotate        = dlg.mTextRotate;
                         text.mText.mLinePitchRate = dlg.mLinePitchRate;
+                        text.mText.mFontFamily    = dlg.mFontFamily;
+                        text.mText.mFontStyle     = ylib.convFontStyle(dlg.mFontStyle);
+                        text.mText.mFontWeight    = ylib.convFontWeight(dlg.mFontWeight);
                     }
                     //  Parts要素
                     if (entity.mEntityId == EntityId.Parts) {
@@ -886,6 +930,9 @@ namespace CadApp
                         parts.mParts.mLinePitchRate = dlg.mLinePitchRate;
                         parts.mParts.mTextRotate    = dlg.mTextRotate;
                         parts.mParts.mName          = dlg.mPartsName;
+                        parts.mParts.mFontFamily    = dlg.mFontFamily;
+                        parts.mParts.mFontStyle     = ylib.convFontStyle(dlg.mFontStyle);
+                        parts.mParts.mFontWeight    = ylib.convFontWeight(dlg.mFontWeight);
                         parts.mParts.remakeData();
                     }
                     //  Undo処理
@@ -894,6 +941,8 @@ namespace CadApp
                 }
                 dlg.Close();
             }
+            if (mChkListDlg != null && mChkListDlg.IsVisible)
+                setDispLayer();
             mEntityData.updateData();
             mMainWindow.cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
             mMainWindow.cbCreateLayer.SelectedIndex = mMainWindow.cbCreateLayer.Items.IndexOf(mEntityData.mPara.mCreateLayerName);
@@ -947,6 +996,12 @@ namespace CadApp
                             textEnt.mText.mRotate = dlg.mTextRotate;
                         if (dlg.mLinePitchRateChk)
                             textEnt.mText.mLinePitchRate = dlg.mLinePitchRate;
+                        if (dlg.mFontFamilyChk)
+                            textEnt.mText.mFontFamily = dlg.mFontFamily;
+                        if (dlg.mFontStyleChk)
+                            textEnt.mText.mFontStyle = ylib.convFontStyle(dlg.mFontStyle);
+                        if (dlg.mFontWeightChk)
+                            textEnt.mText.mFontWeight = ylib.convFontWeight(dlg.mFontWeight);
                     }
                     //  パーツ要素
                     if (entity.mEntityId == EntityId.Parts) {
@@ -961,10 +1016,20 @@ namespace CadApp
                             partsEnt.mParts.mTextRotate = dlg.mTextRotate;
                         if (dlg.mLinePitchRateChk)
                             partsEnt.mParts.mLinePitchRate = dlg.mLinePitchRate;
+                        if (dlg.mFontFamilyChk)
+                            partsEnt.mParts.mFontFamily = dlg.mFontFamily;
+                        if (dlg.mFontStyleChk)
+                            partsEnt.mParts.mFontStyle = ylib.convFontStyle(dlg.mFontStyle);
+                        if (dlg.mFontWeightChk)
+                            partsEnt.mParts.mFontWeight = ylib.convFontWeight(dlg.mFontWeight);
                         partsEnt.mParts.remakeData();
                     }
                     entity.mOperationCount = mEntityData.mOperationCouunt;
                     mEntityData.removeEnt(pickNo.no);
+                }
+                if (dlg.mLayerNameChk) {
+                    if (mChkListDlg != null && mChkListDlg.IsVisible)
+                        setDispLayer();
                 }
             }
             mEntityData.updateData();
@@ -1039,6 +1104,20 @@ namespace CadApp
                 mEntityData.addEntity(entity);
             }
             mEntityData.updateData();
+        }
+
+        /// <summary>
+        /// 接線を作成
+        /// </summary>
+        /// <param name="pickEnt"></param>
+        public void createTangentLine(List<(int no, PointD pos)> pickEnt)
+        {
+            LineD line = mEntityData.tangentLine(pickEnt);
+            if (line != null) {
+                mEntityData.mOperationCouunt++;
+                mEntityData.addLine(line);
+                mEntityData.updateData();
+            }
         }
 
         /// <summary>
@@ -1249,6 +1328,9 @@ namespace CadApp
             dlg.mLinePitchRate = para.mLinePitchRate;
             dlg.mHa = para.mHa;
             dlg.mVa = para.mVa;
+            dlg.mFontFamily = para.mFontFamily;
+            dlg.mFontStyle = para.mFontStyle.ToString();
+            dlg.mFontWeight = para.mFontWeight.ToString();
             dlg.mArrowSize = para.mArrowSize;
             dlg.mArrowAngle = para.mArrowAngle;
             dlg.mGridSize = para.mGridSize;
@@ -1263,6 +1345,9 @@ namespace CadApp
                 para.mLinePitchRate = dlg.mLinePitchRate;
                 para.mHa = dlg.mHa;
                 para.mVa = dlg.mVa;
+                para.mFontFamily = dlg.mFontFamily;
+                para.mFontStyle = ylib.convFontStyle(dlg.mFontStyle);
+                para.mFontWeight = ylib.convFontWeight(dlg.mFontWeight);
                 para.mArrowSize = dlg.mArrowSize;
                 para.mArrowAngle = dlg.mArrowAngle;
                 para.mGridSize = dlg.mGridSize;
@@ -1315,14 +1400,32 @@ namespace CadApp
         /// </summary>
         public void setLayerChk()
         {
+            ulong createLayerBit = mEntityData.getLayerBit(mPara.mCreateLayerName);
             mEntityData.setDispLayerBit(mChkListDlg.mChkList);
-            if (mPara.mDispLayerBit != mEntityData.getLayerBit(mPara.mCreateLayerName)) {
-                mPara.mOneLayerDisp = false;
+            if ((createLayerBit & mEntityData.mPara.mDispLayerBit) == 0) {
+                ylib.messageBox(mMainWindow, "作成レイヤーを非表示にすることはできません");
+                mChkListDlg.visibleDataSet(mPara.mCreateLayerName);
+                mEntityData.mPara.mDispLayerBit |= createLayerBit;
+            }
+            if (mEntityData.mPara.mDispLayerBit != createLayerBit) {
                 mEntityData.mPara.mOneLayerDisp = false;
+                mPara.mOneLayerDisp = false;
             }
             mEntityData.updateData();
             mPara.mDispLayerBit = mEntityData.mPara.mDispLayerBit;
             mMainWindow.commandClear();
+        }
+
+        /// <summary>
+        /// 全レイヤー表示
+        /// </summary>
+        public void setFulleDispLayer()
+        {
+            mPara.mDispLayerBit = 0xffffffff;
+            mEntityData.mPara.mDispLayerBit = mPara.mDispLayerBit;
+            mEntityData.updateData();
+            mPara.mOneLayerDisp = false;
+            mEntityData.mPara.mOneLayerDisp = false;
         }
 
         /// <summary>

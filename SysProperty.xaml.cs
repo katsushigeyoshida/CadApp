@@ -38,6 +38,9 @@ namespace CadApp
         };
         private string[] mHorizontalAlignmentMenu = { "Left", "Center", "Right" };
         private string[] mVerticalAlignmentMenu = { "Top", "Center", "Bottum" };
+        private List<string> mFontFamilyMenu;
+        private string[] mFontStyleMenu = { "Normal", "Italic", "Oblique" };
+        private string[] mFontWeightMenu = { "Normal", "Thin", "Bold" };
 
         public string mColorName = "Black";
         public Brush mColor = Brushes.Black;
@@ -54,6 +57,9 @@ namespace CadApp
         public double mArrowAngle = 30 * Math.PI / 180;
         public string mLayerName = "";
         public List<string> mLayerNameList;
+        public string mFontFamily = "";
+        public string mFontStyle = "";
+        public string mFontWeight = "";
         public double mGridSize = 1;
 
         public bool mShowCheckBox     = false;
@@ -70,6 +76,10 @@ namespace CadApp
         public bool mArrowSizeChk     = false;
         public bool mArrowAngleChk    = false;
         public bool mLayerNameChk     = false;
+        public bool mFontFamilyChk    = false;
+        public bool mFontStyleChk     = false;
+        public bool mFontWeightChk    = false;
+
 
         YDraw ydraw = new YDraw();
         YLib ylib = new YLib();
@@ -93,7 +103,7 @@ namespace CadApp
             cbVertical.ItemsSource   = mVerticalAlignmentMenu;
             cbArrowSize.ItemsSource  = mTextSizeMenu;
             cbArrowAngle.ItemsSource = mArrowAngleMenu;
-            cbLayerName.ItemsSource = mLayerNameList;
+            cbLayerName.ItemsSource  = mLayerNameList;
             cbGridSize.ItemsSource   = mGridSizeMenu;
 
             cbColor.SelectedIndex      = ydraw.mColorList.FindIndex(p => p.brush == mColor);
@@ -108,9 +118,17 @@ namespace CadApp
                                          mHa == HorizontalAlignment.Center ? 1 : 2;
             cbVertical.SelectedIndex   = mVa == VerticalAlignment.Top ? 0 :
                                          mVa == VerticalAlignment.Center ? 1 : 2;
+            mFontFamilyMenu            = ylib.getSystemFontFamilyName();
+            cbFontFamily.ItemsSource   = mFontFamilyMenu;
+            cbFontStyle.ItemsSource    = mFontStyleMenu;
+            cbFontWeight.ItemsSource   = mFontWeightMenu;
+
             cbArrowSize.Text           = mArrowSize.ToString();
             cbArrowAngle.Text          = ylib.double2StrZeroSup(ylib.R2D(mArrowAngle));
             cbGridSize.SelectedIndex   = mGridSizeMenu.FindIndex(p => p >= mGridSize);
+            cbFontFamily.SelectedIndex = mFontFamilyMenu.IndexOf(mFontFamily == "" ? SystemFonts.MessageFontFamily.Source : mFontFamily);
+            cbFontStyle.SelectedIndex  = mFontStyleMenu.FindIndex(p =>p == mFontStyle);
+            cbFontWeight.SelectedIndex = mFontWeightMenu.FindIndex(p => p == mFontWeight);
 
             chColor.Visibility         = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
             chLineType.Visibility      = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
@@ -129,6 +147,9 @@ namespace CadApp
             chLayerName.Visibility     = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
             lbGridTitle.Visibility     = mShowCheckBox ? Visibility.Hidden : Visibility.Visible;
             cbGridSize.Visibility      = mShowCheckBox ? Visibility.Hidden : Visibility.Visible;
+            chFontFamily.Visibility    = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
+            chFontStyle.Visibility     = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
+            chFontWeight.Visibility    = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
 
             chColor.IsChecked         = mColorChk;
             chLineType.IsChecked      = mLineTypeChk;
@@ -140,6 +161,9 @@ namespace CadApp
             chLinePitchRate.IsChecked = mLinePitchRateChk;
             chHorizontal.IsChecked    = mHaChk;
             chVertical.IsChecked      = mVaChk;
+            chFontFamily.IsChecked    = mFontFamilyChk;
+            chFontStyle.IsChecked     = mFontStyleChk;
+            chFontWeight.IsChecked    = mFontWeightChk;
         }
 
         private void btOK_Click(object sender, RoutedEventArgs e)
@@ -174,6 +198,9 @@ namespace CadApp
             mLayerName = cbLayerName.Text;
             if (0 <= cbGridSize.SelectedIndex)
                 mGridSize = mGridSizeMenu[cbGridSize.SelectedIndex];
+            mFontFamily = cbFontFamily.Text;
+            mFontStyle = cbFontStyle.Text;
+            mFontWeight = cbFontWeight.Text;
 
             mColorChk         = chColor.IsChecked         == true;
             mLineTypeChk      = chLineType.IsChecked      == true;
@@ -188,6 +215,9 @@ namespace CadApp
             mArrowSizeChk     = chArrowSize.IsChecked     == true;
             mArrowAngleChk    = chArrowAngle.IsChecked    == true;
             mLayerNameChk     = chLayerName.IsChecked     == true;
+            mFontFamilyChk    = chFontFamily.IsChecked    == true;
+            mFontStyleChk     = chFontStyle.IsChecked     == true;
+            mFontWeightChk    = chFontWeight.IsChecked    == true;
 
             DialogResult = true;
             Close();

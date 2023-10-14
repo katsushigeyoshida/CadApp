@@ -7,10 +7,11 @@ namespace CadApp
 {
     public enum ENTITY { non, all, point, line, polyline, polygon, arc, ellipse, text, parts, any }
     public enum OPERATION { non, loc, pic,
-        createPoint, createLine, createRect, createPolyline, createPolygon, createHVLine,
+        createPoint, createLine, createHVLine, createTangentLine,
+        createRect, createPolyline, createPolygon,
         createArc, createCircle, createTangentCircle, createEllipse, createText,
         createArrow, createLabel, createSymbol, 
-        createLocDimension, createDimension, createAngleDimension,
+        createLocDimension, createLinearDimension, createAngleDimension,
         createDiameterDimension, createRadiusDimension,
 
         translate, rotate, mirror, scale, trim, divide, stretch, offset, symbolAssemble,
@@ -56,8 +57,9 @@ namespace CadApp
             //          main,       sub,            para,  operation,                   entity
             new Command("作成",      "点",          "", OPERATION.createPoint,          ENTITY.point),
             new Command("作成",      "線分",        "", OPERATION.createLine,           ENTITY.line),
-            new Command("作成",      "水平垂直線分","", OPERATION.createHVLine,           ENTITY.line),
-            new Command("作成",      "四角",        "", OPERATION.createRect,           ENTITY.line),
+            new Command("作成",      "水平垂直線分","", OPERATION.createHVLine,         ENTITY.line),
+            new Command("作成",      "接線",        "", OPERATION.createTangentLine,    ENTITY.line),
+            new Command("作成",      "四角",        "", OPERATION.createRect,           ENTITY.polyline),
             new Command("作成",      "ポリライン",  "", OPERATION.createPolyline,       ENTITY.polyline),
             new Command("作成",      "ポリゴン",    "", OPERATION.createPolygon,        ENTITY.polygon),
             new Command("作成",      "円弧",        "", OPERATION.createArc,            ENTITY.arc),
@@ -69,7 +71,7 @@ namespace CadApp
             new Command("作成",      "ラベル",      "", OPERATION.createLabel,          ENTITY.parts),
             new Command("作成",      "シンボル",    "", OPERATION.createSymbol,         ENTITY.parts),
             new Command("作成",      "位置寸法線",  "", OPERATION.createLocDimension,   ENTITY.parts),
-            new Command("作成",      "寸法線",      "", OPERATION.createDimension,      ENTITY.parts),
+            new Command("作成",      "直線寸法線",  "", OPERATION.createLinearDimension,ENTITY.parts),
             new Command("作成",      "角度寸法線",  "", OPERATION.createAngleDimension, ENTITY.parts),
             new Command("作成",      "直径寸法線",  "", OPERATION.createDiameterDimension, ENTITY.parts),
             new Command("作成",      "半径寸法線",  "", OPERATION.createRadiusDimension, ENTITY.parts),
@@ -140,7 +142,8 @@ namespace CadApp
         private List<string> mShortCutComment = new List<string>() {
             "ショートカットキーの設定ファイル",
             "Command",
-            "createPoint, createLine, createRect, createPolyline, createPolygon, createHVLine",
+            "createPoint, createLine, createHVLine, createTangentLine",
+            "createRect, createPolyline, createPolygon",
             "createArc, createCircle, createTangentCircle, createEllipse, createText",
             "createArrow, createLabel, createSymbol",
             "createLocDimension, createDimension, createAngleDimension",

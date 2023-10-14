@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CadApp"
         mc:Ignorable="d"
-        Title="図面設定" Height="300" Width="400" Loaded="Window_Loaded">
+        Title="図面設定" Height="360" Width="400" Loaded="Window_Loaded">
     <Grid>
         <Label Name="lbLayerTitle" Content="レイヤー名" Margin="10,5,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
         <ComboBox Name="cbLayerName" Margin="70,5,0,0" IsEditable="True" Width="265" VerticalAlignment="Top" HorizontalAlignment="Left" />
@@ -54,15 +54,24 @@
         <Label Name="lbLinePitchRateTitle" Content="改行比率" Margin="10,155,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
         <TextBox Name="tbLinerPitchRate" Margin="70,155,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
         <CheckBox x:Name="chLinePitchRate" Margin="175,157,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <Label Name="lbArrowSizeTitle" Content="矢印サイズ" Margin="10,180,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <ComboBox Name="cbArrowSize" Margin="70,180,0,0" IsEditable="True" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
-        <CheckBox x:Name="chArrowSize" Margin="175,182,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <Label Name="lbArrowAngleTitle" Content="矢印角度" Margin="200,180,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <ComboBox Name="cbArrowAngle" Margin="255,180,0,0" Width="80" IsEditable="True" VerticalAlignment="Top" HorizontalAlignment="Left" />
-        <CheckBox x:Name="chArrowAngle" Margin="340,182,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <Label Name="lbGridTitle" Content="グリッド" Margin="10,205,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <ComboBox Name="cbGridSize" Margin="70,205,0,0" IsEditable="True" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
-        
+        <Label Name="lbFontFamily" Content="フォント"  Margin="10,175,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <ComboBox Name="cbFontFamily" Margin="70,175,0,0" Width="150" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <CheckBox x:Name="chFontFamily" Margin="225,178,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <Label Name="lbFontStyle" Content="斜体" Margin="70,198,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <ComboBox Name="cbFontStyle" Margin="110,200,0,0" Width="60" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <CheckBox x:Name="chFontStyle" Margin="175,203,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <Label Name="lbFontWeight" Content="太さ" Margin="210,198,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <ComboBox Name="cbFontWeight" Margin="250,200,0,0" Width="60" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <CheckBox x:Name="chFontWeight" Margin="340,203,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <Label Name="lbArrowSizeTitle" Content="矢印サイズ" Margin="10,225,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <ComboBox Name="cbArrowSize" Margin="70,225,0,0" IsEditable="True" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <CheckBox x:Name="chArrowSize" Margin="175,227,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <Label Name="lbArrowAngleTitle" Content="矢印角度" Margin="200,225,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <ComboBox Name="cbArrowAngle" Margin="255,225,0,0" Width="80" IsEditable="True" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <CheckBox x:Name="chArrowAngle" Margin="340,227,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <Label Name="lbGridTitle" Content="グリッド" Margin="10,255,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <ComboBox Name="cbGridSize" Margin="70,255,0,0" IsEditable="True" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
+
         <Button x:Name="btOK" Content="OK" Height="20" Margin="0,0,100,10" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="50" Click="btOK_Click"/>
         <Button x:Name="btCancel" Content="Cancel" Height="20" Margin="0,0,40,10" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="50" Click="btCancel_Click"/>
     </Grid>

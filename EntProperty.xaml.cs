@@ -31,6 +31,9 @@ namespace CadApp
         };
         private string[] mHorizontalAlignmentMenu = { "Left", "Center", "Right" };
         private string[] mVerticalAlignmentMenu = { "Top", "Center", "Bottum" };
+        private List<string> mFontFamilyMemu;
+        private string[] mFontSTyleMenu = { "Normal", "Italic", "Oblique" };
+        private string[] mFontWeightMenu = { "Normal", "Thin", "Bold" };
 
         public EntityId mEntityId = EntityId.Non;
         public string mColorName = "Black";
@@ -41,6 +44,9 @@ namespace CadApp
         public HorizontalAlignment mHa = HorizontalAlignment.Left;
         public VerticalAlignment mVa = VerticalAlignment.Top;
         public double mTextRotate = 0;
+        public string mFontFamily = "";
+        public string mFontStyle = "Normal";
+        public string mFontWeight = "Normal";
         public double mArrowSize = 5;
         public double mArrowAngle = 0.523598775599;
         public double mLinePitchRate = 1.2;
@@ -60,26 +66,34 @@ namespace CadApp
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            cbColor.SelectedIndex = ydraw.mColorList.FindIndex(p => p.brush == mColor);
-            cbType.ItemsSource = mEntityId == EntityId.Point ? mPointTypeMenu : mLineTypeMenu;
-            cbThickness.ItemsSource = mEntSizeMenu;
-            lbTypeTitle.Content = mEntityId == EntityId.Point ? "点種" : "線種";
-            lbSizeTitle.Content = mEntityId == EntityId.Point ? "点サイズ" : "太さ";
+            cbColor.SelectedIndex    = ydraw.mColorList.FindIndex(p => p.brush == mColor);
+            cbType.ItemsSource       = mEntityId == EntityId.Point ? mPointTypeMenu : mLineTypeMenu;
+            cbThickness.ItemsSource  = mEntSizeMenu;
+            lbTypeTitle.Content      = mEntityId == EntityId.Point ? "点種" : "線種";
+            lbSizeTitle.Content      = mEntityId == EntityId.Point ? "点サイズ" : "太さ";
             cbHorizontal.ItemsSource = mHorizontalAlignmentMenu;
-            cbVertical.ItemsSource = mVerticalAlignmentMenu;
+            cbVertical.ItemsSource   = mVerticalAlignmentMenu;
 
-            cbType.SelectedIndex = mLineType;
-            cbThickness.SelectedIndex = mEntSizeMenu.FindIndex(p => p >= mThickness);
-            tbTextSize.Text = mTextSize.ToString();
-            tbTextRotate.Text = ylib.double2StrZeroSup(ylib.R2D(mTextRotate), "F8");
-            tbLinePitchRate.Text = mLinePitchRate.ToString();
+            cbType.SelectedIndex       = mLineType;
+            cbThickness.SelectedIndex  = mEntSizeMenu.FindIndex(p => p >= mThickness);
+            tbTextSize.Text            = mTextSize.ToString();
+            tbTextRotate.Text          = ylib.double2StrZeroSup(ylib.R2D(mTextRotate), "F8");
+            tbLinePitchRate.Text       = mLinePitchRate.ToString();
             cbHorizontal.SelectedIndex = mHa == HorizontalAlignment.Left ? 0 :
                                          mHa == HorizontalAlignment.Center ? 1 : 2;
             cbVertical.SelectedIndex = mVa == VerticalAlignment.Top ? 0 :
                                        mVa == VerticalAlignment.Center ? 1 : 2;
-            tbArrowSize.Text = mArrowSize.ToString();
+            mFontFamilyMemu = ylib.getSystemFontFamilyName();
+            cbFontFamily.ItemsSource   = mFontFamilyMemu;
+            cbFontStyle.ItemsSource    = mFontSTyleMenu;
+            cbFontWeight.ItemsSource   = mFontWeightMenu;
+            cbFontFamily.SelectedIndex = mFontFamilyMemu.IndexOf(mFontFamily);
+            cbFontStyle.SelectedIndex  = mFontSTyleMenu.FindIndex(p => p == mFontStyle);
+            cbFontWeight.SelectedIndex = mFontWeightMenu.FindIndex(p => p == mFontWeight);
+
+            tbArrowSize.Text  = mArrowSize.ToString();
             tbArrowAngle.Text = ylib.double2StrZeroSup(ylib.R2D(mArrowAngle),"F8");
-            tbPartsName.Text = mPartsName.TrimStart('_');
+            tbPartsName.Text  = mPartsName.TrimStart('_');
 
             lbTextSizeTitle.IsEnabled = false;
             tbTextSize.IsEnabled      = false;
@@ -91,6 +105,12 @@ namespace CadApp
             cbHorizontal.IsEnabled    = false;
             lbVATitle.IsEnabled       = false;
             cbVertical.IsEnabled      = false;
+            lbFontFamily.IsEnabled    = false;
+            cbFontFamily.IsEnabled    = false;
+            lbFontStyle.IsEnabled     = false;
+            cbFontStyle.IsEnabled     = false;
+            lbFontWeight.IsEnabled    = false;
+            cbFontWeight.IsEnabled    = false;
 
             lbArrowSizeTitle.IsEnabled  = false;
             tbArrowSize.IsEnabled       = false;
@@ -101,29 +121,35 @@ namespace CadApp
 
             if (mEntityId == EntityId.Text || mEntityId == EntityId.Parts) {
                 lbTextSizeTitle.IsEnabled = true;
-                tbTextSize.IsEnabled = true;
+                tbTextSize.IsEnabled      = true;
+                lbFontFamily.IsEnabled    = true;
+                cbFontFamily.IsEnabled    = true;
+                lbFontStyle.IsEnabled     = true;
+                cbFontStyle.IsEnabled     = true;
+                lbFontWeight.IsEnabled    = true;
+                cbFontWeight.IsEnabled    = true;
             }
             if (mEntityId == EntityId.Text) {
-                lbTypeTitle.IsEnabled = false;
-                cbType.IsEnabled      = false;
-                lbSizeTitle.IsEnabled = false;
-                cbThickness.IsEnabled = false;
-                lbRotateTitle.IsEnabled = true;
-                tbTextRotate.IsEnabled  = true;
+                lbTypeTitle.IsEnabled     = false;
+                cbType.IsEnabled          = false;
+                lbSizeTitle.IsEnabled     = false;
+                cbThickness.IsEnabled     = false;
+                lbRotateTitle.IsEnabled   = true;
+                tbTextRotate.IsEnabled    = true;
                 lbLinePitchRateTitle.IsEnabled = true;
                 tbLinePitchRate.IsEnabled = true;
-                lbAlimentTitle.IsEnabled = true;
-                cbHorizontal.IsEnabled   = true;
-                lbVATitle.IsEnabled      = true;
-                cbVertical.IsEnabled     = true;
+                lbAlimentTitle.IsEnabled  = true;
+                cbHorizontal.IsEnabled    = true;
+                lbVATitle.IsEnabled       = true;
+                cbVertical.IsEnabled      = true;
             } else if (mEntityId == EntityId.Parts) {
-                lbTypeTitle.IsEnabled = true;
-                cbType.IsEnabled      = true;
-                lbSizeTitle.IsEnabled = true;
-                cbThickness.IsEnabled = true;
-                cbThickness.SelectedIndex = mEntSizeMenu.FindIndex(p => p >= mThickness);
-                lbRotateTitle.IsEnabled = true;
-                tbTextRotate.IsEnabled = true;
+                lbTypeTitle.IsEnabled      = true;
+                cbType.IsEnabled           = true;
+                lbSizeTitle.IsEnabled      = true;
+                cbThickness.IsEnabled      = true;
+                cbThickness.SelectedIndex  = mEntSizeMenu.FindIndex(p => p >= mThickness);
+                lbRotateTitle.IsEnabled    = true;
+                tbTextRotate.IsEnabled     = true;
                 lbLinePitchRateTitle.IsEnabled = true;
                 tbLinePitchRate.IsEnabled = true;
                 lbArrowSizeTitle.IsEnabled  = true;
@@ -162,12 +188,15 @@ namespace CadApp
                     mThickness = mEntSizeMenu[cbThickness.SelectedIndex];
                 }
             }
-            mTextSize = ylib.string2double(tbTextSize.Text);
-            mTextRotate = ylib.D2R(ylib.string2double(tbTextRotate.Text));
+            mTextSize      = ylib.string2double(tbTextSize.Text);
+            mTextRotate    = ylib.D2R(ylib.string2double(tbTextRotate.Text));
             mLinePitchRate = ylib.string2double(tbLinePitchRate.Text);
-            mArrowSize = ylib.string2double(tbArrowSize.Text);
-            mArrowAngle = ylib.D2R(ylib.string2double(tbArrowAngle.Text));
-            mLayerName = cbLayerName.Text;
+            mFontFamily    = cbFontFamily.Text;
+            mFontStyle     = cbFontStyle.Text;
+            mFontWeight    = cbFontWeight.Text;
+            mArrowSize     = ylib.string2double(tbArrowSize.Text);
+            mArrowAngle    = ylib.D2R(ylib.string2double(tbArrowAngle.Text));
+            mLayerName     = cbLayerName.Text;
             if (mPartsName.Length == 0 || (2 < mPartsName.Length && mPartsName.Substring(0, 2) == "__"))
                 mPartsName = "__" + tbPartsName.Text;
 

@@ -257,7 +257,7 @@ namespace CadApp
                 case OPERATION.createLocDimension:
                     locDimensionDragging(entityData, points, pickList);
                     break;
-                case OPERATION.createDimension:
+                case OPERATION.createLinearDimension:
                     dimensionDragging(entityData, points, pickList);
                     break;
                 case OPERATION.createAngleDimension:

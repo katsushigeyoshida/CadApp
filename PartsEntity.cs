@@ -66,6 +66,9 @@ namespace CadApp
                     ydraw.drawWArc(arc, false);
             }
             if (mParts.mTexts != null) {
+                ydraw.mFontFamily = mParts.mFontFamily;
+                ydraw.mFontStyle  = mParts.mFontStyle;
+                ydraw.mFontWeight = mParts.mFontWeight;
                 foreach (var text in mParts.mTexts)
                     ydraw.drawWText(text);
             }
@@ -110,6 +113,12 @@ namespace CadApp
                         mParts.mName = data[++i];
                     } else if (data[i] == "textSize") {
                         mParts.mTextSize = ylib.string2double(data[++i]);
+                    } else if (data[i] == "fontFamily") {
+                        mParts.mFontFamily = data[++i];
+                    } else if (data[i] == "fontStyle") {
+                        mParts.mFontStyle = ylib.convFontStyle(data[++i]);
+                    } else if (data[i] == "fontWeight") {
+                        mParts.mFontWeight = ylib.convFontWeight(data[++i]);
                     } else if (data[i] == "linePitchRate") {
                         mParts.mLinePitchRate = ylib.string2double(data[++i]);
                     } else if (data[i] == "textRotate") {
@@ -162,6 +171,9 @@ namespace CadApp
             }
             buf += $"textSize,{mParts.mTextSize},";
             buf += $"textRotate,{mParts.mTextRotate},";
+            buf += $"fontFamily,{mParts.mFontFamily},";
+            buf += $"fontStyle,{mParts.mFontStyle},";
+            buf += $"fontWeight,{mParts.mFontWeight},";
             buf += $"linePitchRate,{mParts.mLinePitchRate},";
             buf += $"arrowSize,{mParts.mArrowSize},";
             buf += $"arrowAngle,{mParts.mArrowAngle},";
@@ -223,6 +235,9 @@ namespace CadApp
             }
             dataList.Add("textSize");      dataList.Add(mParts.mTextSize.ToString());
             dataList.Add("textRotate");    dataList.Add(mParts.mTextRotate.ToString());
+            dataList.Add("fontFamily");    dataList.Add(mParts.mFontFamily);
+            dataList.Add("fontStyle");     dataList.Add(mParts.mFontStyle.ToString());
+            dataList.Add("fontWeight");     dataList.Add(mParts.mFontWeight.ToString());
             dataList.Add("linePitchRate"); dataList.Add(mParts.mLinePitchRate.ToString());
             dataList.Add("arrowSize");     dataList.Add(mParts.mArrowSize.ToString());
             dataList.Add("arrowAngle");    dataList.Add(mParts.mArrowAngle.ToString());
@@ -259,6 +274,8 @@ namespace CadApp
             buf += $"\n要素種別: パーツ要素";
             buf += $"\n名称: " + mParts.mName;
             buf += $"\n領域 {mArea.ToString("f2")}";
+            buf += $"\n文字高さ: {mParts.mTextSize.ToString("f4")}";
+            buf += $"\nフォント: {mParts.mFontFamily} 斜体 {mParts.mFontStyle} 太さ {mParts.mFontWeight}";
             buf += $"\nカラー: {getColorName(mColor)}";
             buf += $"\n太さ: {mThickness}";
             buf += $"\nレイヤー: {mLayerName}";

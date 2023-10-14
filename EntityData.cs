@@ -312,6 +312,11 @@ namespace CadApp
         {
             if (text == null || text.mText.Length == 0 || text.mTextSize == 0)
                 return -1;
+
+            text.mFontFamily = mPara.mFontFamily;
+            text.mFontStyle = mPara.mFontStyle;
+            text.mFontWeight = mPara.mFontWeight;
+
             Entity textEnt = new TextEntity(text);
             textEnt.setProperty(mPara);
             mEntityList.Add(textEnt);
@@ -335,6 +340,9 @@ namespace CadApp
         {
             PartsEntity partsEnt = new PartsEntity();
             partsEnt.setProperty(mPara);
+            partsEnt.mParts.mFontFamily = mPara.mFontFamily;
+            partsEnt.mParts.mFontStyle = mPara.mFontStyle;
+            partsEnt.mParts.mFontWeight = mPara.mFontWeight;
             partsEnt.mParts = new PartsD();
             partsEnt.mParts.mArrowSize = mPara.mArrowSize;
             partsEnt.mParts.createArrow(sp, ep);
@@ -365,6 +373,9 @@ namespace CadApp
             partsEnt.mParts = new PartsD();
             partsEnt.mParts.mTextSize = mPara.mTextSize;
             partsEnt.mParts.mArrowSize = mPara.mArrowSize;
+            partsEnt.mParts.mFontFamily = mPara.mFontFamily;
+            partsEnt.mParts.mFontStyle = mPara.mFontStyle;
+            partsEnt.mParts.mFontWeight = mPara.mFontWeight;
             partsEnt.mParts.createLabel(plist, text);
             partsEnt.updateArea();
             mEntityList.Add(partsEnt);
@@ -395,6 +406,9 @@ namespace CadApp
             partsEnt.mParts = new PartsD();
             partsEnt.mParts.mTextSize = mPara.mTextSize;
             partsEnt.mParts.mArrowSize = mPara.mArrowSize;
+            partsEnt.mParts.mFontFamily = mPara.mFontFamily;
+            partsEnt.mParts.mFontStyle = mPara.mFontStyle;
+            partsEnt.mParts.mFontWeight = mPara.mFontWeight;
             partsEnt.mParts.createDimension(plist);
             partsEnt.updateArea();
             mEntityList.Add(partsEnt);
@@ -447,6 +461,9 @@ namespace CadApp
                 partsEnt.mParts = new PartsD();
                 partsEnt.mParts.mTextSize = mPara.mTextSize;
                 partsEnt.mParts.mArrowSize = mPara.mArrowSize;
+                partsEnt.mParts.mFontFamily = mPara.mFontFamily;
+                partsEnt.mParts.mFontStyle = mPara.mFontStyle;
+                partsEnt.mParts.mFontWeight = mPara.mFontWeight;
                 List<PointD> plist = new List<PointD>() { cp, ps, pe, pos };
                 partsEnt.mParts.createAngleDimension(plist);
                 partsEnt.updateArea();
@@ -482,6 +499,9 @@ namespace CadApp
                 partsEnt.mParts = new PartsD();
                 partsEnt.mParts.mTextSize = mPara.mTextSize;
                 partsEnt.mParts.mArrowSize = mPara.mArrowSize;
+                partsEnt.mParts.mFontFamily = mPara.mFontFamily;
+                partsEnt.mParts.mFontStyle = mPara.mFontStyle;
+                partsEnt.mParts.mFontWeight = mPara.mFontWeight;
                 partsEnt.mParts.createDiameterDimension(arcEnt.mArc, plist);
                 partsEnt.updateArea();
                 mEntityList.Add(partsEnt);
@@ -516,6 +536,9 @@ namespace CadApp
                 partsEnt.mParts = new PartsD();
                 partsEnt.mParts.mTextSize = mPara.mTextSize;
                 partsEnt.mParts.mArrowSize = mPara.mArrowSize;
+                partsEnt.mParts.mFontFamily = mPara.mFontFamily;
+                partsEnt.mParts.mFontStyle = mPara.mFontStyle;
+                partsEnt.mParts.mFontWeight = mPara.mFontWeight;
                 partsEnt.mParts.createRadiusDimension(arcEnt.mArc, plist);
                 partsEnt.updateArea();
                 mEntityList.Add(partsEnt);
@@ -529,6 +552,31 @@ namespace CadApp
                 return partsEnt.mNo;
             }
             return -1;
+        }
+
+        /// <summary>
+        /// 接線を作成する
+        /// </summary>
+        /// <param name="pickList">ピック要素リスト</param>
+        /// <returns>線分データ</returns>
+        public LineD tangentLine(List<(int no, PointD pos)> pickList)
+        {
+            if (pickList.Count < 2)
+                return null;
+            Entity ent0 = mEntityList[pickList[0].no];
+            Entity ent1 = mEntityList[pickList[1].no];
+            if (ent0.mEntityId == EntityId.Arc && ent1.mEntityId == EntityId.Arc) {
+                ArcEntity arc0 = (ArcEntity)ent0;
+                ArcEntity arc1 = (ArcEntity)ent1;
+                List<LineD> llist = arc0.mArc.tangentArc(arc1.mArc);
+                foreach (LineD line in llist) {
+                    double ang0 = arc0.mArc.mCp.angle(pickList[0].pos, line.ps);
+                    double ang1 = arc1.mArc.mCp.angle(pickList[1].pos, line.pe);
+                    if (ang0 < Math.PI / 2 && ang1 < Math.PI / 2)
+                        return line;
+                }
+            }
+            return null;
         }
 
         /// <summary>

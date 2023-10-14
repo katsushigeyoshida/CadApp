@@ -61,6 +61,9 @@ namespace CadApp
                 mText.mHa = (HorizontalAlignment)Enum.Parse(typeof(HorizontalAlignment), data[5]);
                 mText.mVa = (VerticalAlignment)Enum.Parse(typeof(VerticalAlignment), data[6]);
                 mText.mLinePitchRate = double.Parse(data[7]);
+                mText.mFontFamily = data[8];
+                mText.mFontStyle = ylib.convFontStyle(data[9]);
+                mText.mFontWeight = ylib.convFontWeight(data[10]);
             } catch (Exception e) {
                 System.Diagnostics.Debug.WriteLine(e.Message);
             }
@@ -75,6 +78,9 @@ namespace CadApp
         {
             ydraw.mTextColor = mPick ? mPickColor : mColor;
             ydraw.mThickness = mThickness;
+            ydraw.mFontFamily = mText.mFontFamily;
+            ydraw.mFontStyle = mText.mFontStyle;
+            ydraw.mFontWeight = mText.mFontWeight;
             ydraw.drawWText(mText);
         }
 
@@ -85,7 +91,8 @@ namespace CadApp
         public override string toDataString()
         {
             return $"{ylib.strControlCodeCnv(mText.mText)},{mText.mPos.x},{mText.mPos.y}," +
-                $"{mText.mTextSize},{mText.mRotate},{mText.mHa},{mText.mVa},{mText.mLinePitchRate}";
+                $"{mText.mTextSize},{mText.mRotate},{mText.mHa},{mText.mVa},{mText.mLinePitchRate}," +
+                $"{mText.mFontFamily},{mText.mFontStyle},{mText.mFontWeight}";
         }
 
         /// <summary>
@@ -96,7 +103,8 @@ namespace CadApp
         {
             List<string> dataList = new List<string>() {
                 ylib.strControlCodeCnv(mText.mText), mText.mPos.x.ToString(), mText.mPos.y.ToString(), mText.mTextSize.ToString(),
-                mText.mRotate.ToString(), mText.mHa.ToString(), mText.mVa.ToString(), mText.mLinePitchRate.ToString()
+                mText.mRotate.ToString(), mText.mHa.ToString(), mText.mVa.ToString(), mText.mLinePitchRate.ToString(),
+                mText.mFontFamily.ToString(), mText.mFontStyle.ToString(), mText.mFontWeight.ToString()
             };
             return dataList;
         }
@@ -114,6 +122,7 @@ namespace CadApp
             buf += $"\n文字列　: {mText.mText}";
             buf += $"\n起点    : {mText.mPos.ToString("f4")}";
             buf += $"\n文字高さ: {mText.mTextSize.ToString("f4")} 水平位置 {mText.mHa} 垂直位置 {mText.mVa}";
+            buf += $"\nフォント: {mText.mFontFamily} 斜体 {mText.mFontStyle} 太さ {mText.mFontWeight}";
             buf += $"\nカラー  : {getColorName(mColor)}";
             buf += $"\nレイヤー: {mLayerName}";
 

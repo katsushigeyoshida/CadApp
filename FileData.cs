@@ -6,6 +6,9 @@ using System.Windows;
 
 namespace CadApp
 {
+    /// <summary>
+    /// 図面データ管理
+    /// </summary>
     public class FileData
     {
         public string mBaseDataFolder = "Zumen";

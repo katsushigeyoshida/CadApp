@@ -8,7 +8,7 @@ namespace CadApp
     public enum EntityId
     {
         Non, Link, Point, Line, Arc, Circle, Ellipse, Oval, Polyline, Polygon,
-        Text, Parts, Property, Comment
+        Text, Parts, Image, Property, Comment
     }
     public enum PointType { Dot, Cross, Plus, Squre, Circle }
     public enum LineType { Solid, Center, Dash }
@@ -29,8 +29,9 @@ namespace CadApp
         public int mOperationCount = -1;            //  操作番号(非保存)
         public string mLayerName = "BaseLayer";     //  レイヤー名
         public ulong mLayerBit = 0x1;               //  レイヤービット(64bit非保存)
+        public string mEntityName = "";             //  要素名
         //  表示領域
-        public Box mArea;
+        public Box mArea = new Box();
         //  ピック
         public bool mPick = false;
         public Brush mPickColor = Brushes.Red;

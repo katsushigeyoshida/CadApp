@@ -12,6 +12,7 @@ namespace CadApp
         public EllipseEntity()
         {
             mEntityId = EntityId.Ellipse;
+            mEntityName = "楕円";
         }
 
         public EllipseEntity(EllipseD ellipse)
@@ -19,6 +20,7 @@ namespace CadApp
             mEntityId = EntityId.Ellipse;
             mEllipse = ellipse;
             mArea = ellipse.getArea();
+            mEntityName = "楕円";
         }
 
         /// <summary>
@@ -98,7 +100,7 @@ namespace CadApp
         {
             string buf = "";
             buf += $"要素番号: {mNo}";
-            buf += $"\n要素種別: 楕円要素";
+            buf += $"\n要素種別: {mEntityName}要素";
             buf += $"\n中心 {mEllipse.mCp.ToString("f4")} 半径 {mEllipse.mRx.ToString("f4")},{mEllipse.mRy.ToString("f4")}";
             buf += $"\n開始角 {R2D(mEllipse.mSa).ToString("f2")} 終了角 {R2D(mEllipse.mEa).ToString("f2")} 回転角 {R2D(mEllipse.mRotate).ToString("f2")}";
             buf += $"\nカラー: {getColorName(mColor)}";
@@ -113,7 +115,7 @@ namespace CadApp
         /// <returns></returns>
         public override string getSummary()
         {
-            return $"{mNo}:楕円{mEllipse.ToString("f1")} {getColorName(mColor)}";
+            return $"{mNo}:{mEntityName} {mEllipse.ToString("f1")} {getColorName(mColor)}";
         }
 
         /// <summary>

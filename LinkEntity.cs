@@ -14,6 +14,7 @@ namespace CadApp
         public LinkEntity()
         {
             mEntityId = EntityId.Link;
+            mEntityName = "リンク";
         }
 
         /// <summary>

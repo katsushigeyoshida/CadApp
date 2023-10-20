@@ -5,12 +5,13 @@ using System.Windows.Input;
 
 namespace CadApp
 {
-    public enum ENTITY { non, all, point, line, polyline, polygon, arc, ellipse, text, parts, any }
+    public enum ENTITY { non, all, point, line, polyline, polygon, 
+                            arc, ellipse, text, parts, image, any }
     public enum OPERATION { non, loc, pic,
         createPoint, createLine, createHVLine, createTangentLine,
         createRect, createPolyline, createPolygon,
         createArc, createCircle, createTangentCircle, createEllipse, createText,
-        createArrow, createLabel, createSymbol, 
+        createArrow, createLabel, createSymbol, createImage,
         createLocDimension, createLinearDimension, createAngleDimension,
         createDiameterDimension, createRadiusDimension,
 
@@ -18,7 +19,7 @@ namespace CadApp
         disassemble, changeText, changeRadius, changeProperty, changeProperties,
 
         copyTranslate, copyRotate, copyMirror, copyScale, copyTrim, copyOffset,
-        copyEntity, pasteEntity, copyScreen, saveScreen,
+        copyEntity, pasteEntity,
 
         info, infoData, zumenComment,
         measure, measureDistance, measureAngle,
@@ -26,7 +27,9 @@ namespace CadApp
         zumenInfo, createLayer, setDispLayer, setAllDispLayer, oneLayerDisp, changeLayerName,
         setSymbol, manageSymbol,
 
-        undo, redo, print, cancel, close,
+        undo, redo,
+        copyScreen, saveScreen, screenCapture, print,
+        cancel, close,
         back, save, saveAs, open,
 
         changeColor, changeThickness, changeTextSize, changePointType, changeLineType,
@@ -70,6 +73,7 @@ namespace CadApp
             new Command("作成",      "矢印",        "", OPERATION.createArrow,          ENTITY.parts),
             new Command("作成",      "ラベル",      "", OPERATION.createLabel,          ENTITY.parts),
             new Command("作成",      "シンボル",    "", OPERATION.createSymbol,         ENTITY.parts),
+            new Command("作成",      "イメージ",    "", OPERATION.createImage,          ENTITY.image),
             new Command("作成",      "位置寸法線",  "", OPERATION.createLocDimension,   ENTITY.parts),
             new Command("作成",      "直線寸法線",  "", OPERATION.createLinearDimension,ENTITY.parts),
             new Command("作成",      "角度寸法線",  "", OPERATION.createAngleDimension, ENTITY.parts),
@@ -99,8 +103,6 @@ namespace CadApp
             new Command("コピー",    "オフセット",  "", OPERATION.copyOffset,           ENTITY.any),
             new Command("コピー",    "要素コピー",  "", OPERATION.copyEntity,           ENTITY.non),
             new Command("コピー",    "要素貼付け",  "", OPERATION.pasteEntity,          ENTITY.non),
-            new Command("コピー",    "画面コピー",  "", OPERATION.copyScreen,           ENTITY.non),
-            new Command("コピー",    "画面保存",    "", OPERATION.saveScreen,           ENTITY.non),
             new Command("コピー",    "戻る",        "", OPERATION.back,                 ENTITY.any),
             new Command("情報",      "要素",        "", OPERATION.info,                 ENTITY.any),
             new Command("情報",      "要素データ",  "", OPERATION.infoData,             ENTITY.any),
@@ -124,7 +126,11 @@ namespace CadApp
             //new Command("リドゥ",    "リドゥ",      "", OPERATION.redo,            ENTITY.non),
             //new Command("ファイル",  "上書き保存",  "", OPERATION.save,            ENTITY.non),
             //new Command("ファイル",  "保存",        "", OPERATION.saveAs,          ENTITY.non),
-            new Command("印刷",      "印刷",        "", OPERATION.print,                ENTITY.non),
+            new Command("ツール",    "画面コピー",  "", OPERATION.copyScreen,           ENTITY.non),
+            new Command("ツール",    "画面保存",    "", OPERATION.saveScreen,           ENTITY.non),
+            new Command("ツール",    "スクリーンキャプチャ","", OPERATION.screenCapture,ENTITY.non),
+            new Command("ツール",    "印刷",        "", OPERATION.print,                ENTITY.non),
+            new Command("ツール",    "戻る",        "", OPERATION.back,                 ENTITY.non),
             new Command("キャンセル","キャンセル",  "", OPERATION.cancel,               ENTITY.non),
             new Command("終了",      "終了",        "", OPERATION.close,                ENTITY.non),
         };
@@ -145,19 +151,21 @@ namespace CadApp
             "createPoint, createLine, createHVLine, createTangentLine",
             "createRect, createPolyline, createPolygon",
             "createArc, createCircle, createTangentCircle, createEllipse, createText",
-            "createArrow, createLabel, createSymbol",
+            "createArrow, createLabel, createSymbol, createImage",
             "createLocDimension, createDimension, createAngleDimension",
             "createDiameterDimension, createRadiusDimension",
             "translate, rotate, mirror, scale, trim, divide, stretch, offset, symbolAssemble",
             "disassemble, changeText, changeRadius, changeProperty, changeProperties",
             "copyTranslate, copyRotate, copyMirror, copyScale, copyTrim, copyOffset",
-            "copyEntity, pasteEntity, copyScreen, saveScreen",
+            "copyEntity, pasteEntity",
             "info, infoData, zumenComment",
             "measure, measureDistance, measureAngle",
             "remove",
             "zumenInfo, createLayer, setDispLayer, setAllDispLayer, oneLayerDisp, changeLayerName",
             "setSymbol, manageSymbol",
-            "undo, print, cancel, close",
+            "undo",
+            "copyScreen, saveScreen, screenCapture, print",
+            "cancel, close",
             "back, save, saveAs, open, gridSize",
             "",
         };

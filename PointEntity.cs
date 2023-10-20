@@ -17,6 +17,7 @@ namespace CadApp
         public PointEntity()
         {
             mEntityId = EntityId.Point;
+            mEntityName = "点";
         }
 
         /// <summary>
@@ -27,6 +28,7 @@ namespace CadApp
         {
             mEntityId = EntityId.Point;
             mPoint = p.toCopy();
+            mEntityName = "点";
             mArea = new Box(mPoint);
         }
 
@@ -96,7 +98,7 @@ namespace CadApp
         {
             string buf = "";
             buf += $"要素番号: {mNo}";
-            buf += $"\n要素種別: 点要素";
+            buf += $"\n要素種別: {mEntityName}要素";
             buf += $"\n座標: {mPoint.ToString("f4")}";
             buf += $"\nカラー　: {getColorName(mColor)}";
             buf += $"\n大きさ　: {mThickness}";
@@ -111,7 +113,7 @@ namespace CadApp
         /// <returns></returns>
         public override string getSummary()
         {
-            return $"{mNo}:点{mPoint.ToString("f1")} {getColorName(mColor)}";
+            return $"{mNo}:{mEntityName} {mPoint.ToString("f1")} {getColorName(mColor)}";
         }
 
         /// <summary>

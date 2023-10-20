@@ -58,7 +58,9 @@ namespace CadApp
         };
         private List<string> mSystemSetMenu = new List<string>() {
             "システム設定", "データバックアップ", "シンボルバックアップ",
-            "データバックアップ管理", "シンボルバックアップ管理"
+            "イメージファイルバックアップ",
+            "データバックアップ管理", "シンボルバックアップ管理",
+            "イメージファイルバックアップ管理"
         };
         private List<string> mPrintTypeMenu = new List<string>() {
             "A4 横", "A4 縦"
@@ -87,6 +89,7 @@ namespace CadApp
         private FileData mFileData;
         private DataDrawing mDataDrawing;
         public SymbolData mSymbolData;
+        public ImageData mImageData;
 
         private YCalc ycalc = new YCalc();
         private YLib ylib = new YLib();
@@ -100,7 +103,11 @@ namespace CadApp
             mCommandOpe  = new CommandOpe(mEntityData, this);
             mFileData    = new FileData(this);
             mSymbolData  = new SymbolData(this);
+            mImageData   = new ImageData(this);
+
             mCommandData.loadShortCut(mShortCutPath);
+            mCommandOpe.mImageData = mImageData;
+            mEntityData.mImageData = mImageData;
 
             WindowFormLoad();
         }
@@ -236,6 +243,10 @@ namespace CadApp
             string symbolFolder = Properties.Settings.Default.SymbolFolder;
             mSymbolData.mSymbolFolder = symbolFolder == "" ? Path.GetFullPath("Symbol") : symbolFolder;
             mSymbolData.mBackupFolder = Properties.Settings.Default.BackupFolder;
+            //  イメージフォルダ
+            string imageCashFolder   = Properties.Settings.Default.ImageCashFolder;
+            mImageData.mImageFolder  = imageCashFolder == "" ? Path.GetFullPath("ImageCash") : imageCashFolder;
+            mImageData.mBackupFolder = Properties.Settings.Default.BackupFolder;
 
             //  初期作図表示エリア
             loadDispArea();
@@ -258,6 +269,7 @@ namespace CadApp
             Properties.Settings.Default.DataName       = mFileData.mDataName;
             //  シンボルフォルダ
             Properties.Settings.Default.SymbolFolder   = mSymbolData.mSymbolFolder;
+            Properties.Settings.Default.ImageCashFolder = mImageData.mImageFolder;
             //  Windowの位置とサイズを保存(登録項目をPropeties.settingsに登録して使用する)
             Properties.Settings.Default.MainWindowTop    = Top;
             Properties.Settings.Default.MainWindowLeft   = Left;
@@ -324,6 +336,8 @@ namespace CadApp
                 //  表示レイヤーダイヤログ表示
                 if (mCommandOpe.mChkListDlg != null && mCommandOpe.mChkListDlg.IsVisible)
                     mCommandOpe.setDispLayer();
+                mEntityData.updateData();
+
             } else {
                 mCommandOpe.setOneLayerDisp(false);
             }
@@ -1268,6 +1282,10 @@ namespace CadApp
                     PartsEntity parts = (PartsEntity)ent;
                     pos = parts.mParts.nearPoint(p, 4);
                     break;
+                case EntityId.Image:
+                    ImageEntity image = (ImageEntity)ent;
+                    pos = image.mDispPosSize.nearPoint(p, 4);
+                    break;
             }
             return pos;
         }
@@ -1898,6 +1916,7 @@ namespace CadApp
             //  図面保存基準フォルダ
             dlg.mDataFolder = mFileData.mBaseDataFolder;
             dlg.mSymbolFolder = mSymbolData.mSymbolFolder;
+            dlg.mImageFolder  = mImageData.mImageFolder;
             dlg.mBackupFolder = mFileData.mBackupFolder;
             dlg.mDiffTool = mFileData.mDiffTool;
             if (dlg.ShowDialog() == true) {
@@ -1942,6 +1961,9 @@ namespace CadApp
                 if (!Directory.Exists(mSymbolData.mBackupFolder)) {
                     Directory.CreateDirectory(mSymbolData.mBackupFolder);
                 }
+                mImageData.mImageFolder = dlg.mImageFolder;
+                if (!Directory.Exists(mImageData.mImageFolder))
+                    Directory.CreateDirectory(mImageData.mImageFolder);
                 mFileData.mDiffTool = dlg.mDiffTool;
             }
         }
@@ -1967,11 +1989,17 @@ namespace CadApp
                 case "シンボルバックアップ":
                     mSymbolData.dataBackUp();
                     break;
+                case "イメージファイルバックアップ":
+                    mImageData.dataBackUp();
+                    break;
                 case "データバックアップ管理":
                     mFileData.dataRestor();
                     break;
                 case "シンボルバックアップ管理":
                     mSymbolData.dataRestor();
+                    break;
+                case "イメージファイルバックアップ管理":
+                    mImageData.dataRestor();
                     break;
             }
         }
@@ -2048,14 +2076,7 @@ namespace CadApp
         public void screenSave()
         {
             BitmapSource bitmapSource = canvas2Bitmap(cvCanvas);
-            List<string[]> filters = new List<string[]>() {
-                    new string[] { "PNGファイル", "*.png" },
-                    new string[] { "JPEGファイル", "*.jpg" },
-                    new string[] { "GIFファイル", "*.gif" },
-                    new string[] { "BMPファイル", "*.bmp" },
-                    new string[] { "すべてのファイル", "*.*"}
-                };
-            string path = ylib.fileSaveSelectDlg("イメージ保存", ".", filters);
+            string path = ylib.fileSaveSelectDlg("イメージ保存", ".", mCommandOpe.mImageFilters);
             if (0 < path.Length) {
                 if (Path.GetExtension(path).Length == 0)
                     path += ".png"; 

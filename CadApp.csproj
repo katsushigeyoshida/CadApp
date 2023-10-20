@@ -14,6 +14,7 @@
     <None Remove="Icon\cut.png" />
     <None Remove="Icon\Highlighter.png" />
     <None Remove="Icon\MenuItem.png" />
+    <None Remove="Icon\NoData.png" />
     <None Remove="Icon\OpenFile.png" />
     <None Remove="Icon\paste.png" />
     <None Remove="Icon\Pencil.png" />
@@ -36,10 +37,17 @@
     <None Remove="Icon\ZoomOut.png" />
     <None Remove="Icon\ZoomToFit.png" />
     <None Remove="Icon\ZoomToWidth.png" />
+    <None Remove="Image\NoData.png" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="CadApp.ico" />
+    <Resource Include="Icon\NoData.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Content Include="Image\NoData.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

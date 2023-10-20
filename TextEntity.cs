@@ -21,6 +21,7 @@ namespace CadApp
         {
             mEntityId = EntityId.Text;
             mText = new TextD();
+            mEntityName = "テキスト";
         }
 
         /// <summary>
@@ -31,6 +32,7 @@ namespace CadApp
         {
             mEntityId = EntityId.Text;
             mText = text.toCopy();
+            mEntityName = "テキスト";
             mArea = new Box(mText.getBox());
         }
 
@@ -118,7 +120,7 @@ namespace CadApp
         {
             string buf = "";
             buf += $"要素番号: {mNo}";
-            buf += $"\n要素種別: テキスト要素";
+            buf += $"\n要素種別: {mEntityName}要素";
             buf += $"\n文字列　: {mText.mText}";
             buf += $"\n起点    : {mText.mPos.ToString("f4")}";
             buf += $"\n文字高さ: {mText.mTextSize.ToString("f4")} 水平位置 {mText.mHa} 垂直位置 {mText.mVa}";
@@ -135,7 +137,7 @@ namespace CadApp
         /// <returns></returns>
         public override string getSummary()
         {
-            return $"{mNo}:テキスト{mText.mPos.ToString("f1")} {mText.mText.Substring(0, Math.Min(10, mText.mText.Length))} {getColorName(mColor)}";
+            return $"{mNo}:{mEntityName} {mText.mPos.ToString("f1")} {mText.mText.Substring(0, Math.Min(10, mText.mText.Length))} {getColorName(mColor)}";
         }
 
         /// <summary>

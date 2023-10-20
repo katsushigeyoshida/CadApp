@@ -6,6 +6,9 @@ using System.Windows;
 
 namespace CadApp
 {
+    /// <summary>
+    /// シンボルデータ管理
+    /// </summary>
     public class SymbolData
     {
         public string mSymbolFolder = "Symbol";

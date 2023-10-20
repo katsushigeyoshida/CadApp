@@ -19,6 +19,7 @@ namespace CadApp
         {
             mEntityId = EntityId.Polyline;
             mPolyline = new PolylineD();
+            mEntityName = "ポリライン";
         }
 
         /// <summary>
@@ -30,6 +31,7 @@ namespace CadApp
             mEntityId = EntityId.Polyline;
             mPolyline = new PolylineD(polyline);
             mPolyline.squeeze();
+            mEntityName = "ポリライン";
             mArea = mPolyline.getBox();
         }
 
@@ -125,7 +127,7 @@ namespace CadApp
                 l += mPolyline.mPolyline[i].length(mPolyline.mPolyline[i + 1]);
             string buf = "";
             buf += $"要素番号: {mNo}";
-            buf += $"\n要素種別: ポリライン要素";
+            buf += $"\n要素種別: {mEntityName}要素";
             buf += $"\n始点 {mPolyline.mPolyline[0].ToString("f4")} 終点 {mPolyline.mPolyline[mPolyline.mPolyline.Count - 1].ToString("f4")}";
             buf += $"\n点数 {mPolyline.mPolyline.Count.ToString("f0")}";
             buf += $"\n長さ {l.ToString("f4")}";
@@ -142,7 +144,7 @@ namespace CadApp
         /// <returns></returns>
         public override string getSummary()
         {
-            return $"{mNo}:ポリライン{mPolyline.mPolyline[0].ToString("f1")} {mPolyline.mPolyline[mPolyline.mPolyline.Count - 1].ToString("f1")} {getColorName(mColor)}";
+            return $"{mNo}:{mEntityName} {mPolyline.mPolyline[0].ToString("f1")} {mPolyline.mPolyline[mPolyline.mPolyline.Count - 1].ToString("f1")} {getColorName(mColor)}";
         }
 
         /// <summary>

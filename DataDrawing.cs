@@ -146,7 +146,7 @@ namespace CadApp
 
             ydraw.mBrush = mDraggingColor;
             Box b = new Box(loc[0], loc[1]);
-            List<PointD> plist = b.ToPointDList();
+            List<PointD> plist = b.ToPointList();
             ydraw.drawWPolygon(plist);
         }
 
@@ -195,7 +195,7 @@ namespace CadApp
                 case OPERATION.createRect:
                     if (1 < points.Count) {
                         Box b = new Box(points[0], points[1]);
-                        List<PointD> plist = b.ToPointDList();
+                        List<PointD> plist = b.ToPointList();
                         ydraw.drawWPolygon(plist);
                     }
                     break;
@@ -301,7 +301,7 @@ namespace CadApp
                 case OPERATION.pasteEntity:
                     if (mCopyArea != null) {
                         Box b = new Box(points[0], mCopyArea.Size);
-                        List<PointD> plist = b.ToPointDList();
+                        List<PointD> plist = b.ToPointList();
                         ydraw.drawWPolygon(plist);
                     }
                     break;
@@ -312,6 +312,16 @@ namespace CadApp
                             ent.mColor = mDraggingColor;
                             ent.translate(vec);
                             ent.draw(ydraw);
+                        }
+                    }
+                    break;
+                case OPERATION.createImage: {
+                        if (mCopyEntityList != null && 0 < mCopyEntityList.Count && 1 < points.Count) {
+                            ImageEntity ent = (ImageEntity)mCopyEntityList[0].toCopy();
+                            ent.mColor = mDraggingColor;
+                            ent.setPostion(points[0], points[1]);
+                            ent.draw(ydraw);
+                            ydraw.drawWRectangle(ent.mDispPosSize);
                         }
                     }
                     break;
@@ -676,9 +686,6 @@ namespace CadApp
             ydraw.mWorld.offset(v.inverse());
 
             ydraw.clear();
-            //  移動した位置にBitmapの貼付け
-            moveImage(mBitmapSource, dx, dy);
-
             //  横空白部分を描画
             ydraw.mClipBox = ydraw.mWorld.toCopy();
             if (0 > dx) {
@@ -704,6 +711,9 @@ namespace CadApp
                 dispGrid(gridSize);
                 entityData.drawingAll(ydraw);
             }
+
+            //  移動した位置にBitmapの貼付け
+            moveImage(mBitmapSource, dx, dy);
 
             //  Windowの設定を元に戻す
             ydraw.mClipBox = ydraw.mWorld.toCopy();

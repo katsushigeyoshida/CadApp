@@ -102,7 +102,7 @@ namespace CadApp
                 case "rect":            //  rect
                     if (1 < mPoints.Count) {
                         Box b = new Box(mPoints[0], mPoints[1]);
-                        entity = new PolygonEntity(b.ToPointDList());
+                        entity = new PolygonEntity(b.ToPointList());
                         return createEntity(entity);
                     }
                     break;

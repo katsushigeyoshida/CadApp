@@ -20,6 +20,7 @@ namespace CadApp
         {
             mEntityId = EntityId.Polygon;
             mPolygon = new PolygonD();
+            mEntityName = "ポリゴン";
         }
 
         /// <summary>
@@ -31,6 +32,7 @@ namespace CadApp
             mEntityId = EntityId.Polygon;
             mPolygon = new PolygonD(polygon);
             mPolygon.squeeze();
+            mEntityName = "ポリゴン";
             mArea = new Box(mPolygon.mPolygon);
         }
 
@@ -126,7 +128,7 @@ namespace CadApp
                 l += mPolygon.mPolygon[i].length(mPolygon.mPolygon[i + 1]);
             string buf = "";
             buf += $"要素番号: {mNo}";
-            buf += $"\n要素種別: ポリゴン要素";
+            buf += $"\n要素種別: {mEntityName}要素";
             buf += $"\n始点 {mPolygon.mPolygon[0].ToString("f4")} 終点 {mPolygon.mPolygon[mPolygon.mPolygon.Count - 1].ToString("f4")}";
             buf += $"\n点数 {mPolygon.mPolygon.Count.ToString("f0")}";
             buf += $"\n長さ {l.ToString("f4")}";
@@ -143,7 +145,7 @@ namespace CadApp
         /// <returns></returns>
         public override string getSummary()
         {
-            return $"{mNo}:ポリゴン{mPolygon.mPolygon[0].ToString("f1")} {mPolygon.mPolygon[mPolygon.mPolygon.Count - 1].ToString("f1")} {getColorName(mColor)}";
+            return $"{mNo}:{mEntityName} {mPolygon.mPolygon[0].ToString("f1")} {mPolygon.mPolygon[mPolygon.mPolygon.Count - 1].ToString("f1")} {getColorName(mColor)}";
         }
 
         /// <summary>

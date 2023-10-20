@@ -1,6 +1,7 @@
 ﻿using CoreLib;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Windows;
 
@@ -19,7 +20,7 @@ namespace CadApp
         private double mEps = 1E-8;
         public List<Entity> mEntityList;        //  要素リスト
         public Dictionary<string, ulong> mLayerList;    //  レイヤーリスト
-
+        public ImageData mImageData;
         private YLib ylib = new YLib();
 
         /// <summary>
@@ -210,7 +211,7 @@ namespace CadApp
             if (sp == null || ep == null || sp.length(ep) < mEps)
                 return -1;
             Box b = new Box(sp, ep);
-            List<PointD> plist = b.ToPointDList();
+            List<PointD> plist = b.ToPointList();
             return addPolygon(plist);
         }
 
@@ -627,13 +628,25 @@ namespace CadApp
 
         /// <summary>
         /// 全データを表示する
+        /// イメージ要素を先に表示する
         /// </summary>
         /// <param name="ydraw"></param>
         public void drawingAll(YWorldDraw ydraw)
         {
+            //  イメージ要素を先に表示する
+            List<int> imageNoList = new List<int>();
+            for(int i = 0; i < mEntityList.Count; i++)
+                if (mEntityList[i].mEntityId == EntityId.Image)
+                    imageNoList.Add(i);
+            for(int i = 0; i < imageNoList.Count; i++)
+                if (!mEntityList[imageNoList[i]].mRemove && 0 != (mEntityList[imageNoList[i]].mLayerBit & mPara.mDispLayerBit)
+                    && !ydraw.mWorld.outsideChk(mEntityList[imageNoList[i]].mArea))
+                    mEntityList[imageNoList[i]].draw(ydraw);
+            //  イメージ要素以外を表示
             foreach (var entity in mEntityList) {
                 if (!entity.mRemove && 0 != (entity.mLayerBit & mPara.mDispLayerBit)
                     && entity.mEntityId != EntityId.Link
+                    && entity.mEntityId != EntityId.Image
                     && !ydraw.mWorld.outsideChk(entity.mArea))
                     entity.draw(ydraw);
             }
@@ -1227,6 +1240,13 @@ namespace CadApp
                     partsEntity.setProperty(property);
                     partsEntity.setData(dataStr);
                     return partsEntity;
+                } else if (0 <= property[0].IndexOf(EntityId.Image.ToString())) {
+                    //  イメージ要素
+                    ImageEntity imageEntity = new ImageEntity(mImageData);
+                    imageEntity.setProperty(property);
+                    imageEntity.setData(dataStr);
+                    imageEntity.fileUpdate();
+                    return imageEntity;
                 }
             }
             return null;

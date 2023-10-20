@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace CadApp
 {
@@ -239,10 +240,10 @@ namespace CadApp
     public class CommandOpe
     {
         public EntityData mEntityData;                              //  要素データ
-
-        public string mTextString = "";                             //  文字列データ
+        public ImageData mImageData;
         public DrawingPara mPara = new DrawingPara();
 
+        public string mTextString = "";                             //  文字列データ
         public string mCurFilePath = "";                            //  編集中のファイルパス
         public int mGridMinmumSize = 10;                            //  グリッドの最小表示スクリーンサイズ
         public List<PointD> mLocPos = new();                        //  マウス指定点
@@ -263,7 +264,16 @@ namespace CadApp
         public int mSymbolCategoryIndex = 0;
 
         public MainWindow mMainWindow;
-
+        public List<string[]> mImageFilters = new List<string[]>() {
+                    new string[] { "PNGファイル", "*.png" },
+                    new string[] { "JPGファイル", "*.jpg" },
+                    new string[] { "JPEGファイル", "*.jpeg" },
+                    new string[] { "GIFファイル", "*.gif" },
+                    new string[] { "BMPファイル", "*.bmp" },
+                    new string[] { "すべてのファイル", "*.*"}
+                };
+        public string mClipImagePath = "";
+        private WindowState mWinState;
         private YCalc ycalc = new YCalc();
         private YLib ylib = new YLib();
 
@@ -337,7 +347,7 @@ namespace CadApp
         /// <param name="command">コマンド</param>
         public MainWindow.OPEMODE executeCmd(OPERATION operation)
         {
-            bool commansInit = true;
+            bool commandInit = true;
             MainWindow.OPEMODE locMode = MainWindow.OPEMODE.pick;
 
             switch (operation) {
@@ -357,7 +367,7 @@ namespace CadApp
                     locMode = MainWindow.OPEMODE.loc;
                     mPickEnt.Clear();
                     mLocPos.Clear();
-                    commansInit = false;
+                    commandInit = false;
                     break;
                 case OPERATION.createTangentCircle:
                 case OPERATION.createLinearDimension:
@@ -382,7 +392,7 @@ namespace CadApp
                 case OPERATION.measureAngle:                //  角度測定
                     locMode = MainWindow.OPEMODE.loc;
                     mLocPos.Clear();
-                    commansInit = false;
+                    commandInit = false;
                     break;
                 case OPERATION.createTangentLine:           //  接線
                     createTangentLine(mPickEnt);
@@ -390,6 +400,10 @@ namespace CadApp
                 case OPERATION.createSymbol:                //  シンボル配置
                     if (mSymbolDlg == null || !mSymbolDlg.IsActive)
                         setSymbol();
+                    break;
+                case OPERATION.createImage:                 //  イメージデータの貼付け
+                    locMode = setImage();
+                    commandInit = false;
                     break;
                 case OPERATION.changeText:                  //  文字列変更
                     changeText(mPickEnt);
@@ -403,12 +417,6 @@ namespace CadApp
                 case OPERATION.changeProperties:            //  属性一括変更
                     changeProperties(mPickEnt);
                     break;
-                case OPERATION.copyScreen:                  //  製図領域のイメージコピー
-                    mMainWindow.screenCopy();
-                    break;
-                case OPERATION.saveScreen:                  //  製図領域のイメージ保存
-                    mMainWindow.screenSave();
-                    break;
                 case OPERATION.copyEntity:                  //  要素コピー
                     entitiesCopy(mPickEnt);
                     break;
@@ -416,7 +424,7 @@ namespace CadApp
                     entitiesPaste();
                     locMode = MainWindow.OPEMODE.loc;
                     mLocPos.Clear();
-                    commansInit = false;
+                    commandInit = false;
                     break;
                 case OPERATION.symbolAssemble:             //  シンボル化
                     cnvSymbol(mPickEnt);
@@ -478,6 +486,15 @@ namespace CadApp
                     break;
                 case OPERATION.redo:                        //  リドゥ
                     break;
+                case OPERATION.copyScreen:                  //  製図領域のイメージコピー
+                    mMainWindow.screenCopy();
+                    break;
+                case OPERATION.saveScreen:                  //  製図領域のイメージ保存
+                    mMainWindow.screenSave();
+                    break;
+                case OPERATION.screenCapture:
+                    screenCapture(mMainWindow);
+                    break;
                 case OPERATION.print:                       //  印刷
                     mMainWindow.print();
                     break;
@@ -498,7 +515,7 @@ namespace CadApp
                     gridSet();
                     break;
             }
-            if (commansInit) {
+            if (commandInit) {
                 mMainWindow.commandClear();
             }
             return locMode;
@@ -518,7 +535,7 @@ namespace CadApp
                 || operation == OPERATION.createText || operation == OPERATION.createHVLine
                 || operation == OPERATION.createPolyline || operation == OPERATION.createPolygon
                 || operation == OPERATION.createArrow || operation == OPERATION.createLabel
-                || operation == OPERATION.createLocDimension
+                || operation == OPERATION.createImage || operation == OPERATION.createLocDimension
                 || operation == OPERATION.pasteEntity || operation == OPERATION.createSymbol
                 || operation == OPERATION.measureDistance || operation == OPERATION.measureAngle) {
                 //  要素の追加 (Ctrlキーなし)
@@ -621,6 +638,9 @@ namespace CadApp
                     mEntityData.mOperationCouunt--;
                     return false;
                 }
+            } else if (operation == OPERATION.createImage && points.Count == 2) {
+                //  イメージの貼付け
+                createImage(points[0], points[1]);
             } else if (operation == OPERATION.createArrow && points.Count == 2) {
                 //  矢印の作成
                 mEntityData.addArrow(points[0], points[1]);
@@ -874,6 +894,7 @@ namespace CadApp
                 dlg.mLineType  = entity.mType;
                 dlg.mThickness = entity.mThickness;
                 dlg.mLayerName = entity.mLayerName;
+                dlg.Title = entity.mEntityName + "要素属性";
                 //  Text要素
                 if (entity.mEntityId == EntityId.Text) {
                     TextEntity text = (TextEntity)entity;
@@ -898,6 +919,17 @@ namespace CadApp
                     dlg.mFontFamily    = parts.mParts.mFontFamily;
                     dlg.mFontStyle     = parts.mParts.mFontStyle.ToString();
                     dlg.mFontWeight    = parts.mParts.mFontWeight.ToString();
+                }
+                //  Image要素
+                if (entity.mEntityId == EntityId.Image) {
+                    ImageEntity image = (ImageEntity)entity;
+                    if (!System.IO.File.Exists(image.mImagePath)) {
+                        string filePath = ylib.fileOpenSelectDlg("イメージファイルの選択",
+                            System.IO.Path.GetDirectoryName(image.mImagePath), mImageFilters);
+                        if (0 < filePath.Length) {
+                            image.fileUpdate(filePath);
+                        }
+                    }
                 }
                 if (dlg.ShowDialog() == true) {
                     //  共通属性
@@ -1190,6 +1222,47 @@ namespace CadApp
             mLocPos.Clear();
         }
 
+        /// <summary>
+        /// イメージファイルの貼付け
+        /// </summary>
+        /// <param name="sp">貼付け位置始点</param>
+        /// <param name="ep">貼付け位置終点</param>
+        public void createImage(PointD sp, PointD ep)
+        {
+            if (mCopyEntityList != null && 0 < mCopyEntityList.Count) {
+                ImageEntity entity = (ImageEntity)mCopyEntityList[0].toCopy();
+                entity.setPostion(sp, ep);
+                entity.mOperationCount = mEntityData.mOperationCouunt;
+                mEntityData.addEntity(entity);
+                mEntityData.updateData();
+            }
+        }
+
+
+        /// <summary>
+        /// イメージ要素を設定
+        /// </summary>
+        public MainWindow.OPEMODE setImage()
+        {
+            string filePath;
+            if (0 < mClipImagePath.Length) {
+                if (ylib.messageBox(mMainWindow, "キャプチャしたイメージを貼り付けますか", 
+                    "", "", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
+                    filePath = mClipImagePath;
+                } else {
+                    filePath = ylib.fileOpenSelectDlg("イメージファイルの選択", ".", mImageFilters);
+                }
+            } else
+                filePath = ylib.fileOpenSelectDlg("イメージファイルの選択", ".", mImageFilters);
+            Entity ent = new ImageEntity(mImageData, filePath);
+            ent.setProperty(mPara);
+            mCopyEntityList = new List<Entity>();
+            if (ent != null)
+                mCopyEntityList.Add(ent);
+            mLocPos.Clear();
+            mClipImagePath = "";
+            return MainWindow.OPEMODE.loc;
+        }
 
         /// <summary>
         /// ピックした要素をシンボルに変換する
@@ -1730,6 +1803,35 @@ namespace CadApp
         public void getProperty()
         {
             mPara = mEntityData.mPara;
+        }
+
+        /// <summary>
+        /// 画面の一部を切り取ってクリップボードに貼り付ける
+        /// </summary>
+        /// <param name="window">親Window</param>
+        private void screenCapture(Window window)
+        {
+            //  自アプリ退避
+            mWinState = window.WindowState;
+            window.WindowState = WindowState.Minimized;
+            System.Threading.Thread.Sleep(500);
+            //  全画面をキャプチャ
+            BitmapSource bitmapSource = ylib.bitmap2BitmapSource(ylib.getFullScreenCapture()); ;
+            //  自アプリを元に戻す
+            window.WindowState = mWinState;
+            window.Activate();
+            //  キャプチャしたイメージを全画面表示し領域を切り取る
+            FullView dlg = new FullView();
+            dlg.mBitmapSource = bitmapSource;
+            if (dlg.ShowDialog() == true) {
+                System.Drawing.Bitmap bitmap = ylib.cnvBitmapSource2Bitmap(bitmapSource);
+                bitmap = ylib.trimingBitmap(bitmap, dlg.mStartPoint, dlg.mEndPoint);
+                if (bitmap != null) {
+                    //  クリップボードに張り付ける
+                    Clipboard.SetImage(ylib.bitmap2BitmapSource(bitmap));
+                    mClipImagePath = mImageData.saveBitmapCash(bitmap);
+                }
+            }
         }
 
         /// <summary>

@@ -19,6 +19,7 @@ namespace CadApp
         {
             mEntityId = EntityId.Line;
             mLine = new LineD();
+            mEntityName = "線分";
         }
 
         /// <summary>
@@ -30,6 +31,7 @@ namespace CadApp
             mEntityId = EntityId.Line;
             mLine = line.toCopy();
             mArea = new Box(mLine);
+            mEntityName = "線分";
         }
 
         /// <summary>
@@ -101,7 +103,7 @@ namespace CadApp
         {
             string buf = "";
             buf += $"要素番号: {mNo}";
-            buf += $"\n要素種別: 線分要素";
+            buf += $"\n要素種別: {mEntityName}要素";
             buf += $"\n始点 {mLine.ps.ToString("f4")} 終点 {mLine.pe.ToString("f4")}";
             buf += $"\n長さ {mLine.length().ToString("f4")}";
             buf += $"\nカラー　: {getColorName(mColor)}";
@@ -117,7 +119,7 @@ namespace CadApp
         /// <returns></returns>
         public override string getSummary()
         {
-            return $"{mNo}:線分{mLine.ToString("f1")} {getColorName(mColor)}";
+            return $"{mNo}:{mEntityName} {mLine.ToString("f1")} {getColorName(mColor)}";
         }
 
         /// <summary>

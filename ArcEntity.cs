@@ -20,6 +20,7 @@ namespace CadApp
         {
             mEntityId = EntityId.Arc;
             mArc = new ArcD();
+            mEntityName = "円弧";
         }
 
         /// <summary>
@@ -31,6 +32,7 @@ namespace CadApp
             mEntityId = EntityId.Arc;
             mArc = arc.toCopy();
             mArea = new Box(mArc);
+            mEntityName = "円弧";
         }
 
         /// <summary>
@@ -106,7 +108,7 @@ namespace CadApp
         {
             string buf = "";
             buf += $"要素番号: {mNo}";
-            buf += $"\n要素種別: 円弧要素";
+            buf += $"\n要素種別: {mEntityName}要素";
             buf += $"\n中心 {mArc.mCp.ToString("f4")} 半径 {mArc.mR.ToString("f4")} 開始角 {R2D(mArc.mSa).ToString("f2")} 終了角 {R2D(mArc.mEa).ToString("f2")}";
             buf += $"\nカラー　: {getColorName(mColor)}";
             buf += $"\n太さ　　: {mThickness}";
@@ -121,7 +123,7 @@ namespace CadApp
         /// <returns></returns>
         public override string getSummary()
         {
-            return $"{mNo}:円弧{mArc.ToString("f1")} {getColorName(mColor)}";
+            return $"{mNo}:{mEntityName} {mArc.ToString("f1")} {getColorName(mColor)}";
         }
 
         /// <summary>

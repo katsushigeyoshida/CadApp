@@ -394,5 +394,17 @@ namespace CadApp.Properties {
                 this["SymbolDlgLeft"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ImageCashFolder {
+            get {
+                return ((string)(this["ImageCashFolder"]));
+            }
+            set {
+                this["ImageCashFolder"] = value;
+            }
+        }
     }
 }

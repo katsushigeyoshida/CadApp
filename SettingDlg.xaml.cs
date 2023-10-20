@@ -25,6 +25,7 @@ namespace CadApp
         public double mGridSize = 1;
         public string mDataFolder = "";
         public string mSymbolFolder = "";
+        public string mImageFolder = "";
         public string mBackupFolder = "";
         public string mDiffTool = "";
 
@@ -61,6 +62,7 @@ namespace CadApp
             tbGridSize.Text     = mGridSize.ToString();
             tbDataFolder.Text   = mDataFolder;
             tbSymbolFolder.Text = mSymbolFolder;
+            tbImageFolder.Text  = mImageFolder;
             tbBackupFolder.Text = mBackupFolder;
             tbDiffTool.Text     = mDiffTool;
         }
@@ -86,6 +88,7 @@ namespace CadApp
             mGridSize           = ylib.string2double(tbGridSize.Text);
             mDataFolder         = tbDataFolder.Text;
             mSymbolFolder       = tbSymbolFolder.Text;
+            mImageFolder        = tbImageFolder.Text;
             mBackupFolder       = tbBackupFolder.Text;
             mDiffTool           = tbDiffTool.Text;
 
@@ -129,6 +132,18 @@ namespace CadApp
         }
 
         /// <summary>
+        /// [イメージフォルダ]選択
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void tbImageFolder_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            string folder = ylib.folderSelect("イメージキャッシュフォルダ", mImageFolder);
+            if (folder != null && 0 < folder.Length)
+                tbImageFolder.Text = folder;
+        }
+
+        /// <summary>
         /// [バックアップフォルダ]選択
         /// </summary>
         /// <param name="sender"></param>
@@ -155,6 +170,5 @@ namespace CadApp
             if (0 < filePath.Length)
                 tbDiffTool.Text = filePath;
         }
-
     }
 }

@@ -42,9 +42,6 @@
 
   <ItemGroup>
     <Content Include="CadApp.ico" />
-    <Resource Include="Icon\NoData.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
     <Content Include="Image\NoData.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

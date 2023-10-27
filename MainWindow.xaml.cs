@@ -57,7 +57,7 @@ namespace CadApp
             "垂点", "端点距離"
         };
         private List<string> mSystemSetMenu = new List<string>() {
-            "システム設定", "データバックアップ", "シンボルバックアップ",
+            "システム設定", "図面データバックアップ", "シンボルバックアップ",
             "イメージファイルバックアップ",
             "データバックアップ管理", "シンボルバックアップ管理",
             "イメージファイルバックアップ管理"
@@ -433,6 +433,7 @@ namespace CadApp
             List<int> picks = getPickNo(pickPos);
             if (mLocMode == OPEMODE.loc) {
                 //  ロケイトモード
+                mCommandOpe.mTextString = tbTextString.Text;
                 if (0 < mCommandOpe.mLocPos.Count &&
                     (mOperation == OPERATION.createPolyline
                     || mOperation == OPERATION.createPolygon
@@ -1901,38 +1902,38 @@ namespace CadApp
             dlg.mWorldWindow.Left = Properties.Settings.Default.WorldWindowLeft;
             //  表示エリア
             dlg.mWorldWindow.Bottom = Properties.Settings.Default.WorldWindowBottom;
-            dlg.mWorldWindow.Right = Properties.Settings.Default.WorldWindowRight;
-            dlg.mWorldWindow.Top = Properties.Settings.Default.WorldWindowTop;
+            dlg.mWorldWindow.Right  = Properties.Settings.Default.WorldWindowRight;
+            dlg.mWorldWindow.Top    = Properties.Settings.Default.WorldWindowTop;
             //  データプロパティ
-            dlg.mPointSize = Properties.Settings.Default.PointSize;
-            dlg.mPointType = Properties.Settings.Default.PointType;
-            dlg.mThickness = Properties.Settings.Default.Thickness;
-            dlg.mLineType = Properties.Settings.Default.LineType;
-            dlg.mTextSize = Properties.Settings.Default.TextSize;
-            dlg.mArrowSize = Properties.Settings.Default.ArrowSize;
+            dlg.mPointSize  = Properties.Settings.Default.PointSize;
+            dlg.mPointType  = Properties.Settings.Default.PointType;
+            dlg.mThickness  = Properties.Settings.Default.Thickness;
+            dlg.mLineType   = Properties.Settings.Default.LineType;
+            dlg.mTextSize   = Properties.Settings.Default.TextSize;
+            dlg.mArrowSize  = Properties.Settings.Default.ArrowSize;
             dlg.mArrowAngle = Properties.Settings.Default.ArrowAngle;
             //  システムプロパティ
             dlg.mGridSize = Properties.Settings.Default.GridSize;
             //  図面保存基準フォルダ
-            dlg.mDataFolder = mFileData.mBaseDataFolder;
+            dlg.mDataFolder   = mFileData.mBaseDataFolder;
             dlg.mSymbolFolder = mSymbolData.mSymbolFolder;
             dlg.mImageFolder  = mImageData.mImageFolder;
             dlg.mBackupFolder = mFileData.mBackupFolder;
-            dlg.mDiffTool = mFileData.mDiffTool;
+            dlg.mDiffTool     = mFileData.mDiffTool;
             if (dlg.ShowDialog() == true) {
                 //  表示エリア
-                Properties.Settings.Default.WorldWindowLeft = dlg.mWorldWindow.Left;
+                Properties.Settings.Default.WorldWindowLeft   = dlg.mWorldWindow.Left;
                 Properties.Settings.Default.WorldWindowBottom = dlg.mWorldWindow.Bottom;
-                Properties.Settings.Default.WorldWindowRight = dlg.mWorldWindow.Right;
-                Properties.Settings.Default.WorldWindowTop = dlg.mWorldWindow.Top;
+                Properties.Settings.Default.WorldWindowRight  = dlg.mWorldWindow.Right;
+                Properties.Settings.Default.WorldWindowTop    = dlg.mWorldWindow.Top;
                 loadDispArea();
                 //  データプロパティ
-                Properties.Settings.Default.PointSize = dlg.mPointSize;
-                Properties.Settings.Default.PointType = dlg.mPointType;
-                Properties.Settings.Default.Thickness = dlg.mThickness;
-                Properties.Settings.Default.LineType = dlg.mLineType;
-                Properties.Settings.Default.TextSize = dlg.mTextSize;
-                Properties.Settings.Default.ArrowSize = dlg.mArrowSize;
+                Properties.Settings.Default.PointSize  = dlg.mPointSize;
+                Properties.Settings.Default.PointType  = dlg.mPointType;
+                Properties.Settings.Default.Thickness  = dlg.mThickness;
+                Properties.Settings.Default.LineType   = dlg.mLineType;
+                Properties.Settings.Default.TextSize   = dlg.mTextSize;
+                Properties.Settings.Default.ArrowSize  = dlg.mArrowSize;
                 Properties.Settings.Default.ArrowAngle = dlg.mArrowAngle;
                 //  システムプロパティ
                 Properties.Settings.Default.GridSize = dlg.mGridSize;
@@ -1983,7 +1984,7 @@ namespace CadApp
                 case "システム設定":
                     systemSettingdlg();
                     break;
-                case "データバックアップ":
+                case "図面データバックアップ":
                     mFileData.dataBackUp();
                     break;
                 case "シンボルバックアップ":
@@ -2011,7 +2012,6 @@ namespace CadApp
         {
             loadDispArea();
             loadDataProperty();
-            setZumenProperty();
         }
 
         /// <summary>
@@ -2030,8 +2030,8 @@ namespace CadApp
                                          mCommandOpe.mPara.mHa == HorizontalAlignment.Center ? 1 : 2;
             cbTextVertical.SelectedIndex   = mCommandOpe.mPara.mVa == VerticalAlignment.Top ? 0 :
                                          mCommandOpe.mPara.mVa == VerticalAlignment.Center ? 1 : 2;
-            cbTextRotate.SelectedIndex  = mTextRotateMenu.FindIndex(p => ylib.R2D(mCommandOpe.mPara.mTextRotate) <= p);
-            cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
+            cbTextRotate.SelectedIndex = mTextRotateMenu.FindIndex(p => ylib.R2D(mCommandOpe.mPara.mTextRotate) <= p);
+            cbCreateLayer.ItemsSource  = mEntityData.getLayerNameList();
             setCreateLayer(mEntityData.mPara.mCreateLayerName);
         }
 
@@ -2051,6 +2051,7 @@ namespace CadApp
         /// </summary>
         private void loadDataProperty()
         {
+            mCommandOpe.mPara = new DrawingPara();
             mCommandOpe.mPara.mPointSize  = Properties.Settings.Default.PointSize;
             mCommandOpe.mPara.mPointType  = Properties.Settings.Default.PointType;
             mCommandOpe.mPara.mThickness  = Properties.Settings.Default.Thickness;

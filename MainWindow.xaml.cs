@@ -244,8 +244,8 @@ namespace CadApp
             mSymbolData.mSymbolFolder = symbolFolder == "" ? Path.GetFullPath("Symbol") : symbolFolder;
             mSymbolData.mBackupFolder = Properties.Settings.Default.BackupFolder;
             //  イメージフォルダ
-            string imageCashFolder   = Properties.Settings.Default.ImageCashFolder;
-            mImageData.mImageFolder  = imageCashFolder == "" ? Path.GetFullPath("ImageCash") : imageCashFolder;
+            string imageCacheFolder   = Properties.Settings.Default.ImageCacheFolder;
+            mImageData.mImageFolder  = imageCacheFolder == "" ? Path.GetFullPath(mImageData.mImageFolder) : imageCacheFolder;
             mImageData.mBackupFolder = Properties.Settings.Default.BackupFolder;
 
             //  初期作図表示エリア
@@ -269,7 +269,7 @@ namespace CadApp
             Properties.Settings.Default.DataName       = mFileData.mDataName;
             //  シンボルフォルダ
             Properties.Settings.Default.SymbolFolder   = mSymbolData.mSymbolFolder;
-            Properties.Settings.Default.ImageCashFolder = mImageData.mImageFolder;
+            Properties.Settings.Default.ImageCacheFolder = mImageData.mImageFolder;
             //  Windowの位置とサイズを保存(登録項目をPropeties.settingsに登録して使用する)
             Properties.Settings.Default.MainWindowTop    = Top;
             Properties.Settings.Default.MainWindowLeft   = Left;

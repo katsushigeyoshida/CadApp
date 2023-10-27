@@ -10,7 +10,7 @@ namespace CadApp
     /// </summary>
     public class ImageData
     {
-        public string mImageFolder = "ImageCash";
+        public string mImageFolder = "ImageCache";
         public string mBackupFolder = "";
         public Window mMainWindow;
 

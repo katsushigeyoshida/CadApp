@@ -398,12 +398,12 @@ namespace CadApp.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string ImageCashFolder {
+        public string ImageCacheFolder {
             get {
-                return ((string)(this["ImageCashFolder"]));
+                return ((string)(this["ImageCacheFolder"]));
             }
             set {
-                this["ImageCashFolder"] = value;
+                this["ImageCacheFolder"] = value;
             }
         }
     }

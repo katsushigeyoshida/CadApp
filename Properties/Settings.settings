@@ -95,7 +95,7 @@
     <Setting Name="SymbolDlgLeft" Type="System.Double" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
-    <Setting Name="ImageCashFolder" Type="System.String" Scope="User">
+    <Setting Name="ImageCacheFolder" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>

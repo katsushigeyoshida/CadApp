@@ -308,8 +308,8 @@ namespace CadApp
         {
             mCurFilePath = filePath;
             mEntityData.clear();
-            mEntityData.mPara = new DrawingPara();
-            mMainWindow.setSystemProperty();
+            mEntityData.mPara = mPara;
+            mEntityData.mArea = mInitArea.toCopy();
             saveFile();
         }
 

@@ -16,6 +16,7 @@ namespace CadApp
 
         public Box mArea;                       //  要素領域
         public int mOperationCouunt = 0;        //  操作回数
+        public int mFirstEntityCount = 0;       //  編集開始時の要素数
 
         private double mEps = 1E-8;
         public List<Entity> mEntityList;        //  要素リスト
@@ -1285,14 +1286,20 @@ namespace CadApp
                 }
             }
             updateData();
+            mFirstEntityCount = mEntityList.Count;
+            mOperationCouunt = 0;
         }
 
         /// <summary>
         /// 要素リストのファイル保存
         /// </summary>
         /// <param name="path">ファイルパス</param>
-        public void saveData(string path)
+        /// <param name="noOpeSave">非変更保存</param>
+        public void saveData(string path, bool noOpeSave = true)
         {
+            if (noOpeSave &&
+                (mFirstEntityCount == mEntityList.Count && 0 == mOperationCouunt))
+                return;
             List<string[]> listData = new List<string[]>();
             //  図面のプロパティ
             string[] buf = { EntityId.Property.ToString() };
@@ -1306,7 +1313,9 @@ namespace CadApp
             listData.Add(buf);
             //  要素データ
             foreach (Entity entity in mEntityList) {
-                if (entity != null && !entity.mRemove && entity.mEntityId != EntityId.Non) {
+                if (entity != null && !entity.mRemove && 
+                    entity.mEntityId != EntityId.Non &&
+                    entity.mEntityId != EntityId.Link) {
                     listData.Add(entity.toList().ToArray());
                     listData.Add(entity.toDataList().ToArray());
                 }

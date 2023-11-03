@@ -507,7 +507,15 @@ namespace CadApp
             string backupFolder = Path.Combine(mBackupFolder, Path.GetFileName(mBaseDataFolder));
             if (Path.GetFullPath(mBaseDataFolder) != Path.GetFullPath(backupFolder)) {
                 DirectoryDiff directoryDiff = new DirectoryDiff(mBaseDataFolder, backupFolder);
-                int count = directoryDiff.syncFolder();
+                List<FilesData> removeFile = directoryDiff.getNoExistFile();
+                bool noExistFileRemove = true;
+                if (0 < removeFile.Count) {
+                    if (ylib.messageBox(mMainWindow,
+                        $"ソースにないファイルがバックアップに {removeFile.Count} ファイル存在します。\nこれも削除しますか?",
+                        "" ,"確認", MessageBoxButton.YesNo) == MessageBoxResult.No)
+                        noExistFileRemove = false;
+                }
+                int count = directoryDiff.syncFolder(noExistFileRemove);
                 ylib.messageBox(mMainWindow, $"{count} ファイルのバックアップを更新しました。");
             } else {
                 ylib.messageBox(mMainWindow, "バックアップ先がデータフォルダと同じです");

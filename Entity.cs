@@ -45,10 +45,11 @@ namespace CadApp
         /// <param name="ent">Entity</param>
         public void setProperty(Entity ent)
         {
-            mColor     = ent.mColor;
-            mThickness = ent.mThickness;
-            mType      = ent.mType;
-            mLayerName = ent.mLayerName;
+            mColor      = ent.mColor;
+            mThickness  = ent.mThickness;
+            mType       = ent.mType;
+            mLayerName  = ent.mLayerName;
+            mEntityName = ent.mEntityName;
         }
 
         /// <summary>

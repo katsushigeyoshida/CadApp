@@ -1544,12 +1544,12 @@ namespace CadApp
                     case "相対座標入力":
                         //  xxx,yyy で入力
                         valstr = dlg.mEditText.Split(',');
-                        if (1 < valstr.Length) {
+                        if (1 < valstr.Length && 0 < mCommandOpe.mLocPos.Count) {
                             wp = new PointD(ycalc.expression(valstr[0]), ycalc.expression(valstr[1]));
-                            if (0 < mCommandOpe.mLocPos.Count) {
-                                wp += lastLoc;
-                            }
-                            mCommandOpe.mLocPos.Add(wp);
+                            if (2 < valstr.Length)
+                                repeat = (int)ycalc.expression(valstr[2]);
+                            for (int i = 0; i < repeat; i++) 
+                                mCommandOpe.mLocPos.Add(wp + mCommandOpe.mLocPos.Last());
                             if (mCommandOpe.entityCommand(mOperation, mCommandOpe.mLocPos, mCommandOpe.mPickEnt))
                                 commandClear();
                         }

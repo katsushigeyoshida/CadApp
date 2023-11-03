@@ -231,7 +231,6 @@ namespace CadApp
                 System.Diagnostics.Debug.WriteLine(e.Message);
             }
         }
-
     }
 
     /// <summary>
@@ -569,7 +568,8 @@ namespace CadApp
                     return true;
                 }
             } else if (1 < locPos.Count &&
-                (operation == OPERATION.copyTranslate || operation == OPERATION.copyRotate)) {
+                (operation == OPERATION.copyTranslate || operation == OPERATION.copyRotate
+                 || operation == OPERATION.copyOffset)) {
                 //  編集コマンド
                 if (changeData(locPos, pickEnt, operation)) {
                     return true;
@@ -650,7 +650,7 @@ namespace CadApp
             } else if (operation == OPERATION.createLocDimension && points.Count == 3) {
                 //  寸法線の作成
                 mEntityData.addLocDimension(points[0], points[1], points[2]);
-            } else if (operation == OPERATION.pasteEntity && points.Count == 1) {
+            } else if (operation == OPERATION.pasteEntity && points.Count == 1 && 0 < mCopyEntityList.Count) {
                 //  クリップボードの要素を貼り付け
                 entityPaste(points[0]);
             } else if (operation == OPERATION.createSymbol && points.Count == 1) {
@@ -764,6 +764,9 @@ namespace CadApp
                     } else if (operation == OPERATION.copyRotate) {
                         //  コピー回転
                         mEntityData.rotate(pickEnt, loc[0], loc[i], true);
+                    } else if (operation == OPERATION.copyOffset) {
+                        //  コピーオフセット
+                        mEntityData.offset(pickEnt, loc[0], loc[i], true);
                     }
                 }
             } else {
@@ -1128,6 +1131,8 @@ namespace CadApp
         /// <param name="loc">貼り付け位置</param>
         public void entityPaste(PointD loc)
         {
+            if (mCopyArea == null)
+                return;
             PointD vec = loc - mCopyArea.Location;
             for (int i = 0; i < mCopyEntityList.Count; i++) {
                 Entity entity = mCopyEntityList[i];
@@ -1858,7 +1863,6 @@ namespace CadApp
                 mEntityData.loadData(filePath);
                 mCurFilePath = filePath;
                 mPara = mEntityData.mPara;
-                //mSysPara = mEntityData.mSysPara;
                 return true;
             }
             return false;
@@ -1874,7 +1878,6 @@ namespace CadApp
                 if (0 < mCurFilePath.Length) {
                     if (mCurFilePath.IndexOf(".csv") < 0)
                         mCurFilePath = mCurFilePath + ".csv";
-                    //setProperty();
                     mEntityData.saveData(mCurFilePath);
                 }
             } else if (!saveonly) {

@@ -527,53 +527,57 @@ namespace CadApp
         /// <param name="locPos">座標リスト</param>
         public bool entityCommand(OPERATION operation, List<PointD> locPos, List<(int no, PointD pos)> pickEnt)
         {
-            mEntityData.mOperationCouunt++;
-            if (operation == OPERATION.createPoint || operation == OPERATION.createLine
-                || operation == OPERATION.createRect || operation == OPERATION.createArc
-                || operation == OPERATION.createCircle || operation == OPERATION.createEllipse
-                || operation == OPERATION.createText || operation == OPERATION.createHVLine
-                || operation == OPERATION.createPolyline || operation == OPERATION.createPolygon
-                || operation == OPERATION.createArrow || operation == OPERATION.createLabel
-                || operation == OPERATION.createImage || operation == OPERATION.createLocDimension
-                || operation == OPERATION.pasteEntity || operation == OPERATION.createSymbol
-                || operation == OPERATION.measureDistance || operation == OPERATION.measureAngle) {
-                //  要素の追加 (Ctrlキーなし)
-                if (createData(locPos, operation)) {
-                    return true;
+            try {
+                mEntityData.mOperationCouunt++;
+                if (operation == OPERATION.createPoint || operation == OPERATION.createLine
+                    || operation == OPERATION.createRect || operation == OPERATION.createArc
+                    || operation == OPERATION.createCircle || operation == OPERATION.createEllipse
+                    || operation == OPERATION.createText || operation == OPERATION.createHVLine
+                    || operation == OPERATION.createPolyline || operation == OPERATION.createPolygon
+                    || operation == OPERATION.createArrow || operation == OPERATION.createLabel
+                    || operation == OPERATION.createImage || operation == OPERATION.createLocDimension
+                    || operation == OPERATION.pasteEntity || operation == OPERATION.createSymbol
+                    || operation == OPERATION.measureDistance || operation == OPERATION.measureAngle) {
+                    //  要素の追加 (Ctrlキーなし)
+                    if (createData(locPos, operation)) {
+                        return true;
+                    }
+                } else if (locPos.Count == 1 &&
+                    (operation == OPERATION.divide || operation == OPERATION.createTangentCircle
+                    || operation == OPERATION.createLinearDimension
+                    || operation == OPERATION.createAngleDimension
+                    || operation == OPERATION.createDiameterDimension
+                    || operation == OPERATION.createRadiusDimension)) {
+                    //  編集コマンド
+                    if (changeData(locPos, pickEnt, operation)) {
+                        return true;
+                    }
+                } else if (locPos.Count == 2 &&
+                    (operation == OPERATION.translate || operation == OPERATION.rotate
+                    || operation == OPERATION.mirror || operation == OPERATION.trim
+                    || operation == OPERATION.offset
+                    || operation == OPERATION.copyMirror || operation == OPERATION.copyOffset
+                    || operation == OPERATION.copyTrim || operation == OPERATION.stretch)) {
+                    //  編集コマンド
+                    if (changeData(locPos, pickEnt, operation)) {
+                        return true;
+                    }
+                } else if (locPos.Count == 3 &&
+                    (operation == OPERATION.scale || operation == OPERATION.copyScale)) {
+                    //  編集コマンド
+                    if (changeData(locPos, pickEnt, operation)) {
+                        return true;
+                    }
+                } else if (1 < locPos.Count &&
+                    (operation == OPERATION.copyTranslate || operation == OPERATION.copyRotate
+                     || operation == OPERATION.copyOffset)) {
+                    //  編集コマンド
+                    if (changeData(locPos, pickEnt, operation)) {
+                        return true;
+                    }
                 }
-            } else if (locPos.Count == 1 &&
-                (operation == OPERATION.divide || operation == OPERATION.createTangentCircle
-                || operation == OPERATION.createLinearDimension
-                || operation == OPERATION.createAngleDimension
-                || operation == OPERATION.createDiameterDimension
-                || operation == OPERATION.createRadiusDimension)) {
-                //  編集コマンド
-                if (changeData(locPos, pickEnt, operation)) {
-                    return true;
-                }
-            } else if (locPos.Count == 2 &&
-                (operation == OPERATION.translate || operation == OPERATION.rotate
-                || operation == OPERATION.mirror || operation == OPERATION.trim
-                || operation == OPERATION.offset
-                || operation == OPERATION.copyMirror || operation == OPERATION.copyOffset
-                || operation == OPERATION.copyTrim || operation == OPERATION.stretch)) {
-                //  編集コマンド
-                if (changeData(locPos, pickEnt, operation)) {
-                    return true;
-                }
-            } else if (locPos.Count == 3 &&
-                (operation == OPERATION.scale || operation == OPERATION.copyScale)) {
-                //  編集コマンド
-                if (changeData(locPos, pickEnt, operation)) {
-                    return true;
-                }
-            } else if (1 < locPos.Count &&
-                (operation == OPERATION.copyTranslate || operation == OPERATION.copyRotate
-                 || operation == OPERATION.copyOffset)) {
-                //  編集コマンド
-                if (changeData(locPos, pickEnt, operation)) {
-                    return true;
-                }
+            } catch (Exception e) {
+                ylib.messageBox(mMainWindow, e.Message, "", "例外エラー");
             }
             return false;
         }

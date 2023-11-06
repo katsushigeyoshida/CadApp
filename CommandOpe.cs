@@ -577,7 +577,7 @@ namespace CadApp
                     }
                 }
             } catch (Exception e) {
-                ylib.messageBox(mMainWindow, e.Message, "", "例外エラー");
+                ylib.messageBox(mMainWindow, e.Message, operation.ToString(), "例外エラー");
             }
             return false;
         }

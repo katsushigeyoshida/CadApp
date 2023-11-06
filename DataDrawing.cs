@@ -176,166 +176,170 @@ namespace CadApp
             PartsD parts;
             ArcD arc;
             preDragging();
-            switch (operation) {
-                case OPERATION.createPoint:
-                    ydraw.drawWPoint(points[0]);
-                    return;
-                case OPERATION.createLine:
-                    if (1 < points.Count) {
-                        ydraw.drawWLine(new LineD(points[0], points[1]));
-                    }
-                    break;
-                case OPERATION.createHVLine:
-                    {
-                        PolylineD polyline = new PolylineD(points);
-                        List<PointD> plist = polyline.toHVLine();
-                        ydraw.drawWPolyline(plist);
-                    }
-                    break;
-                case OPERATION.createRect:
-                    if (1 < points.Count) {
-                        Box b = new Box(points[0], points[1]);
-                        List<PointD> plist = b.ToPointList();
-                        ydraw.drawWPolygon(plist);
-                    }
-                    break;
-                case OPERATION.createPolyline:
-                    ydraw.drawWPolyline(points);
-                    break;
-                case OPERATION.createPolygon:
-                    ydraw.drawWPolygon(points, false);
-                    break;
-                case OPERATION.createArc:
-                    if (points.Count == 2) {
-                        ydraw.drawWLine(new LineD(points[0], points[1]));
-                    } else if (points.Count == 3 && 0 < points[1].length(points[2])) {
-                        arc = new ArcD(points[0], points[2], points[1]);
-                        if (arc.mCp != null) {
-                            ydraw.drawWArc(arc, false);
+            try {
+                switch (operation) {
+                    case OPERATION.createPoint:
+                        ydraw.drawWPoint(points[0]);
+                        return;
+                    case OPERATION.createLine:
+                        if (1 < points.Count) {
+                            ydraw.drawWLine(new LineD(points[0], points[1]));
                         }
-                    }
-                    break;
-                case OPERATION.createCircle:
-                    if (1 < points.Count) {
-                        ydraw.drawWCircle(points[0], points[0].length(points[1]), false);
-                    }
-                    break;
-                case OPERATION.createEllipse:
-                    if (1 < points.Count) {
-                        EllipseD ellipse = new EllipseD(points[0], points[1]);
-                        ydraw.drawWEllipse(ellipse);
-                    }
-                    break;
-                case OPERATION.createTangentCircle:
-                    arc = entityData.tangentCircle(pickList, points);
-                    if (arc != null) {
-                        ydraw.drawWArc(arc);
-                    }
-                    break;
-                case OPERATION.createText:
-                    TextD text = new TextD(mMainWindow.tbTextString.Text, points[0], mPara.mTextSize, 
-                        mPara.mTextRotate, mPara.mHa, mPara.mVa, mPara.mLinePitchRate);
-                    ydraw.drawWText(text);
-                    break;
-                case OPERATION.createArrow:
-                    parts = new PartsD();
-                    parts.mArrowSize = mPara.mArrowSize;
-                    if (1 < points.Count) {
-                        parts.createArrow(points[0], points[1]);
-                        drawWParts(parts);
-                    }
-                    break;
-                case OPERATION.createLabel:
-                    parts = new PartsD();
-                    parts.mTextSize = mPara.mTextSize;
-                    parts.mArrowSize = mPara.mArrowSize;
-                    if (1 < points.Count) {
-                        parts.createLabel(points, mMainWindow.tbTextString.Text);
-                        drawWParts(parts);
-                    }
-                    break;
-                case OPERATION.createLocDimension:
-                    locDimensionDragging(entityData, points, pickList);
-                    break;
-                case OPERATION.createLinearDimension:
-                    dimensionDragging(entityData, points, pickList);
-                    break;
-                case OPERATION.createAngleDimension:
-                    angleDimensionDragging(entityData, points, pickList);
-                    break;
-                case OPERATION.createDiameterDimension:
-                    diameterDimensionDragging(entityData, points, pickList);
-                    break;
-                case OPERATION.createRadiusDimension:
-                    radiusDimensionDragging(entityData, points, pickList);
-                    break;
-                case OPERATION.translate:
-                case OPERATION.copyTranslate:
-                    translateDragging(entityData, points, pickList);
-                    break;
-                case OPERATION.rotate:
-                case OPERATION.copyRotate:
-                    rotateDragging(entityData, points, pickList);
-                    break;
-                case OPERATION.mirror:
-                case OPERATION.copyMirror:
-                    mirrorDragging(entityData, points, pickList);
-                    break;
-                case OPERATION.scale:
-                case OPERATION.copyScale:
-                    scaleDragging(entityData, points, pickList);
-                    break;
-                case OPERATION.offset:
-                case OPERATION.copyOffset:
-                    offsetDragging(entityData, points, pickList);
-                    break;
-                case OPERATION.trim:
-                case OPERATION.copyTrim:
-                    trimDragging(entityData, points, pickList);
-                    break;
-                case OPERATION.divide:
-                    break;
-                case OPERATION.stretch:
-                    stretchDragging(entityData, points, pickList);
-                    break;
-                case OPERATION.pasteEntity:
-                    if (mCopyArea != null) {
-                        Box b = new Box(points[0], mCopyArea.Size);
-                        List<PointD> plist = b.ToPointList();
-                        ydraw.drawWPolygon(plist);
-                    }
-                    break;
-                case OPERATION.createSymbol: {
-                        if (mCopyEntityList != null && 0 < mCopyEntityList.Count) {
-                            PointD vec = points[0] - mCopyEntityList[0].mArea.getCenter();
-                            Entity ent = mCopyEntityList[0].toCopy();
-                            ent.mColor = mDraggingColor;
-                            ent.translate(vec);
-                            ent.draw(ydraw);
+                        break;
+                    case OPERATION.createHVLine: {
+                            PolylineD polyline = new PolylineD(points);
+                            List<PointD> plist = polyline.toHVLine();
+                            ydraw.drawWPolyline(plist);
                         }
-                    }
-                    break;
-                case OPERATION.createImage: {
-                        if (mCopyEntityList != null && 0 < mCopyEntityList.Count && 1 < points.Count) {
-                            ImageEntity ent = (ImageEntity)mCopyEntityList[0].toCopy();
-                            ent.mColor = mDraggingColor;
-                            ent.setPostion(points[0], points[1]);
-                            ent.draw(ydraw);
-                            ydraw.drawWRectangle(ent.mDispPosSize);
+                        break;
+                    case OPERATION.createRect:
+                        if (1 < points.Count) {
+                            Box b = new Box(points[0], points[1]);
+                            List<PointD> plist = b.ToPointList();
+                            ydraw.drawWPolygon(plist);
                         }
-                    }
-                    break;
-                case OPERATION.measureDistance:
-                case OPERATION.measureAngle:
-                    break;
-                default:
-                    return;
-            }
-            // ロケイト点表示
-            ydraw.mPointType = 2;
-            ydraw.mPointSize = 3;
-            for (int i = 0; i < points.Count; i++) {
-                ydraw.drawWPoint(points[i]);
+                        break;
+                    case OPERATION.createPolyline:
+                        ydraw.drawWPolyline(points);
+                        break;
+                    case OPERATION.createPolygon:
+                        ydraw.drawWPolygon(points, false);
+                        break;
+                    case OPERATION.createArc:
+                        if (points.Count == 2) {
+                            ydraw.drawWLine(new LineD(points[0], points[1]));
+                        } else if (points.Count == 3 && 0 < points[1].length(points[2])) {
+                            arc = new ArcD(points[0], points[2], points[1]);
+                            if (arc.mCp != null) {
+                                ydraw.drawWArc(arc, false);
+                            }
+                        }
+                        break;
+                    case OPERATION.createCircle:
+                        if (1 < points.Count) {
+                            ydraw.drawWCircle(points[0], points[0].length(points[1]), false);
+                        }
+                        break;
+                    case OPERATION.createEllipse:
+                        if (1 < points.Count) {
+                            EllipseD ellipse = new EllipseD(points[0], points[1]);
+                            ydraw.drawWEllipse(ellipse);
+                        }
+                        break;
+                    case OPERATION.createTangentCircle:
+                        arc = entityData.tangentCircle(pickList, points);
+                        if (arc != null) {
+                            ydraw.drawWArc(arc);
+                        }
+                        break;
+                    case OPERATION.createText:
+                        TextD text = new TextD(mMainWindow.tbTextString.Text, points[0], mPara.mTextSize,
+                            mPara.mTextRotate, mPara.mHa, mPara.mVa, mPara.mLinePitchRate);
+                        ydraw.drawWText(text);
+                        break;
+                    case OPERATION.createArrow:
+                        parts = new PartsD();
+                        parts.mArrowSize = mPara.mArrowSize;
+                        if (1 < points.Count) {
+                            parts.createArrow(points[0], points[1]);
+                            drawWParts(parts);
+                        }
+                        break;
+                    case OPERATION.createLabel:
+                        parts = new PartsD();
+                        parts.mTextSize = mPara.mTextSize;
+                        parts.mArrowSize = mPara.mArrowSize;
+                        if (1 < points.Count) {
+                            parts.createLabel(points, mMainWindow.tbTextString.Text);
+                            drawWParts(parts);
+                        }
+                        break;
+                    case OPERATION.createLocDimension:
+                        locDimensionDragging(entityData, points, pickList);
+                        break;
+                    case OPERATION.createLinearDimension:
+                        dimensionDragging(entityData, points, pickList);
+                        break;
+                    case OPERATION.createAngleDimension:
+                        angleDimensionDragging(entityData, points, pickList);
+                        break;
+                    case OPERATION.createDiameterDimension:
+                        diameterDimensionDragging(entityData, points, pickList);
+                        break;
+                    case OPERATION.createRadiusDimension:
+                        radiusDimensionDragging(entityData, points, pickList);
+                        break;
+                    case OPERATION.translate:
+                    case OPERATION.copyTranslate:
+                        translateDragging(entityData, points, pickList);
+                        break;
+                    case OPERATION.rotate:
+                    case OPERATION.copyRotate:
+                        rotateDragging(entityData, points, pickList);
+                        break;
+                    case OPERATION.mirror:
+                    case OPERATION.copyMirror:
+                        mirrorDragging(entityData, points, pickList);
+                        break;
+                    case OPERATION.scale:
+                    case OPERATION.copyScale:
+                        scaleDragging(entityData, points, pickList);
+                        break;
+                    case OPERATION.offset:
+                    case OPERATION.copyOffset:
+                        offsetDragging(entityData, points, pickList);
+                        break;
+                    case OPERATION.trim:
+                    case OPERATION.copyTrim:
+                        trimDragging(entityData, points, pickList);
+                        break;
+                    case OPERATION.divide:
+                        break;
+                    case OPERATION.stretch:
+                        stretchDragging(entityData, points, pickList);
+                        break;
+                    case OPERATION.pasteEntity:
+                        if (mCopyArea != null) {
+                            Box b = new Box(points[0], mCopyArea.Size);
+                            List<PointD> plist = b.ToPointList();
+                            ydraw.drawWPolygon(plist);
+                        }
+                        break;
+                    case OPERATION.createSymbol: {
+                            if (mCopyEntityList != null && 0 < mCopyEntityList.Count) {
+                                PointD vec = points[0] - mCopyEntityList[0].mArea.getCenter();
+                                Entity ent = mCopyEntityList[0].toCopy();
+                                ent.mColor = mDraggingColor;
+                                ent.translate(vec);
+                                ent.draw(ydraw);
+                            }
+                        }
+                        break;
+                    case OPERATION.createImage: {
+                            if (mCopyEntityList != null && 0 < mCopyEntityList.Count && 1 < points.Count) {
+                                ImageEntity ent = (ImageEntity)mCopyEntityList[0].toCopy();
+                                ent.mColor = mDraggingColor;
+                                ent.setPostion(points[0], points[1]);
+                                ent.draw(ydraw);
+                                ydraw.drawWRectangle(ent.mDispPosSize);
+                            }
+                        }
+                        break;
+                    case OPERATION.measureDistance:
+                    case OPERATION.measureAngle:
+                        break;
+                    default:
+                        return;
+                }
+                // ロケイト点表示
+                ydraw.mPointType = 2;
+                ydraw.mPointSize = 3;
+                for (int i = 0; i < points.Count; i++) {
+                    ydraw.drawWPoint(points[i]);
+                }
+            } catch (Exception e) {
+                ylib.messageBox(mMainWindow, e.Message, operation.ToString(), "例外エラー");
+                operation = OPERATION.non;
             }
         }
 

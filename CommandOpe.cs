@@ -261,6 +261,7 @@ namespace CadApp
         public ChkListDialog mChkListDlg = null;                    //  表示レイヤー設定ダイヤログ
         public SymbolDlg mSymbolDlg = null;                         //  シンボル選択配置ダイヤログ
         public int mSymbolCategoryIndex = 0;
+        public int mSaveOperationCount = 10;                        //  定期保存の操作回数
 
         public MainWindow mMainWindow;
         public List<string[]> mImageFilters = new List<string[]>() {
@@ -272,6 +273,7 @@ namespace CadApp
                     new string[] { "すべてのファイル", "*.*"}
                 };
         public string mClipImagePath = "";
+
         private WindowState mWinState;
         private YCalc ycalc = new YCalc();
         private YLib ylib = new YLib();
@@ -517,6 +519,8 @@ namespace CadApp
             if (commandInit) {
                 mMainWindow.commandClear();
             }
+            if (mEntityData.mOperationCouunt % mSaveOperationCount == 0)
+                saveFile();
             return locMode;
         }
 

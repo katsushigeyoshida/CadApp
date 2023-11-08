@@ -1303,6 +1303,14 @@ namespace CadApp
                 } else if (mEntityData.mEntityList[no].mEntityId == EntityId.Text) {
                     TextEntity textEnt = (TextEntity)mEntityData.mEntityList[no];
                     texts.Add(textEnt.mText);
+                } else if (mEntityData.mEntityList[no].mEntityId == EntityId.Parts) {
+                    PartsEntity partsEnt = (PartsEntity)mEntityData.mEntityList[no];
+                    if (0 < partsEnt.mParts.mLines.Count)
+                        lines.AddRange(partsEnt.mParts.mLines);
+                    if (0 < partsEnt.mParts.mArcs.Count)
+                        arcs.AddRange(partsEnt.mParts.mArcs);
+                    if (0 < partsEnt.mParts.mTexts.Count)
+                        texts.AddRange(partsEnt.mParts.mTexts);
                 }
             }
             if (0 == lines.Count && 0 == arcs.Count && 0 == texts.Count)

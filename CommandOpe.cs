@@ -1,6 +1,7 @@
 ﻿using CoreLib;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -1267,14 +1268,17 @@ namespace CadApp
                 }
             } else
                 filePath = ylib.fileOpenSelectDlg("イメージファイルの選択", ".", mImageFilters);
-            Entity ent = new ImageEntity(mImageData, filePath);
-            ent.setProperty(mPara);
-            mCopyEntityList = new List<Entity>();
-            if (ent != null)
-                mCopyEntityList.Add(ent);
-            mLocPos.Clear();
-            mClipImagePath = "";
-            return MainWindow.OPEMODE.loc;
+            if (File.Exists(filePath)) {
+                Entity ent = new ImageEntity(mImageData, filePath);
+                ent.setProperty(mPara);
+                mCopyEntityList = new List<Entity>();
+                if (ent != null)
+                    mCopyEntityList.Add(ent);
+                mLocPos.Clear();
+                mClipImagePath = "";
+                return MainWindow.OPEMODE.loc;
+            }
+            return MainWindow.OPEMODE.non;
         }
 
         /// <summary>
@@ -1383,6 +1387,7 @@ namespace CadApp
         public void measureDistance(PointD ps, PointD pe)
         {
             double dis = ps.length(pe);
+            Clipboard.SetText(dis.ToString());
             string buf = "距離 : " + ylib.double2StrZeroSup(dis, "F8");
             ylib.messageBox(mMainWindow, buf, "", "距離測定");
         }
@@ -1398,8 +1403,10 @@ namespace CadApp
             LineD ls = new LineD(pc, ps);
             LineD le = new LineD(pc, pe);
             double ang = ls.angle2(le);
+            Clipboard.SetText(ang.ToString());
             string buf = "角度 : " + ylib.double2StrZeroSup(ylib.R2D(ang), "F8") + "°";
             ylib.messageBox(mMainWindow, buf, "", "角度測定");
+            Clipboard.SetText(ang.ToString());
         }
 
         /// <summary>
@@ -1728,10 +1735,14 @@ namespace CadApp
                         }
                         break;
                 }
-                if (0 <= dis)
+                if (0 <= dis) {
                     buf += "距離 : " + ylib.double2StrZeroSup(dis, "F8");
-                if (0 <= ang)
+                    Clipboard.SetText(dis.ToString());
+                }
+                if (0 <= ang) {
                     buf += (0 <= dis ? "\n" : "") + "角度 : " + ylib.double2StrZeroSup(ylib.R2D(ang), "F8");
+                    Clipboard.SetText(ang.ToString());
+                }
                 ylib.messageBox(mMainWindow, buf, "距離・角度測定");
             }
         }
@@ -1891,11 +1902,9 @@ namespace CadApp
         public void saveFile(bool saveonly = false)
         {
             if (0 < mCurFilePath.Length) {
-                if (0 < mCurFilePath.Length) {
-                    if (mCurFilePath.IndexOf(".csv") < 0)
-                        mCurFilePath = mCurFilePath + ".csv";
-                    mEntityData.saveData(mCurFilePath);
-                }
+                if (mCurFilePath.IndexOf(".csv") < 0)
+                    mCurFilePath = mCurFilePath + ".csv";
+                mEntityData.saveData(mCurFilePath);
             } else if (!saveonly) {
                 saveAsFile();
             }

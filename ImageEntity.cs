@@ -9,8 +9,8 @@ namespace CadApp
     public class ImageEntity : Entity
     {
         public string mImagePath = "";
-        public string mCashName = "";
-        public string mCashFolder = "";
+        public string mCacheName = "";
+        public string mCacheFolder = "";
         public System.Drawing.Bitmap mBitmap;
         public Size mOrgSize = new Size();
         public Box mDispPosSize = new Box();
@@ -26,7 +26,7 @@ namespace CadApp
             mEntityId = EntityId.Image;
             mEntityName = "イメージ";
             mImageData = imageData;
-            mCashFolder = mImageData.mImageFolder;
+            mCacheFolder = mImageData.mImageFolder;
         }
 
         /// <summary>
@@ -39,23 +39,27 @@ namespace CadApp
             mEntityId = EntityId.Image;
             mEntityName = "イメージ";
             mImageData = imageData;
-            mCashFolder = mImageData.mImageFolder;
+            mCacheFolder = mImageData.mImageFolder;
             mImagePath = filePath;
 
-            string cashPath = mImageData.hashCopyFile(filePath);
-            if (0 < cashPath.Length) {
-                mCashFolder = Path.GetDirectoryName(cashPath);
-                mCashName = Path.GetFileName(cashPath);
+            string cachePath = mImageData.hashCopyFile(filePath);
+            if (0 < cachePath.Length) {
+                mCacheFolder = Path.GetDirectoryName(cachePath);
+                mCacheName = Path.GetFileName(cachePath);
             }
 
-            if (File.Exists(cashPath))
-                mBitmap = ydraw.getBitmapFile(cashPath);
+            if (File.Exists(cachePath))
+                mBitmap = ydraw.getBitmapFile(cachePath);
             else if (File.Exists(mImagePath))
                 mBitmap = ydraw.getBitmapFile(mImagePath);
+            else
+                mBitmap = null;
 
-            mOrgSize = new Size(mBitmap.Width, mBitmap.Height);
-            mDispPosSize = new Box(mOrgSize);
-            mArea = mDispPosSize.toCopy();
+            if (mBitmap != null) {
+                mOrgSize = new Size(mBitmap.Width, mBitmap.Height);
+                mDispPosSize = new Box(mOrgSize);
+                mArea = mDispPosSize.toCopy();
+            }
         }
 
         /// <summary>
@@ -64,18 +68,18 @@ namespace CadApp
         /// <param name="data">文字配列</param>
         public override void setData(string[] data)
         {
-            string cashPath = "";
+            string cachePath = "";
             try {
                 mImagePath = ylib.strControlCodeRev(data[0]);
                 mOrgSize = new Size(double.Parse(data[1]), double.Parse(data[2]));
                 PointD pos = new PointD(double.Parse(data[3]), double.Parse(data[4]));
                 Size size = new Size(double.Parse(data[5]), double.Parse(data[6]));
                 if (7 < data.Length) {
-                    mCashName = ylib.strControlCodeRev(data[7]);
-                    cashPath = Path.Combine(mCashFolder, mCashName);
+                    mCacheName = ylib.strControlCodeRev(data[7]);
+                    cachePath = Path.Combine(mCacheFolder, mCacheName);
                 }
-                if (File.Exists(cashPath)) {
-                    mBitmap = ydraw.getBitmapFile(cashPath);
+                if (File.Exists(cachePath)) {
+                    mBitmap = ydraw.getBitmapFile(cachePath);
                 } else if (File.Exists(mImagePath)) {
                     mBitmap = ydraw.getBitmapFile(mImagePath);
                 } else {
@@ -98,25 +102,25 @@ namespace CadApp
         /// <param name="cashPath">キャッシュファイルパス</param>
         public void fileUpdate(string filePath = "")
         {
-            string cashPath;
+            string cachePath;
             if (0 < filePath.Length && File.Exists(filePath)) {
                 mImagePath = filePath;
-                cashPath = mImageData.hashCopyFile(mImagePath);
-                mCashFolder = Path.GetDirectoryName(cashPath);
-                mCashName = Path.GetFileName(cashPath);
+                cachePath = mImageData.hashCopyFile(mImagePath);
+                mCacheFolder = Path.GetDirectoryName(cachePath);
+                mCacheName = Path.GetFileName(cachePath);
             } else {
                 if (File.Exists(mImagePath)) {
-                    if (mCashName.Length == 0 || !File.Exists(getCashPath())) {
-                        cashPath = mImageData.hashCopyFile(mImagePath);
-                        mCashFolder = Path.GetDirectoryName(cashPath);
-                        mCashName = Path.GetFileName(cashPath);
+                    if (mCacheName.Length == 0 || !File.Exists(getCashPath())) {
+                        cachePath = mImageData.hashCopyFile(mImagePath);
+                        mCacheFolder = Path.GetDirectoryName(cachePath);
+                        mCacheName = Path.GetFileName(cachePath);
                     } 
                 }
             }
 
-            cashPath = getCashPath();
-            if (File.Exists(cashPath))
-                mBitmap = ydraw.getBitmapFile(cashPath);
+            cachePath = getCashPath();
+            if (File.Exists(cachePath))
+                mBitmap = ydraw.getBitmapFile(cachePath);
             else if (File.Exists(mImagePath))
                 mBitmap = ydraw.getBitmapFile(mImagePath);
             mOrgSize = new Size(mBitmap.Width, mBitmap.Height);
@@ -128,7 +132,7 @@ namespace CadApp
         /// <returns></returns>
         public string getCashPath()
         {
-            return Path.Combine(mCashFolder, mCashName);
+            return Path.Combine(mCacheFolder, mCacheName);
         }
 
         /// <summary>
@@ -152,7 +156,7 @@ namespace CadApp
         {
             return $"{ylib.strControlCodeCnv(mImagePath)},{mOrgSize.Width},{mOrgSize.Height}," +
                 $"{mDispPosSize.Left},{mDispPosSize.Top},{mDispPosSize.Width},{mDispPosSize.Height}," +
-                $"{ylib.strControlCodeCnv(mCashName)}";
+                $"{ylib.strControlCodeCnv(mCacheName)}";
         }
 
         /// <summary>
@@ -165,7 +169,7 @@ namespace CadApp
                 ylib.strControlCodeCnv(mImagePath), mOrgSize.Width.ToString(), mOrgSize.Height.ToString(),
                 mDispPosSize.Left.ToString(), mDispPosSize.Top.ToString(),
                 mDispPosSize.Width.ToString(), mDispPosSize.Height.ToString(),
-                ylib.strControlCodeCnv(mCashName)
+                ylib.strControlCodeCnv(mCacheName)
             };
             return dataList;
         }
@@ -179,8 +183,8 @@ namespace CadApp
             ImageEntity entity = new ImageEntity(mImageData);
             entity.setProperty(this);
             entity.mImagePath = mImagePath;
-            entity.mCashFolder = mCashFolder;
-            entity.mCashName = mCashName;
+            entity.mCacheFolder = mCacheFolder;
+            entity.mCacheName = mCacheName;
             entity.mBitmap = mBitmap;
             entity.mOrgSize = mOrgSize;
             entity.mDispPosSize = mDispPosSize.toCopy();
@@ -199,7 +203,7 @@ namespace CadApp
             buf += $"要素番号: {mNo}";
             buf += $"\n要素種別: {mEntityName}要素";
             buf += $"\nファイルパス: {mImagePath}";
-            buf += $"\nキャッシュ名: {mCashName}";
+            buf += $"\nキャッシュ名: {mCacheName}";
             buf += $"\n元サイズ　: {mOrgSize.Width.ToString("f4")} x {mOrgSize.Height.ToString("f4")}";
             buf += $"\n位置    　: {mDispPosSize.Left.ToString("f4")} , {mDispPosSize.Top.ToString("f4")}";
             buf += $"\n表示サイズ: {mDispPosSize.Width.ToString("f4")} , {mDispPosSize.Height.ToString("f4")}";

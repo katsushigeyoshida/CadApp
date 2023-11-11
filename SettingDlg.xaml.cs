@@ -28,6 +28,7 @@ namespace CadApp
         public string mImageFolder = "";
         public string mBackupFolder = "";
         public string mDiffTool = "";
+        public string mShortCutFilePath = "";
 
         private List<string> mPointTypeMenu = new List<string>() {
             "・点", "X クロス", "+ 十字", "□ 四角", "〇 円", "△ 三角"
@@ -169,6 +170,38 @@ namespace CadApp
             string filePath = ylib.fileOpenSelectDlg("ツール選択", Path.GetDirectoryName(mDiffTool), filters);
             if (0 < filePath.Length)
                 tbDiffTool.Text = filePath;
+        }
+
+        /// <summary>
+        /// [ショートカットキー]ボタンの選択
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btShortCut_Click(object sender, RoutedEventArgs e)
+        {
+            shortCutKeyEdit();
+        }
+
+        /// <summary>
+        /// ショートカットキーファイルの編集
+        /// </summary>
+        private void shortCutKeyEdit()
+        {
+            string buf = "";
+            if (File.Exists(mShortCutFilePath)) {
+                buf = ylib.loadTextFile(mShortCutFilePath);
+            }
+            InputBox dlg = new InputBox();
+            dlg.Owner = this;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.mMultiLine = true;
+            dlg.mWindowSizeOutSet = true;
+            dlg.Title = "ショートカットキー編集";
+            dlg.mEditText = buf;
+            if (dlg.ShowDialog() == true) {
+                buf = dlg.mEditText;
+                ylib.saveTextFile(mShortCutFilePath, buf);
+            }
         }
     }
 }

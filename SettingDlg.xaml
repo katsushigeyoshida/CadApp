@@ -43,6 +43,7 @@
         <TextBox x:Name="tbBackupFolder" Margin="105,260,20,0" VerticalAlignment="Top" MouseDoubleClick="tbBackupFolder_MouseDoubleClick"/>
         <TextBlock Text="ファイル比較ツール" Margin="10,295,0,0" HorizontalAlignment="Left"  VerticalAlignment="Top"/>
         <TextBox x:Name="tbDiffTool" Margin="105,295,20,0" VerticalAlignment="Top" MouseDoubleClick="tbDiffTool_MouseDoubleClick" />
+        <Button x:Name="btShortCut" Content="ショートカットキー" Margin="10,0,0,10" IsDefault="True" Height="20" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="80" Click="btShortCut_Click" />
         <Button x:Name="btOK" Content="OK" Margin="0,0,100,10" IsDefault="True" Width="40" Height="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="btOK_Click" />
         <Button x:Name="btCancel" Content="Cancel" Margin="0,0,40,10" IsCancel="True" Width="40" Height="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="btCancel_Click" />
     </Grid>

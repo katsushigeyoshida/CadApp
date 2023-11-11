@@ -1920,6 +1920,7 @@ namespace CadApp
             dlg.mImageFolder  = mImageData.mImageFolder;
             dlg.mBackupFolder = mFileData.mBackupFolder;
             dlg.mDiffTool     = mFileData.mDiffTool;
+            dlg.mShortCutFilePath = mShortCutPath;
             if (dlg.ShowDialog() == true) {
                 //  表示エリア
                 Properties.Settings.Default.WorldWindowLeft   = dlg.mWorldWindow.Left;
@@ -1966,6 +1967,7 @@ namespace CadApp
                 if (!Directory.Exists(mImageData.mImageFolder))
                     Directory.CreateDirectory(mImageData.mImageFolder);
                 mFileData.mDiffTool = dlg.mDiffTool;
+                mCommandData.loadShortCut(mShortCutPath);
             }
         }
 

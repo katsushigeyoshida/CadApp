@@ -1088,6 +1088,8 @@ namespace CadApp
         /// <param name="pickEnt"></param>
         public void entitiesCopy(List<(int no, PointD pos)> pickEnt)
         {
+            if (pickEnt.Count == 0)
+                return;
             List<string[]> listData = new List<string[]>();
             Box area = mEntityData.mEntityList[pickEnt[0].no].mArea.toCopy();
             foreach ((int no, PointD pos) pickNo in pickEnt) {
@@ -1453,6 +1455,7 @@ namespace CadApp
                 para.mArrowAngle = dlg.mArrowAngle;
                 para.mGridSize = dlg.mGridSize;
                 dlg.Close();
+                mEntityData.mOperationCouunt++;
                 return true;
             } else {
                 dlg.Close();
@@ -1477,6 +1480,7 @@ namespace CadApp
                 mPara.mDispLayerBit = mEntityData.mPara.mDispLayerBit;
                 mMainWindow.cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
                 mMainWindow.cbCreateLayer.SelectedIndex = mMainWindow.cbCreateLayer.Items.IndexOf(mEntityData.mPara.mCreateLayerName);
+                mEntityData.mOperationCouunt++;
             }
         }
 
@@ -1494,6 +1498,7 @@ namespace CadApp
             mChkListDlg.mCallBackOn = true;
             mChkListDlg.callback = setLayerChk;
             mChkListDlg.Show();
+            mEntityData.mOperationCouunt++;
         }
 
         /// <summary>
@@ -1527,6 +1532,7 @@ namespace CadApp
             mEntityData.updateData();
             mPara.mOneLayerDisp = false;
             mEntityData.mPara.mOneLayerDisp = false;
+            mEntityData.mOperationCouunt++;
         }
 
         /// <summary>
@@ -1542,6 +1548,7 @@ namespace CadApp
             } else {
                 mPara.mOneLayerDisp = true;
             }
+            mEntityData.mOperationCouunt++;
         }
 
         /// <summary>

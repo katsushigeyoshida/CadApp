@@ -1308,8 +1308,7 @@ namespace CadApp
             //  図面コメント情報
             buf = new string[] { EntityId.Comment.ToString() };
             listData.Add(buf);
-            buf = mPara.commentToString().Split(new char[] { ',' });
-            listData.Add(buf);
+            listData.Add(mPara.commentToString());
             //  要素データ
             foreach (Entity entity in mEntityList) {
                 if (entity != null && !entity.mRemove && 

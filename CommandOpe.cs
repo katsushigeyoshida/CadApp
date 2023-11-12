@@ -117,15 +117,6 @@ namespace CadApp
         }
 
         /// <summary>
-        /// 図面情報を文字列に変換
-        /// </summary>
-        /// <returns></returns>
-        public string commentToString()
-        {
-            return $"Comment,Comment,{ylib.strControlCodeCnv(mComment)}";
-        }
-
-        /// <summary>
         /// 文字列配列をプロパティ設定値に変換
         /// </summary>
         /// <param name="data"></param>
@@ -210,6 +201,16 @@ namespace CadApp
             } catch (Exception e) {
                 System.Diagnostics.Debug.WriteLine(e.Message);
             }
+        }
+
+        /// <summary>
+        /// 図面情報を文字列に変換
+        /// </summary>
+        /// <returns></returns>
+        public string[] commentToString()
+        {
+            string[] buf = { "Comment", "Comment", ylib.strControlCodeCnv(mComment) };
+            return buf;
         }
 
         /// <summary>
@@ -1783,6 +1784,7 @@ namespace CadApp
                 dlg.Title = $"[{entNo.no}] {propertyStr}";
                 dlg.mEditText = dataStr;
                 if (dlg.ShowDialog() == true) {
+                    mEntityData.mOperationCouunt++;
                     dataStr = dlg.mEditText;
                     string[] property = propertyStr.Split(new char[] { ',' });
                     string[] data = dataStr.Split(new char[] { ',' });
@@ -1810,6 +1812,7 @@ namespace CadApp
             dlg.mEditText = mPara.mComment;
             if (dlg.ShowDialog() == true) {
                 mPara.mComment = dlg.mEditText;
+                mEntityData.mOperationCouunt++;
             }
         }
 

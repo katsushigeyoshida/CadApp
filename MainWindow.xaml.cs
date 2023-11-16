@@ -59,7 +59,7 @@ namespace CadApp
         private List<string> mSystemSetMenu = new List<string>() {
             "システム設定", "図面データバックアップ", "シンボルバックアップ",
             "イメージファイルバックアップ",
-            "データバックアップ管理", "シンボルバックアップ管理",
+            "図面データバックアップ管理", "シンボルバックアップ管理",
             "イメージファイルバックアップ管理"
         };
         private List<string> mPrintTypeMenu = new List<string>() {
@@ -1995,7 +1995,7 @@ namespace CadApp
                 case "イメージファイルバックアップ":
                     mImageData.dataBackUp();
                     break;
-                case "データバックアップ管理":
+                case "図面データバックアップ管理":
                     mFileData.dataRestor();
                     break;
                 case "シンボルバックアップ管理":

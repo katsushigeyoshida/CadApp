@@ -1093,6 +1093,7 @@ namespace CadApp
                 return;
             List<string[]> listData = new List<string[]>();
             Box area = mEntityData.mEntityList[pickEnt[0].no].mArea.toCopy();
+            BitmapSource bitmap = null;
             foreach ((int no, PointD pos) pickNo in pickEnt) {
                 Entity entity = mEntityData.mEntityList[pickNo.no];
                 if (entity != null && !entity.mRemove && entity.mEntityId != EntityId.Non) {
@@ -1100,12 +1101,20 @@ namespace CadApp
                     listData.Add(entity.toDataList().ToArray());
                     area.extension(entity.mArea);
                 }
+                if (bitmap == null && entity != null && entity.mEntityId == EntityId.Image) {
+                    ImageEntity ent = (ImageEntity)entity;
+                    bitmap = ylib.cnvBitmap2BitmapImage(ent.mBitmap);
+                }
             }
             string buf = "area," + area.ToString() +"\n";
             foreach (string[] str in listData) {
                 buf += ylib.arrayStr2CsvData(str) + "\n";
             }
-            Clipboard.SetText(buf);
+            //  Clipboardにコピー
+            DataObject data = new DataObject(DataFormats.Text, buf);
+            if (bitmap != null)
+                data.SetData(DataFormats.Bitmap, bitmap);
+            Clipboard.SetDataObject(data, true);
         }
 
         /// <summary>
@@ -1261,15 +1270,20 @@ namespace CadApp
         /// </summary>
         public MainWindow.OPEMODE setImage()
         {
-            string filePath;
+            string filePath = "";
             if (0 < mClipImagePath.Length) {
                 if (ylib.messageBox(mMainWindow, "キャプチャしたイメージを貼り付けますか", 
                     "", "", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
                     filePath = mClipImagePath;
-                } else {
-                    filePath = ylib.fileOpenSelectDlg("イメージファイルの選択", ".", mImageFilters);
                 }
-            } else
+            } else if (Clipboard.ContainsImage()) {
+                if (ylib.messageBox(mMainWindow, "クリップボードのイメージを貼り付けますか",
+                    "", "", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
+                    BitmapSource bitmapSource = Clipboard.GetImage();
+                    filePath = mImageData.saveBitmapCash(ylib.cnvBitmapSource2Bitmap(bitmapSource));
+                }
+            }
+            if (filePath.Length == 0)
                 filePath = ylib.fileOpenSelectDlg("イメージファイルの選択", ".", mImageFilters);
             if (File.Exists(filePath)) {
                 Entity ent = new ImageEntity(mImageData, filePath);

@@ -505,7 +505,8 @@ namespace CadApp
                 if (0 < mCommandOpe.mPara.mGridSize)    
                 wp.round(Math.Abs(mCommandOpe.mPara.mGridSize));
                 tbPosition.Text = $"{wp.x.ToString("F2")},{wp.y.ToString("F2")}";   //  マウス座標表示
-                if (mMouseLeftButtonDown && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control) {
+                if (mMouseLeftButtonDown && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control
+                    || (Mouse.MiddleButton == MouseButtonState.Pressed)) {
                     //  画面の移動(Ctrl + 左ボタン)
                     if (ylib.distance(point, mPrevPosition) > 10) {
                         scroll(mPrevPosition, point);

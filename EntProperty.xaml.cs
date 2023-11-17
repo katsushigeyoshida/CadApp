@@ -38,6 +38,7 @@ namespace CadApp
         public EntityId mEntityId = EntityId.Non;
         public string mColorName = "Black";
         public Brush mColor = Brushes.Black;
+        public bool mBackDisp = false;
         public int mLineType = 0;
         public double mThickness = 1;
         public double mTextSize = 12;
@@ -53,6 +54,9 @@ namespace CadApp
         public List<string> mLayerNameList = new List<string>();
         public string mLayerName = "";
         public string mPartsName = "";
+        public bool mFillOn = false;
+        public Brush mFillColor = Brushes.Aqua;
+        public bool mFillEntity = false;
 
         YDraw ydraw = new YDraw();
         YLib ylib = new YLib();
@@ -61,13 +65,15 @@ namespace CadApp
         {
             InitializeComponent();
 
-            cbColor.DataContext = ydraw.mColorList;
+            cbColor.DataContext     = ydraw.mColorList;
+            cbFillColor.DataContext = ydraw.mColorList;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             cbColor.SelectedIndex    = ydraw.mColorList.FindIndex(p => p.brush == mColor);
             cbType.ItemsSource       = mEntityId == EntityId.Point ? mPointTypeMenu : mLineTypeMenu;
+            chBackDisp.IsChecked     = mBackDisp;
             cbThickness.ItemsSource  = mEntSizeMenu;
             lbTypeTitle.Content      = mEntityId == EntityId.Point ? "点種" : "線種";
             lbSizeTitle.Content      = mEntityId == EntityId.Point ? "点サイズ" : "太さ";
@@ -119,6 +125,10 @@ namespace CadApp
             lbPartsNameTitle.IsEnabled  = false;
             tbPartsName.IsEnabled       = false;
 
+            lbFillTitle.IsEnabled = false;
+            cbFillColor.IsEnabled = false;
+            chFillColor.IsEnabled = false;
+
             if (mEntityId == EntityId.Text || mEntityId == EntityId.Parts) {
                 lbTextSizeTitle.IsEnabled = true;
                 tbTextSize.IsEnabled      = true;
@@ -151,7 +161,7 @@ namespace CadApp
                 lbRotateTitle.IsEnabled    = true;
                 tbTextRotate.IsEnabled     = true;
                 lbLinePitchRateTitle.IsEnabled = true;
-                tbLinePitchRate.IsEnabled = true;
+                tbLinePitchRate.IsEnabled   = true;
                 lbArrowSizeTitle.IsEnabled  = true;
                 tbArrowSize.IsEnabled       = true;
                 lbArrowAngleTitle.IsEnabled = true;
@@ -163,6 +173,14 @@ namespace CadApp
             }
             cbLayerName.ItemsSource = mLayerNameList;
             cbLayerName.Text = mLayerName;
+            if (mFillEntity) {
+                lbFillTitle.IsEnabled = true;
+                cbFillColor.IsEnabled = true;
+                chFillColor.IsEnabled = true;
+
+                cbFillColor.SelectedIndex = ydraw.mColorList.FindIndex(p => p.brush == mFillColor);
+                chFillColor.IsChecked = mFillOn;
+            }
         }
 
         /// <summary>
@@ -176,6 +194,7 @@ namespace CadApp
                 mColor = ydraw.mColorList[cbColor.SelectedIndex].brush;
                 mColorName = ydraw.mColorList[cbColor.SelectedIndex].colorTitle;
             }
+            mBackDisp = chBackDisp.IsChecked == true;
             if (0 <= cbType.SelectedIndex)
                 mLineType = cbType.SelectedIndex;
             if (0 <= cbThickness.SelectedIndex) {
@@ -199,6 +218,10 @@ namespace CadApp
             mLayerName     = cbLayerName.Text;
             if (mPartsName.Length == 0 || (2 < mPartsName.Length && mPartsName.Substring(0, 2) == "__"))
                 mPartsName = "__" + tbPartsName.Text;
+            mFillOn = chFillColor.IsChecked == true;
+            if (0 <= cbFillColor.SelectedIndex) {
+                mFillColor = ydraw.mColorList[cbFillColor.SelectedIndex].brush;
+            }
 
             DialogResult = true;
             Close();

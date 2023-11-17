@@ -12,6 +12,8 @@ namespace CadApp
     {
         //  座標データ
         public ArcD mArc;
+        public bool mFillOn = false;
+        public System.Windows.Media.Brush mFillColor = System.Windows.Media.Brushes.AliceBlue;
 
         /// <summary>
         /// コンストラクタ
@@ -43,26 +45,10 @@ namespace CadApp
         {
             ArcEntity arc = new ArcEntity(mArc);
             arc.setProperty(this);
+            arc.mFillColor = mFillColor;
+            arc.mFillOn = mFillOn;
             arc.mArea = mArea.toCopy();
             return arc;
-        }
-
-        /// <summary>
-        /// 文字データによる座標設定
-        /// </summary>
-        /// <param name="data"></param>
-        public override void setData(string[] data)
-        {
-            try {
-                mArc.mCp.x = double.Parse(data[0]);
-                mArc.mCp.y = double.Parse(data[1]);
-                mArc.mR = double.Parse(data[2]);
-                mArc.mSa = double.Parse(data[3]);
-                mArc.mEa = double.Parse(data[4]);
-            } catch(Exception e) {
-                System.Diagnostics.Debug.WriteLine(e.Message);
-            }
-            mArea = new Box(mArc);
         }
 
         /// <summary>
@@ -72,9 +58,43 @@ namespace CadApp
         public override void draw(YWorldDraw ydraw)
         {
             ydraw.mBrush = mPick ? mPickColor : mColor;
+            ydraw.mFillColor = mFillColor;
             ydraw.mThickness = mThickness;
             ydraw.mLineType = mType;
-            ydraw.drawWArc(mArc, false);
+            ydraw.drawWArc(mArc, mFillOn);
+        }
+
+        /// <summary>
+        /// 文字データによる座標設定
+        /// </summary>
+        /// <param name="data"></param>
+        public override void setData(string[] data)
+        {
+            try {
+                int i = 0;
+                while (i < data.Length) {
+                    if (data[i] == "FILL") {
+                        i++;
+                        if (bool.TryParse(data[i++], out mFillOn)) {
+                            mFillColor = ylib.getColor(data[i++]);
+                        } else {
+                            mFillOn = false;
+                            i++;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                mArc.mCp.x = double.Parse(data[i++]);
+                mArc.mCp.y = double.Parse(data[i++]);
+                mArc.mR = double.Parse(data[i++]);
+                mArc.mSa = double.Parse(data[i++]);
+                mArc.mEa = double.Parse(data[i++]);
+                mArea = new Box(mArc);
+            } catch (Exception e) {
+                System.Diagnostics.Debug.WriteLine(e.Message);
+                ylib.messageBox(null, e.Message, "", "例外エラー");
+            }
         }
 
         /// <summary>
@@ -83,7 +103,10 @@ namespace CadApp
         /// <returns></returns>
         public override string toDataString()
         {
-            return $"{mArc.mCp.x},{mArc.mCp.y},{mArc.mR},{mArc.mSa},{mArc.mEa}";
+            string buf = "";
+            buf += $"FILL,{mFillOn},{ylib.getColorName(mFillColor)},";
+            buf += $"{mArc.mCp.x},{mArc.mCp.y},{mArc.mR},{mArc.mSa},{mArc.mEa}";
+            return buf;
         }
 
         /// <summary>
@@ -93,6 +116,7 @@ namespace CadApp
         public override List<string> toDataList()
         {
             List<string> dataList = new List<string>() {
+                "FILL", mFillOn.ToString(), ylib.getColorName(mFillColor),
                 mArc.mCp.x.ToString(), mArc.mCp.y.ToString(), mArc.mR.ToString(),
                 mArc.mSa.ToString(), mArc.mEa.ToString()
             };

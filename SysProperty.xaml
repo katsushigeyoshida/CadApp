@@ -26,6 +26,9 @@
             </ComboBox.ItemTemplate>
         </ComboBox>
         <CheckBox x:Name="chColor" Margin="175,32,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <Label Name="lbBackDispTitle" Content="背景" Margin="198,30,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <CheckBox x:Name="chBackDisp" Margin="255,35,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <CheckBox x:Name="chBackDispChk" Margin="340,35,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
         <Label Name="lbLineTypeTitle" Content="線種" Margin="10,55,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
         <ComboBox Name="cbLineType" Margin="70,55,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
         <CheckBox x:Name="chLineType" Margin="175,57,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
@@ -66,7 +69,7 @@
         <Label Name="lbArrowSizeTitle" Content="矢印サイズ" Margin="10,225,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
         <ComboBox Name="cbArrowSize" Margin="70,225,0,0" IsEditable="True" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
         <CheckBox x:Name="chArrowSize" Margin="175,227,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <Label Name="lbArrowAngleTitle" Content="矢印角度" Margin="200,225,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <Label Name="lbArrowAngleTitle" Content="矢印角度" Margin="198,225,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
         <ComboBox Name="cbArrowAngle" Margin="255,225,0,0" Width="80" IsEditable="True" VerticalAlignment="Top" HorizontalAlignment="Left" />
         <CheckBox x:Name="chArrowAngle" Margin="340,227,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
         <Label Name="lbGridTitle" Content="グリッド" Margin="10,255,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />

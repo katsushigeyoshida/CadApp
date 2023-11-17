@@ -8,6 +8,8 @@ namespace CadApp
     public class EllipseEntity : Entity
     {
         public EllipseD mEllipse = new EllipseD();
+        public bool mFillOn = false;
+        public System.Windows.Media.Brush mFillColor = System.Windows.Media.Brushes.AliceBlue;
 
         public EllipseEntity()
         {
@@ -21,6 +23,19 @@ namespace CadApp
             mEllipse = ellipse;
             mArea = ellipse.getArea();
             mEntityName = "楕円";
+        }
+
+        /// <summary>
+        /// 要素の描画
+        /// </summary>
+        /// <param name="ydraw"></param>
+        public override void draw(YWorldDraw ydraw)
+        {
+            ydraw.mBrush = mPick ? mPickColor : mColor;
+            ydraw.mFillColor = mFillColor;
+            ydraw.mThickness = mThickness;
+            ydraw.mLineType = mType;
+            ydraw.drawWEllipse(mEllipse, mFillOn);
         }
 
         /// <summary>
@@ -42,18 +57,6 @@ namespace CadApp
             }
             mArea = mEllipse.getArea();
 
-        }
-
-        /// <summary>
-        /// 要素の描画
-        /// </summary>
-        /// <param name="ydraw"></param>
-        public override void draw(YWorldDraw ydraw)
-        {
-            ydraw.mBrush = mPick ? mPickColor : mColor;
-            ydraw.mThickness = mThickness;
-            ydraw.mLineType = mType;
-            ydraw.drawWEllipse(mEllipse);
         }
 
         /// <summary>
@@ -87,6 +90,8 @@ namespace CadApp
             EllipseEntity entity = new EllipseEntity();
             entity.setProperty(this);
             entity.mEllipse = mEllipse.toCopy();
+            entity.mFillColor = mFillColor;
+            entity.mFillOn = mFillOn;
             entity.mArea = mArea.toCopy();
             return entity;
         }

@@ -44,6 +44,7 @@ namespace CadApp
 
         public string mColorName = "Black";
         public Brush mColor = Brushes.Black;
+        public bool mBackDisp = false;
         public int mLineType = 0;
         public double mThickness = 1;
         public int mPointType = 0;
@@ -64,6 +65,7 @@ namespace CadApp
 
         public bool mShowCheckBox     = false;
         public bool mColorChk         = false;
+        public bool mBackDispChk      = false;
         public bool mLineTypeChk      = false;
         public bool mThicknessChk     = false;
         public bool mPointTypeChk     = false;
@@ -107,6 +109,7 @@ namespace CadApp
             cbGridSize.ItemsSource   = mGridSizeMenu;
 
             cbColor.SelectedIndex      = ydraw.mColorList.FindIndex(p => p.brush == mColor);
+            chBackDisp.IsChecked       = mBackDisp;
             cbLineType.SelectedIndex   = mLineType;
             cbPointType.SelectedIndex  = mPointType;
             cbThickness.Text           = mThickness.ToString();
@@ -131,6 +134,9 @@ namespace CadApp
             cbFontWeight.SelectedIndex = mFontWeightMenu.FindIndex(p => p == mFontWeight);
 
             chColor.Visibility         = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
+            lbBackDispTitle.Visibility = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
+            chBackDisp.Visibility      = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
+            chBackDispChk.Visibility   = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
             chLineType.Visibility      = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
             chPointType.Visibility     = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
             chThickness.Visibility     = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
@@ -172,6 +178,7 @@ namespace CadApp
                 mColor = ydraw.mColorList[cbColor.SelectedIndex].brush;
                 mColorName = ydraw.mColorList[cbColor.SelectedIndex].colorTitle;
             }
+            mBackDisp = chBackDisp.IsChecked == true;
             if (0 <= cbLineType.SelectedIndex)
                 mLineType = cbLineType.SelectedIndex;
             if (0 < cbThickness.Text.Length)
@@ -202,6 +209,7 @@ namespace CadApp
             mFontStyle = cbFontStyle.Text;
             mFontWeight = cbFontWeight.Text;
 
+            mBackDispChk      = chBackDispChk.IsChecked   == true;
             mColorChk         = chColor.IsChecked         == true;
             mLineTypeChk      = chLineType.IsChecked      == true;
             mPointTypeChk     = chPointType.IsChecked     == true;

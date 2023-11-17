@@ -30,6 +30,8 @@ namespace CadApp
         public string mLayerName = "BaseLayer";     //  レイヤー名
         public ulong mLayerBit = 0x1;               //  レイヤービット(64bit非保存)
         public string mEntityName = "";             //  要素名
+        public bool mBackDisp = false;              //  背面表示
+
         //  表示領域
         public Box mArea = new Box();
         //  ピック
@@ -50,6 +52,7 @@ namespace CadApp
             mType       = ent.mType;
             mLayerName  = ent.mLayerName;
             mEntityName = ent.mEntityName;
+            mBackDisp   = ent.mBackDisp;
         }
 
         /// <summary>
@@ -75,9 +78,38 @@ namespace CadApp
                 mThickness = double.Parse(property[2].Trim());
                 mType      = int.Parse(property[3].Trim());
                 mLayerName = property[4].Trim();
+                if (5 < property.Length) {
+                    mBackDisp = bool.Parse(property[5].Trim());
+                } else {
+                    if (mEntityId == EntityId.Image)
+                        mBackDisp = true;
+                }
             } catch (Exception e) {
                 System.Diagnostics.Debug.WriteLine(e.ToString());
             }
+        }
+
+        /// <summary>
+        /// 要素属性を文字列に変換
+        /// </summary>
+        /// <returns></returns>
+        public string toString()
+        {
+            return $"{mEntityId},{ydraw.getColorName(mColor)},{mThickness}," +
+                    $"{mType},{mLayerName},{mBackDisp}";
+        }
+
+        /// <summary>
+        /// 要素属性を文字列のリストに変換
+        /// </summary>
+        /// <returns></returns>
+        public List<string> toList()
+        {
+            List<string> propertyLis = new List<string>() {
+                mEntityId.ToString(), ydraw.getColorName(mColor), mThickness.ToString(),
+                mType.ToString(), mLayerName, mBackDisp.ToString(),
+            };
+            return propertyLis;
         }
 
         /// <summary>
@@ -121,28 +153,6 @@ namespace CadApp
         /// </summary>
         /// <param name="ydraw"></param>
         abstract public void draw(YWorldDraw ydraw);
-
-        /// <summary>
-        /// 要素属性を文字列に変換
-        /// </summary>
-        /// <returns></returns>
-        public string toString()
-        {
-            return $"{mEntityId},{ydraw.getColorName(mColor)},{mThickness},{mType},{mLayerName}";
-        }
-
-        /// <summary>
-        /// 要素属性を文字列のリストに変換
-        /// </summary>
-        /// <returns></returns>
-        public List<string> toList()
-        {
-            List<string> propertyLis = new List<string>() {
-                mEntityId.ToString(), ydraw.getColorName(mColor), mThickness.ToString(),
-                mType.ToString(), mLayerName
-            };
-            return propertyLis;
-        }
 
         /// <summary>
         /// 座標データを文字列に変換

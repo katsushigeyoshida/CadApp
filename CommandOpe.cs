@@ -907,6 +907,7 @@ namespace CadApp
                 dlg.mLineType  = entity.mType;
                 dlg.mThickness = entity.mThickness;
                 dlg.mLayerName = entity.mLayerName;
+                dlg.mBackDisp = entity.mBackDisp;
                 dlg.Title = entity.mEntityName + "要素属性";
                 //  Text要素
                 if (entity.mEntityId == EntityId.Text) {
@@ -936,13 +937,35 @@ namespace CadApp
                 //  Image要素
                 if (entity.mEntityId == EntityId.Image) {
                     ImageEntity image = (ImageEntity)entity;
-                    if (!System.IO.File.Exists(image.mImagePath)) {
+                    if (!System.IO.File.Exists(image.mImagePath) &&
+                        !File.Exists(image.getCashPath())) {
                         string filePath = ylib.fileOpenSelectDlg("イメージファイルの選択",
                             System.IO.Path.GetDirectoryName(image.mImagePath), mImageFilters);
                         if (0 < filePath.Length) {
                             image.fileUpdate(filePath);
                         }
                     }
+                }
+                //  Polygon要素
+                if (entity.mEntityId == EntityId.Polygon) {
+                    PolygonEntity polygon = (PolygonEntity)entity;
+                    dlg.mFillOn    = polygon.mFillOn;
+                    dlg.mFillColor = polygon.mFillColor;
+                    dlg.mFillEntity = true;
+                }
+                //  Arc要素
+                if (entity.mEntityId == EntityId.Arc) {
+                    ArcEntity arc = (ArcEntity)entity;
+                    dlg.mFillOn = arc.mFillOn;
+                    dlg.mFillColor = arc.mFillColor;
+                    dlg.mFillEntity = true;
+                }
+                //  Ellipse要素
+                if (entity.mEntityId == EntityId.Ellipse) {
+                    EllipseEntity ellipse = (EllipseEntity)entity;
+                    dlg.mFillOn = ellipse.mFillOn;
+                    dlg.mFillColor = ellipse.mFillColor;
+                    dlg.mFillEntity = true;
                 }
                 if (dlg.ShowDialog() == true) {
                     //  共通属性
@@ -953,6 +976,7 @@ namespace CadApp
                     entity.mThickness = dlg.mThickness;
                     entity.mLayerName = dlg.mLayerName;
                     entity.mLayerBit = mEntityData.setLayerBit(entity.mLayerName);
+                    entity.mBackDisp = dlg.mBackDisp;
                     //  Text要素
                     if (entity.mEntityId == EntityId.Text) {
                         TextEntity text = (TextEntity)entity;
@@ -979,6 +1003,24 @@ namespace CadApp
                         parts.mParts.mFontStyle     = ylib.convFontStyle(dlg.mFontStyle);
                         parts.mParts.mFontWeight    = ylib.convFontWeight(dlg.mFontWeight);
                         parts.mParts.remakeData();
+                    }
+                    //  Polygon要素
+                    if (entity.mEntityId == EntityId.Polygon) {
+                        PolygonEntity polygon = (PolygonEntity)entity;
+                        polygon.mFillOn    = dlg.mFillOn;
+                        polygon.mFillColor = dlg.mFillColor;
+                    }
+                    //  Arc要素
+                    if (entity.mEntityId == EntityId.Arc) {
+                        ArcEntity arc = (ArcEntity)entity;
+                        arc.mFillOn = dlg.mFillOn;
+                        arc.mFillColor = dlg.mFillColor;
+                    }
+                    //  Ellipse要素
+                    if (entity.mEntityId == EntityId.Ellipse) {
+                        EllipseEntity ellipse = (EllipseEntity)entity;
+                        ellipse.mFillOn = dlg.mFillOn;
+                        ellipse.mFillColor = dlg.mFillColor;
                     }
                     //  Undo処理
                     entity.mOperationCount = mEntityData.mOperationCouunt;
@@ -1028,6 +1070,8 @@ namespace CadApp
                         entity.mLayerName = dlg.mLayerName;
                         entity.mLayerBit = mEntityData.setLayerBit(entity.mLayerName);
                     }
+                    if (dlg.mBackDispChk)
+                        entity.mBackDisp = dlg.mBackDisp;
                     //  テキスト要素
                     if (entity.mEntityId == EntityId.Text) {
                         TextEntity textEnt = (TextEntity)entity;

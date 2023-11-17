@@ -145,6 +145,7 @@ namespace CadApp
             mCanvas.Children.Add(mMainWindow.imScreen);
 
             ydraw.mBrush = mDraggingColor;
+            ydraw.mFillColor = null;
             Box b = new Box(loc[0], loc[1]);
             List<PointD> plist = b.ToPointList();
             ydraw.drawWPolygon(plist);
@@ -217,7 +218,8 @@ namespace CadApp
                         break;
                     case OPERATION.createCircle:
                         if (1 < points.Count) {
-                            ydraw.drawWCircle(points[0], points[0].length(points[1]), false);
+                            arc = new ArcD(points[0], points[0].length(points[1]));
+                            ydraw.drawWArc(arc, false);
                         }
                         break;
                     case OPERATION.createEllipse:
@@ -351,12 +353,13 @@ namespace CadApp
             mCanvas.Children.Clear();
             mMainWindow.imScreen.Source = mBitmapSource;
             mCanvas.Children.Add(mMainWindow.imScreen);
-            ydraw.mBrush = mDraggingColor;
+            ydraw.mBrush     = mDraggingColor;
             ydraw.mTextColor = mDraggingColor;
             ydraw.mThickness = mPara.mThickness;
-            ydraw.mLineType = mPara.mLineType;
+            ydraw.mLineType  = mPara.mLineType;
             ydraw.mPointType = mPara.mPointType;
             ydraw.mPointSize = mPara.mPointSize;
+            ydraw.mFillColor = null;
         }
 
         /// <summary>
@@ -688,15 +691,17 @@ namespace CadApp
             //  状態を保存
             PointD v = new PointD(ydraw.screen2worldXlength(dx), ydraw.screen2worldYlength(dy));
             ydraw.mWorld.offset(v.inverse());
+            //  ポリゴンの塗潰しで境界線削除ためオフセットを設定
+            double offset = ydraw.screen2worldXlength(2);
 
             ydraw.clear();
             //  横空白部分を描画
             ydraw.mClipBox = ydraw.mWorld.toCopy();
             if (0 > dx) {
-                ydraw.mClipBox.Left = ydraw.mWorld.Right + v.x;
-                ydraw.mClipBox.Width = -v.x;
+                ydraw.mClipBox.Left = ydraw.mWorld.Right + v.x - offset;
+                ydraw.mClipBox.Width = -v.x + offset;
             } else if (0 < dx) {
-                ydraw.mClipBox.Width = v.x;
+                ydraw.mClipBox.Width = v.x + offset;
             }
             if (dx != 0) {
                 dispGrid(gridSize);
@@ -706,18 +711,18 @@ namespace CadApp
             //  縦空白部分を描画
             ydraw.mClipBox = ydraw.mWorld.toCopy();
             if (0 > dy) {
-                ydraw.mClipBox.Top -= ydraw.mWorld.Height - v.y;
-                ydraw.mClipBox.Height = v.y;
+                ydraw.mClipBox.Top -= ydraw.mWorld.Height - v.y - offset;
+                ydraw.mClipBox.Height = v.y + offset;
             } else if (0 < dy) {
-                ydraw.mClipBox.Height = -v.y;
+                ydraw.mClipBox.Height = -v.y + offset;
             }
             if (dy != 0) {
                 dispGrid(gridSize);
                 entityData.drawingAll(ydraw);
             }
 
-            //  移動した位置にBitmapの貼付け
-            moveImage(mBitmapSource, dx, dy);
+            //  移動した位置にBitmapの貼付け(ポリゴン塗潰しの境界線削除でoffsetを設定)
+            moveImage(mBitmapSource, dx, dy, 1);
 
             //  Windowの設定を元に戻す
             ydraw.mClipBox = ydraw.mWorld.toCopy();
@@ -774,20 +779,24 @@ namespace CadApp
 
         /// <summary>
         /// Bitmap 図形を移動させる
+        /// Bitmapをdx,dy分移動させてCanvasに貼り付ける(dx,dyのマイナス方向も可)
+        /// オフセットで指定した分Bitmapサイズをカットする(ポリゴンの塗潰しの境界線をカットするために必要)
         /// </summary>
         /// <param name="bitmapSource">Bitmap</param>
         /// <param name="dx">移動量</param>
         /// <param name="dy">移動量</param>
-        private void moveImage(BitmapSource bitmapSource, double dx, double dy)
+        /// <param name="offset">オフセット</param>
+        private void moveImage(BitmapSource bitmapSource, double dx, double dy, int offset = 0)
         {
             System.Drawing.Bitmap bitmap = ylib.cnvBitmapSource2Bitmap(mBitmapSource);
             double width = bitmap.Width - Math.Abs(dx);
             double height = bitmap.Height - Math.Abs(dy);
-            Point sp = new Point(dx > 0 ? 0 : -dx, dy > 0 ? 0 : -dy);
-            Point ep = new Point(sp.X + width, sp.Y + height);
+            Point sp = new Point(dx > 0 ? offset : -dx, dy > 0 ? offset : -dy);
+            Point ep = new Point(sp.X + width - offset, sp.Y + height - offset);
             System.Drawing.Bitmap moveBitmap = ylib.trimingBitmap(bitmap, sp, ep);
             BitmapImage bitmapImage = ylib.cnvBitmap2BitmapImage(moveBitmap);
-            ylib.setCanvasBitmapImage(mCanvas, bitmapImage, dx > 0 ? dx : 0, dy > 0 ? dy : 0, width, height);
+            ylib.setCanvasBitmapImage(mCanvas, bitmapImage, dx > 0 ? dx + offset : 0, dy > 0 ? dy + offset : 0,
+                width - offset, height - offset);
         }
 
         /// <summary>

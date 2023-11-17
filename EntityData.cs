@@ -633,20 +633,19 @@ namespace CadApp
         /// <param name="ydraw"></param>
         public void drawingAll(YWorldDraw ydraw)
         {
-            //  イメージ要素を先に表示する
-            List<int> imageNoList = new List<int>();
-            for(int i = 0; i < mEntityList.Count; i++)
-                if (mEntityList[i].mEntityId == EntityId.Image)
-                    imageNoList.Add(i);
-            for(int i = 0; i < imageNoList.Count; i++)
-                if (!mEntityList[imageNoList[i]].mRemove && 0 != (mEntityList[imageNoList[i]].mLayerBit & mPara.mDispLayerBit)
-                    && !ydraw.mWorld.outsideChk(mEntityList[imageNoList[i]].mArea))
-                    mEntityList[imageNoList[i]].draw(ydraw);
-            //  イメージ要素以外を表示
+            //  背景属性要素を優先に表示
             foreach (var entity in mEntityList) {
                 if (!entity.mRemove && 0 != (entity.mLayerBit & mPara.mDispLayerBit)
                     && entity.mEntityId != EntityId.Link
-                    && entity.mEntityId != EntityId.Image
+                    && entity.mBackDisp
+                    && !ydraw.mWorld.outsideChk(entity.mArea))
+                    entity.draw(ydraw);
+            }
+            //  背景属性以外を表示
+            foreach (var entity in mEntityList) {
+                if (!entity.mRemove && 0 != (entity.mLayerBit & mPara.mDispLayerBit)
+                    && entity.mEntityId != EntityId.Link
+                    && !entity.mBackDisp
                     && !ydraw.mWorld.outsideChk(entity.mArea))
                     entity.draw(ydraw);
             }

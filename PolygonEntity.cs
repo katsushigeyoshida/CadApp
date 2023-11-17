@@ -1,4 +1,5 @@
 ﻿using CoreLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,6 +13,8 @@ namespace CadApp
     {
         //  座標データ
         public PolygonD mPolygon;
+        public bool mFillOn = false;
+        public System.Windows.Media.Brush mFillColor = System.Windows.Media.Brushes.AliceBlue;
 
         /// <summary>
         /// コンストラクタ
@@ -55,27 +58,10 @@ namespace CadApp
         {
             PolygonEntity polygon = new PolygonEntity(mPolygon);
             polygon.setProperty(this);
+            polygon.mFillColor = mFillColor;
+            polygon.mFillOn = mFillOn;
             polygon.mArea = mArea.toCopy();
             return polygon;
-        }
-
-        /// <summary>
-        /// 文字データによる座標設定
-        /// </summary>
-        /// <param name="data"></param>
-        public override void setData(string[] data)
-        {
-            mPolygon = new PolygonD();
-            if (2 < data.Length) {
-                for (int i = 0; i < data.Length - 1; i += 2) {
-                    PointD ps = new PointD();
-                    ps.x = double.Parse(data[i]);
-                    ps.y = double.Parse(data[i + 1]);
-                    mPolygon.Add(ps);
-                }
-                mPolygon.squeeze();
-                mArea = new Box(mPolygon.mPolygon);
-            }
         }
 
         /// <summary>
@@ -85,9 +71,48 @@ namespace CadApp
         public override void draw(YWorldDraw ydraw)
         {
             ydraw.mBrush = mPick ? mPickColor : mColor;
+            ydraw.mFillColor = mFillColor;
             ydraw.mThickness = mThickness;
             ydraw.mLineType = mType;
-            ydraw.drawWPolygon(mPolygon, false);
+            ydraw.drawWPolygon(mPolygon, mFillOn);
+        }
+
+        /// <summary>
+        /// 文字データによる座標設定
+        /// </summary>
+        /// <param name="data"></param>
+        public override void setData(string[] data)
+        {
+            if (2 < data.Length) {
+                PolygonD polygon = new PolygonD();
+                try {
+                    int i = 0;
+                    while (i < data.Length) {
+                        if (data[i] == "FILL") {
+                            i++;
+                            if (bool.TryParse(data[i++], out mFillOn)) {
+                                mFillColor = ylib.getColor(data[i++]);
+                            } else {
+                                mFillOn = false;
+                                i++;
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                    for (; i < data.Length - 1; i += 2) {
+                        PointD ps = new PointD();
+                        ps.x = double.Parse(data[i]);
+                        ps.y = double.Parse(data[i + 1]);
+                        polygon.Add(ps);
+                    }
+                    polygon.squeeze();
+                    mPolygon = polygon;
+                    mArea = new Box(mPolygon.mPolygon);
+                } catch (Exception e) {
+                    ylib.messageBox(null, e.Message, "", "例外エラー");
+                }
+            }
         }
 
         /// <summary>
@@ -97,6 +122,7 @@ namespace CadApp
         public override string toDataString()
         {
             string buf = "";
+            buf += $"FILL,{mFillOn},{ylib.getColorName(mFillColor)},";
             foreach (PointD p in mPolygon.mPolygon) {
                 buf += $"{p.x},{p.y},";
             }
@@ -109,7 +135,9 @@ namespace CadApp
         /// <returns></returns>
         public override List<string> toDataList()
         {
-            List<string> dataList = new List<string>();
+            List<string> dataList = new List<string> {
+                "FILL", mFillOn.ToString(), ylib.getColorName(mFillColor)
+            };
             foreach (PointD p in mPolygon.mPolygon) {
                 dataList.Add(p.x.ToString());
                 dataList.Add(p.y.ToString());
@@ -129,9 +157,10 @@ namespace CadApp
             string buf = "";
             buf += $"要素番号: {mNo}";
             buf += $"\n要素種別: {mEntityName}要素";
-            buf += $"\n始点 {mPolygon.mPolygon[0].ToString("f4")} 終点 {mPolygon.mPolygon[mPolygon.mPolygon.Count - 1].ToString("f4")}";
-            buf += $"\n点数 {mPolygon.mPolygon.Count.ToString("f0")}";
-            buf += $"\n長さ {l.ToString("f4")}";
+            buf += $"\n始点    : {mPolygon.mPolygon[0].ToString("f4")} 終点 {mPolygon.mPolygon[mPolygon.mPolygon.Count - 1].ToString("f4")}";
+            buf += $"\n点数    : {mPolygon.mPolygon.Count.ToString("f0")}";
+            buf += $"\n長さ    : {l.ToString("f4")}";
+            buf += $"\n塗潰し  : {(mFillOn ? "あり" : "なし")} {getColorName(mFillColor)}";
             buf += $"\nカラー　: {getColorName(mColor)}";
             buf += $"\n太さ　　: {mThickness}";
             buf += $"\nレイヤー: {mLayerName}";

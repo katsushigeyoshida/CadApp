@@ -1171,8 +1171,9 @@ namespace CadApp
             if (0 < picks.Count) {
                 int pickNo = pickSelect(picks);
                 if (0 <= pickNo) {
-                    List<(int no, PointD pos)> pickEnt = new();
-                    pickEnt.Add((pickNo, pickPos.toCopy()));
+                    List<(int no, PointD pos)> pickEnt = new() {
+                        (pickNo, pickPos.toCopy())
+                    };
                     if (!mCommandOpe.changeText(pickEnt))
                         mCommandOpe.changeProperty(pickEnt);
                 }

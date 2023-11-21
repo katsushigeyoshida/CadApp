@@ -294,20 +294,23 @@ namespace CadApp
         /// <summary>
         /// データをバックアップする
         /// </summary>
-        public void dataBackUp()
+        public int dataBackUp(bool messageOn = true)
         {
+            int count = 0;
             if (mSymbolFolder == null || mBackupFolder.Length == 0 || !Directory.Exists(mBackupFolder)) {
-                ylib.messageBox(mMainWindow, "バックアップのフォルダが設定されていません。");
-                return;
+                ylib.messageBox(mMainWindow, "シンボルのバックアップのフォルダが設定されていません。");
+                return count;
             }
             string backupFolder = Path.Combine(mBackupFolder, Path.GetFileName(mSymbolFolder));
             if (Path.GetFullPath(mSymbolFolder) != Path.GetFullPath(backupFolder)) {
                 DirectoryDiff directoryDiff = new DirectoryDiff(mSymbolFolder, backupFolder);
-                int count = directoryDiff.syncFolder();
-                ylib.messageBox(mMainWindow, $"{count} ファイルのバックアップを更新しました。");
+                count = directoryDiff.syncFolder();
+                if (messageOn)
+                    ylib.messageBox(mMainWindow, $"{count} ファイルのバックアップを更新しました。");
             } else {
                 ylib.messageBox(mMainWindow, "バックアップ先がデータフォルダと同じです");
             }
+            return count;
         }
 
         /// <summary>

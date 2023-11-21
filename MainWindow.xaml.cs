@@ -57,7 +57,7 @@ namespace CadApp
             "垂点", "端点距離"
         };
         private List<string> mSystemSetMenu = new List<string>() {
-            "システム設定", "図面データバックアップ", "シンボルバックアップ",
+            "システム設定", "全バックアップ", "図面データバックアップ", "シンボルバックアップ",
             "イメージファイルバックアップ",
             "図面データバックアップ管理", "シンボルバックアップ管理",
             "イメージファイルバックアップ管理"
@@ -507,7 +507,7 @@ namespace CadApp
                 tbPosition.Text = $"{wp.x.ToString("F2")},{wp.y.ToString("F2")}";   //  マウス座標表示
                 if (mMouseLeftButtonDown && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control
                     || (Mouse.MiddleButton == MouseButtonState.Pressed)) {
-                    //  画面の移動(Ctrl + 左ボタン)
+                    //  画面の移動(Ctrl + 左ボタン, 中ボタン)
                     if (ylib.distance(point, mPrevPosition) > 10) {
                         scroll(mPrevPosition, point);
                     } else {
@@ -678,6 +678,8 @@ namespace CadApp
                 mCommandOpe.saveFile(true);
                 if (mCommandOpe.mChkListDlg != null)
                     mCommandOpe.mChkListDlg.Close();
+                if (mCommandOpe.mSymbolDlg != null)
+                    mCommandOpe.mSymbolDlg.Close();
                 if (mCommandOpe.openFile(mFileData.getItemFilePath(lbItemList.Items[index].ToString() ?? ""))) {
                     mFileData.mDataName = lbItemList.Items[index].ToString() ?? "";
                     Title = lbItemList.Items[index].ToString();
@@ -1987,6 +1989,13 @@ namespace CadApp
             switch (dlg.mResultMenu) {
                 case "システム設定":
                     systemSettingdlg();
+                    break;
+                case "全バックアップ":
+                    int count = 0;
+                    count += mFileData.dataBackUp(false);
+                    count += mSymbolData.dataBackUp(false);
+                    count += mImageData.dataBackUp(false);
+                    ylib.messageBox(this, $"{count} ファイルのバックアップを更新しました。");
                     break;
                 case "図面データバックアップ":
                     mFileData.dataBackUp();

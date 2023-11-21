@@ -497,12 +497,13 @@ namespace CadApp
         /// <summary>
         /// データをバックアップする
         /// </summary>
-        public void dataBackUp()
+        public int dataBackUp(bool messageOn = true)
         {
+            int count = 0;
             if (mBaseDataFolder == null || mBackupFolder.Length == 0
                 || !Directory.Exists(mBackupFolder)) {
-                ylib.messageBox(mMainWindow, "バックアップのフォルダが設定されていません。");
-                return;
+                ylib.messageBox(mMainWindow, "図面データのバックアップのフォルダが設定されていません。");
+                return count;
             }
             string backupFolder = Path.Combine(mBackupFolder, Path.GetFileName(mBaseDataFolder));
             if (Path.GetFullPath(mBaseDataFolder) != Path.GetFullPath(backupFolder)) {
@@ -515,11 +516,13 @@ namespace CadApp
                         "" ,"確認", MessageBoxButton.YesNo) == MessageBoxResult.No)
                         noExistFileRemove = false;
                 }
-                int count = directoryDiff.syncFolder(noExistFileRemove);
-                ylib.messageBox(mMainWindow, $"{count} ファイルのバックアップを更新しました。");
+                count = directoryDiff.syncFolder(noExistFileRemove);
+                if (messageOn)
+                    ylib.messageBox(mMainWindow, $"{count} ファイルのバックアップを更新しました。");
             } else {
                 ylib.messageBox(mMainWindow, "バックアップ先がデータフォルダと同じです");
             }
+            return count;
         }
 
         /// <summary>

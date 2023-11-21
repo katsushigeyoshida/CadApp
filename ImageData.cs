@@ -108,20 +108,23 @@ namespace CadApp
         /// <summary>
         /// イメージのキャッシュファイルをバックアップする
         /// </summary>
-        public void dataBackUp()
+        public int dataBackUp(bool messageOn = true)
         {
+            int count = 0;
             if (mImageFolder == null || mBackupFolder.Length == 0 || !Directory.Exists(mBackupFolder)) {
-                ylib.messageBox(mMainWindow, "バックアップのフォルダが設定されていません。");
-                return;
+                ylib.messageBox(mMainWindow, "イメージのバックアップのフォルダが設定されていません。");
+                return count;
             }
             string backupFolder = Path.Combine(mBackupFolder, Path.GetFileName(mImageFolder));
             if (Path.GetFullPath(mImageFolder) != Path.GetFullPath(backupFolder)) {
                 DirectoryDiff directoryDiff = new DirectoryDiff(mImageFolder, backupFolder);
-                int count = directoryDiff.syncFolder();
-                ylib.messageBox(mMainWindow, $"{count} ファイルのバックアップを更新しました。");
+                count = directoryDiff.syncFolder();
+                if (messageOn)
+                    ylib.messageBox(mMainWindow, $"{count} ファイルのバックアップを更新しました。");
             } else {
                 ylib.messageBox(mMainWindow, "バックアップ先がデータフォルダと同じです");
             }
+            return count;
         }
 
         /// <summary>

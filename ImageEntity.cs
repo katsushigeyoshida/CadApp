@@ -383,7 +383,6 @@ namespace CadApp
                 List<PointD> plist = b.intersection(mArea);
                 return 0 < plist.Count;
             }
-            return false;
         }
 
         /// <summary>

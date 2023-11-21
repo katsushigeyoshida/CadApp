@@ -34,6 +34,7 @@ namespace CadApp
         public ulong mDispLayerBit = 0xffffffff;                    //  表示レイヤービットフィルタ
         public string mCreateLayerName = "BaseLayer";               //  作成レイヤー名
         public bool mOneLayerDisp = false;                          //  1レイヤーのみの表示
+        public int mSymbolCategoryIndex = 0;                        //  シンボル分類No
 
         private YLib ylib = new YLib();
 
@@ -72,6 +73,7 @@ namespace CadApp
             para.mDispLayerBit = mDispLayerBit;
             para.mCreateLayerName = mCreateLayerName;
             para.mOneLayerDisp = mOneLayerDisp;
+            para.mSymbolCategoryIndex = mSymbolCategoryIndex;
             return para;
         }
 
@@ -100,6 +102,7 @@ namespace CadApp
             mDispLayerBit = 0xffffffff;                     //  表示レイヤービットフィルタ
             mCreateLayerName = "BaseLayer";                 //  作成レイヤー名
             mOneLayerDisp = false;                          //  1レイヤーのみの表示
+            mSymbolCategoryIndex = 0;                       //  シンボル分類No
         }
 
         /// <summary>
@@ -113,7 +116,8 @@ namespace CadApp
                 $"TextRotate,{mTextRotate},LinePitchRate,{mLinePitchRate},HA,{mHa},VA,{mVa}," +
                 $"ArrowSize,{mArrowSize},ArrowAngle,{mArrowAngle},GridSize,{mGridSize},DispLaerBit,{mDispLayerBit}," +
                 $"CreateLayer,{ylib.strControlCodeCnv(mCreateLayerName)},OneLayerDisp,{mOneLayerDisp}," +
-                $"FontFamily,{mFontFamily},FontStyle,{mFontStyle},FontWeight,{mFontWeight}";
+                $"FontFamily,{mFontFamily},FontStyle,{mFontStyle},FontWeight,{mFontWeight}," +
+                $"SymbolCategoryIindex,{mSymbolCategoryIndex}";
         }
 
         /// <summary>
@@ -183,6 +187,9 @@ namespace CadApp
                             case "OneLayerDisp":
                                 mOneLayerDisp = bool.Parse(data[++i]);
                                 break;
+                            case "SymbolCategoryIindex":
+                                mSymbolCategoryIndex = int.Parse(data[++i]);
+                                break;
                         }
                     }
                 } else {
@@ -200,6 +207,7 @@ namespace CadApp
                 }
             } catch (Exception e) {
                 System.Diagnostics.Debug.WriteLine(e.Message);
+                ylib.messageBox(null, e.Message, "SetPropertyData 例外エラー");
             }
         }
 
@@ -262,7 +270,6 @@ namespace CadApp
 
         public ChkListDialog mChkListDlg = null;                    //  表示レイヤー設定ダイヤログ
         public SymbolDlg mSymbolDlg = null;                         //  シンボル選択配置ダイヤログ
-        public int mSymbolCategoryIndex = 0;
         public int mSaveOperationCount = 10;                        //  定期保存の操作回数
 
         public MainWindow mMainWindow;
@@ -1248,14 +1255,14 @@ namespace CadApp
             dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             dlg.Title = "シンボル選択";
             dlg.mSymbolFolder = mMainWindow.mSymbolData.mSymbolFolder;
-            dlg.mDefualtCategory = mSymbolCategoryIndex;
+            dlg.mDefualtCategory = mPara.mSymbolCategoryIndex;
             if (dlg.ShowDialog() == true) {
                 Entity ent = dlg.mEntity;
                 ent.setProperty(mPara);
                 mCopyEntityList = new List<Entity>();
                 if (ent != null)
                     mCopyEntityList.Add(ent);
-                mSymbolCategoryIndex = dlg.mDefualtCategory;
+                mPara.mSymbolCategoryIndex = dlg.mDefualtCategory;
             }
         }
 
@@ -1270,7 +1277,7 @@ namespace CadApp
             mSymbolDlg.Topmost = true;
             mSymbolDlg.Title = "シンボル選択";
             mSymbolDlg.mSymbolFolder = mMainWindow.mSymbolData.mSymbolFolder;
-            mSymbolDlg.mDefualtCategory = mSymbolCategoryIndex;
+            mSymbolDlg.mDefualtCategory = mPara.mSymbolCategoryIndex;
             mSymbolDlg.mCallBackOn = true;
             mSymbolDlg.callback = setSymbolData;
             mSymbolDlg.Show();
@@ -1286,7 +1293,7 @@ namespace CadApp
             mCopyEntityList = new List<Entity>();
             if (ent != null)
                 mCopyEntityList.Add(ent);
-            mSymbolCategoryIndex = mSymbolDlg.mDefualtCategory;
+            mPara.mSymbolCategoryIndex = mSymbolDlg.mDefualtCategory;
             mMainWindow.mOperation = OPERATION.createSymbol;
             mMainWindow.mLocMode = MainWindow.OPEMODE.loc;
             mLocPos.Clear();

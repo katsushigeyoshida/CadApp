@@ -27,7 +27,8 @@ namespace CadApp
         private string mHelpFile = "CadAppManual.pdf";       //  PDFのヘルプファイル
         private string mShortCutPath = "ShortCut.csv";
         private double[] mGridSizeMenu = {
-            0, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000
+            0, 0.1, 0.2, 0.3, 0.4, 0.5, 1,1.5, 2, 2.5, 3, 4, 5, 10,
+            20, 30, 40, 50, 100, 200, 300, 400, 500, 1000
         };
         private double[] mTextSizeMenu = {
             0.1, 0.2, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 9, 
@@ -404,8 +405,8 @@ namespace CadApp
                     mLocMode = mPrevMode;
             } else if (mLocMode == OPEMODE.loc && !onControlKey()) {
                 //  要素追加(ロケイト数不定コマンドを除く)
-                if (0 < mCommandOpe.mPara.mGridSize)
-                    wp.round(Math.Abs(mCommandOpe.mPara.mGridSize));
+                if (0 < mCommandOpe.mEntityData.mPara.mGridSize)
+                    wp.round(Math.Abs(mCommandOpe.mEntityData.mPara.mGridSize));
                 mCommandOpe.mLocPos.Add(wp);
                 mCommandOpe.mTextString = tbTextString.Text;
                 if (mOperation != OPERATION.createPolyline
@@ -502,8 +503,8 @@ namespace CadApp
                 mAreaLoc[1] = wp;
                 mDataDrawing.areaDragging(mAreaLoc);
             } else {
-                if (0 < mCommandOpe.mPara.mGridSize)    
-                wp.round(Math.Abs(mCommandOpe.mPara.mGridSize));
+                if (0 < mCommandOpe.mEntityData.mPara.mGridSize)
+                    wp.round(Math.Abs(mCommandOpe.mEntityData.mPara.mGridSize));
                 tbPosition.Text = $"{wp.x.ToString("F2")},{wp.y.ToString("F2")}";   //  マウス座標表示
                 if (mMouseLeftButtonDown && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control
                     || (Mouse.MiddleButton == MouseButtonState.Pressed)) {
@@ -763,7 +764,7 @@ namespace CadApp
         {
             int index = cbColor.SelectedIndex;
             if (0 <= index)
-                mCommandOpe.mPara.mColor = ylib.mColorList[index].brush; ;
+                mCommandOpe.mEntityData.mPara.mColor = ylib.mColorList[index].brush; ;
         }
 
         /// <summary>
@@ -775,8 +776,8 @@ namespace CadApp
         {
             int index = cbGridSize.SelectedIndex;
             if (0 <= index) {
-                mCommandOpe.mPara.mGridSize = mGridSizeMenu[index];
-                mDataDrawing.dispGrid(mCommandOpe.mPara.mGridSize);
+                mCommandOpe.mEntityData.mPara.mGridSize = mGridSizeMenu[index];
+                mDataDrawing.dispGrid(mCommandOpe.mEntityData.mPara.mGridSize);
                 disp(mEntityData);
             }
         }
@@ -790,7 +791,7 @@ namespace CadApp
         {
             int index = cbPointType.SelectedIndex;
             if (0 <= index) {
-                mCommandOpe.mPara.mPointType = index;
+                mCommandOpe.mEntityData.mPara.mPointType = index;
             }
         }
 
@@ -803,7 +804,7 @@ namespace CadApp
         {
             int index = cbPointSize.SelectedIndex;
             if (0 <= index)
-                mCommandOpe.mPara.mPointSize = mEntSizeMenu[index];
+                mCommandOpe.mEntityData.mPara.mPointSize = mEntSizeMenu[index];
         }
 
         /// <summary>
@@ -815,7 +816,7 @@ namespace CadApp
         {
             int index = cbLineType.SelectedIndex;
             if (0 <= index) {
-                mCommandOpe.mPara.mLineType = index;
+                mCommandOpe.mEntityData.mPara.mLineType = index;
             }
         }
 
@@ -828,7 +829,7 @@ namespace CadApp
         {
             int index = cbEntSize.SelectedIndex;
             if (0 <= index)
-                mCommandOpe.mPara.mThickness = mEntSizeMenu[index];
+                mCommandOpe.mEntityData.mPara.mThickness = mEntSizeMenu[index];
         }
 
         /// <summary>
@@ -840,8 +841,8 @@ namespace CadApp
         {
             int index = cbTextSize.SelectedIndex;
             if (0 <= index) {
-                mCommandOpe.mPara.mTextSize = mTextSizeMenu[index];
-                mCommandOpe.mPara.mArrowSize = mCommandOpe.mPara.mTextSize * 6 / 12;
+                mCommandOpe.mEntityData.mPara.mTextSize = mTextSizeMenu[index];
+                mCommandOpe.mEntityData.mPara.mArrowSize = mCommandOpe.mEntityData.mPara.mTextSize * 6 / 12;
             }
         }
 
@@ -854,7 +855,7 @@ namespace CadApp
         {
             int index = cbTextHorizontal.SelectedIndex;
             if (0 <= index) {
-                mCommandOpe.mPara.mHa = index == 1 ? HorizontalAlignment.Center : index == 2 ?HorizontalAlignment.Right : HorizontalAlignment.Left;
+                mCommandOpe.mEntityData.mPara.mHa = index == 1 ? HorizontalAlignment.Center : index == 2 ?HorizontalAlignment.Right : HorizontalAlignment.Left;
             }
         }
 
@@ -867,7 +868,7 @@ namespace CadApp
         {
             int index = cbTextVertical.SelectedIndex;
             if (0 <= index) {
-                mCommandOpe.mPara.mVa = index == 1 ? VerticalAlignment.Center : index == 2 ? VerticalAlignment.Bottom : VerticalAlignment.Top;
+                mCommandOpe.mEntityData.mPara.mVa = index == 1 ? VerticalAlignment.Center : index == 2 ? VerticalAlignment.Bottom : VerticalAlignment.Top;
             }
         }
 
@@ -880,7 +881,7 @@ namespace CadApp
         {
             int index = cbTextRotate.SelectedIndex;
             if (0 <= index) {
-                mCommandOpe.mPara.mTextRotate = ylib.D2R(mTextRotateMenu[index]);
+                mCommandOpe.mEntityData.mPara.mTextRotate = ylib.D2R(mTextRotateMenu[index]);
             }
         }
 
@@ -1005,7 +1006,7 @@ namespace CadApp
         {
             if (control) {
                 switch (key) {
-                    case Key.F1: mCommandOpe.mPara.mGridSize *= -1; disp(mEntityData); break;   //  グリッド表示反転
+                    case Key.F1: mCommandOpe.mEntityData.mPara.mGridSize *= -1; disp(mEntityData); break;   //  グリッド表示反転
                     case Key.F2: break;
                     case Key.F3: break;
                     case Key.F4: break;
@@ -1207,7 +1208,7 @@ namespace CadApp
             mOperation = OPERATION.non;
             lbCommand.ItemsSource = mCommandData.getMainCommand();
             lbCommand.SelectedIndex = -1;
-            chOneLayer.IsChecked = mCommandOpe.mPara.mOneLayerDisp;
+            chOneLayer.IsChecked = mCommandOpe.mEntityData.mPara.mOneLayerDisp;
             disp(mEntityData);
         }
 
@@ -1693,14 +1694,14 @@ namespace CadApp
         {
             mEntityData.addDispLayer(layerName);
             mEntityData.mPara.mCreateLayerName = layerName;
-            mCommandOpe.mPara.mCreateLayerName = layerName;
-            if (mCommandOpe.mPara.mOneLayerDisp) {
+            mCommandOpe.mEntityData.mPara.mCreateLayerName = layerName;
+            if (mCommandOpe.mEntityData.mPara.mOneLayerDisp) {
                 //  1レイヤー表示
                 mEntityData.mPara.mDispLayerBit &= mEntityData.getLayerBit(layerName);
             }
-            mCommandOpe.mPara.mDispLayerBit = mEntityData.mPara.mDispLayerBit;
+            mCommandOpe.mEntityData.mPara.mDispLayerBit = mEntityData.mPara.mDispLayerBit;
             cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
-            cbCreateLayer.SelectedIndex = cbCreateLayer.Items.IndexOf(mCommandOpe.mPara.mCreateLayerName);
+            cbCreateLayer.SelectedIndex = cbCreateLayer.Items.IndexOf(mCommandOpe.mEntityData.mPara.mCreateLayerName);
             if (mCommandOpe.mChkListDlg != null && mCommandOpe.mChkListDlg.IsVisible) {
                 //  表示レイヤーダイヤログ表示
                 mCommandOpe.setDispLayer();
@@ -1797,7 +1798,7 @@ namespace CadApp
         /// </summary>
         private void disp(EntityData entyityData)
         {
-            mDataDrawing.disp(entyityData, mCommandOpe.mBackColor, mCommandOpe.mPara.mGridSize);
+            mDataDrawing.disp(entyityData, mCommandOpe.mBackColor, mCommandOpe.mEntityData.mPara.mGridSize);
             mDataDrawing.pickDisp(mEntityData, mCommandOpe.mPickEnt);
         }
 
@@ -1861,7 +1862,7 @@ namespace CadApp
         /// <param name="dy">Y移動量</param>
         private void scroll(double dx, double dy)
         {
-            mDataDrawing.scroll(mEntityData, dx, dy, mCommandOpe.mPara.mGridSize);
+            mDataDrawing.scroll(mEntityData, dx, dy, mCommandOpe.mEntityData.mPara.mGridSize);
             mDataDrawing.pickDisp(mEntityData, mCommandOpe.mPickEnt);
         }
 
@@ -2032,18 +2033,18 @@ namespace CadApp
         /// </summary>
         public void setZumenProperty()
         {
-            cbColor.SelectedIndex     = ylib.mColorList.FindIndex(p => p.brush == mCommandOpe.mPara.mColor);
-            cbGridSize.SelectedIndex  = mGridSizeMenu.FindIndex(Math.Abs(mCommandOpe.mPara.mGridSize));
-            cbPointType.SelectedIndex = mCommandOpe.mPara.mPointType;
-            cbPointSize.SelectedIndex = mEntSizeMenu.FindIndex(p => mCommandOpe.mPara.mPointSize <= p);
-            cbLineType.SelectedIndex  = mCommandOpe.mPara.mLineType;
-            cbEntSize.SelectedIndex   = mEntSizeMenu.FindIndex(p => mCommandOpe.mPara.mThickness <= p);
-            cbTextSize.SelectedIndex  = mTextSizeMenu.FindIndex((p) => mCommandOpe.mPara.mTextSize <= p);
-            cbTextHorizontal.SelectedIndex = mCommandOpe.mPara.mHa == HorizontalAlignment.Left ? 0 :
-                                         mCommandOpe.mPara.mHa == HorizontalAlignment.Center ? 1 : 2;
-            cbTextVertical.SelectedIndex   = mCommandOpe.mPara.mVa == VerticalAlignment.Top ? 0 :
-                                         mCommandOpe.mPara.mVa == VerticalAlignment.Center ? 1 : 2;
-            cbTextRotate.SelectedIndex = mTextRotateMenu.FindIndex(p => ylib.R2D(mCommandOpe.mPara.mTextRotate) <= p);
+            cbColor.SelectedIndex     = ylib.mColorList.FindIndex(p => p.brush == mCommandOpe.mEntityData.mPara.mColor);
+            cbGridSize.SelectedIndex  = mGridSizeMenu.FindIndex(Math.Abs(mCommandOpe.mEntityData.mPara.mGridSize));
+            cbPointType.SelectedIndex = mCommandOpe.mEntityData.mPara.mPointType;
+            cbPointSize.SelectedIndex = mEntSizeMenu.FindIndex(p => mCommandOpe.mEntityData.mPara.mPointSize <= p);
+            cbLineType.SelectedIndex  = mCommandOpe.mEntityData.mPara.mLineType;
+            cbEntSize.SelectedIndex   = mEntSizeMenu.FindIndex(p => mCommandOpe.mEntityData.mPara.mThickness <= p);
+            cbTextSize.SelectedIndex  = mTextSizeMenu.FindIndex((p) => mCommandOpe.mEntityData.mPara.mTextSize <= p);
+            cbTextHorizontal.SelectedIndex = mCommandOpe.mEntityData.mPara.mHa == HorizontalAlignment.Left ? 0 :
+                                         mCommandOpe.mEntityData.mPara.mHa == HorizontalAlignment.Center ? 1 : 2;
+            cbTextVertical.SelectedIndex   = mCommandOpe.mEntityData.mPara.mVa == VerticalAlignment.Top ? 0 :
+                                         mCommandOpe.mEntityData.mPara.mVa == VerticalAlignment.Center ? 1 : 2;
+            cbTextRotate.SelectedIndex = mTextRotateMenu.FindIndex(p => ylib.R2D(mCommandOpe.mEntityData.mPara.mTextRotate) <= p);
             cbCreateLayer.ItemsSource  = mEntityData.getLayerNameList();
             setCreateLayer(mEntityData.mPara.mCreateLayerName);
         }
@@ -2064,15 +2065,15 @@ namespace CadApp
         /// </summary>
         private void loadDataProperty()
         {
-            mCommandOpe.mPara = new DrawingPara();
-            mCommandOpe.mPara.mPointSize  = Properties.Settings.Default.PointSize;
-            mCommandOpe.mPara.mPointType  = Properties.Settings.Default.PointType;
-            mCommandOpe.mPara.mThickness  = Properties.Settings.Default.Thickness;
-            mCommandOpe.mPara.mLineType   = Properties.Settings.Default.LineType;
-            mCommandOpe.mPara.mTextSize   = Properties.Settings.Default.TextSize;
-            mCommandOpe.mPara.mArrowSize  = Properties.Settings.Default.ArrowSize;
-            mCommandOpe.mPara.mArrowAngle = Properties.Settings.Default.ArrowAngle;
-            mCommandOpe.mPara.mGridSize   = Properties.Settings.Default.GridSize;
+            mCommandOpe.mEntityData.mPara = new DrawingPara();
+            mCommandOpe.mEntityData.mPara.mPointSize  = Properties.Settings.Default.PointSize;
+            mCommandOpe.mEntityData.mPara.mPointType  = Properties.Settings.Default.PointType;
+            mCommandOpe.mEntityData.mPara.mThickness  = Properties.Settings.Default.Thickness;
+            mCommandOpe.mEntityData.mPara.mLineType   = Properties.Settings.Default.LineType;
+            mCommandOpe.mEntityData.mPara.mTextSize   = Properties.Settings.Default.TextSize;
+            mCommandOpe.mEntityData.mPara.mArrowSize  = Properties.Settings.Default.ArrowSize;
+            mCommandOpe.mEntityData.mPara.mArrowAngle = Properties.Settings.Default.ArrowAngle;
+            mCommandOpe.mEntityData.mPara.mGridSize   = Properties.Settings.Default.GridSize;
         }
 
         /// <summary>

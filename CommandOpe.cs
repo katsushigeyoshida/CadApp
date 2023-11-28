@@ -250,7 +250,6 @@ namespace CadApp
     {
         public EntityData mEntityData;                              //  要素データ
         public ImageData mImageData;
-        public DrawingPara mPara = new DrawingPara();
 
         public string mTextString = "";                             //  文字列データ
         public string mCurFilePath = "";                            //  編集中のファイルパス
@@ -318,7 +317,6 @@ namespace CadApp
         {
             mCurFilePath = filePath;
             mEntityData.clear();
-            mEntityData.mPara = mPara;
             mEntityData.mArea = mInitArea.toCopy();
             saveFile();
         }
@@ -466,7 +464,7 @@ namespace CadApp
                     zumenComment();
                     break;
                 case OPERATION.zumenInfo:                   //  図面設定
-                    if (zumenProperty(mPara))
+                    if (zumenProperty(mEntityData.mPara))
                         mMainWindow.setZumenProperty();     //  コントロールバーの設定
                     break;
                 case OPERATION.createLayer:                 //  作成レイヤー設定
@@ -479,7 +477,7 @@ namespace CadApp
                     setFulleDispLayer();
                     break;
                 case OPERATION.oneLayerDisp:                //  1レイヤー表示
-                    setOneLayerDisp(!mPara.mOneLayerDisp);
+                    setOneLayerDisp(!mEntityData.mPara.mOneLayerDisp);
                     break;
                 case OPERATION.changeLayerName:             //  レイヤー名変更
                     changeLayerName();
@@ -603,11 +601,8 @@ namespace CadApp
         /// <returns></returns>
         public bool createData(List<PointD> points, OPERATION operation)
         {
-            mEntityData.mPara = mPara.toCopy();
             if (operation == OPERATION.createPoint && points.Count == 1) {
                 //  点要素作成
-                mEntityData.mPara.mPointType = mPara.mPointType;
-                mEntityData.mPara.mPointSize = mPara.mPointSize;
                 mEntityData.addPoint(points[0]);
             } else if (operation == OPERATION.createLine && points.Count == 2) {
                 //  線分要素作成
@@ -627,8 +622,8 @@ namespace CadApp
                 mEntityData.addEllipse(new EllipseD(points[0], points[1]));
             } else if (operation == OPERATION.createText && points.Count == 1) {
                 //  テキスト要素の作成
-                TextD text = new TextD(mTextString, points[0], mPara.mTextSize, mPara.mTextRotate,
-                    mPara.mHa, mPara.mVa, mPara.mLinePitchRate);
+                TextD text = new TextD(mTextString, points[0], mEntityData.mPara.mTextSize, mEntityData.mPara.mTextRotate,
+                    mEntityData.mPara.mHa, mEntityData.mPara.mVa, mEntityData.mPara.mLinePitchRate);
                 mEntityData.addText(text);
             } else if (operation == OPERATION.createHVLine) {
                 //  水平垂直線分
@@ -694,7 +689,6 @@ namespace CadApp
         /// <returns></returns>
         public bool changeData(List<PointD> loc, List<(int, PointD)> pickEnt, OPERATION operation)
         {
-            mEntityData.mPara = mPara.toCopy();
             if (loc.Count == 1) {
                 if (operation == OPERATION.divide) {
                     //  分割
@@ -803,7 +797,7 @@ namespace CadApp
         {
             mEntityData.mOperationCouunt++;
             mKeyCommand.mTextString = text;
-            return mKeyCommand.setCommand(command, mPara);
+            return mKeyCommand.setCommand(command, mEntityData.mPara);
         }
 
         /// <summary>
@@ -1189,7 +1183,7 @@ namespace CadApp
                             continue;
                         string[] data = ylib.csvData2ArrayStr(dataList[++i]);
                         Entity ent = mEntityData.setStringEntityData(property, data);
-                        ent.mLayerName = mPara.mCreateLayerName;
+                        ent.mLayerName = mEntityData.mPara.mCreateLayerName;
                         if (ent != null)
                             mCopyEntityList.Add(ent);
                     }
@@ -1255,14 +1249,14 @@ namespace CadApp
             dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             dlg.Title = "シンボル選択";
             dlg.mSymbolFolder = mMainWindow.mSymbolData.mSymbolFolder;
-            dlg.mDefualtCategory = mPara.mSymbolCategoryIndex;
+            dlg.mDefualtCategory = mEntityData.mPara.mSymbolCategoryIndex;
             if (dlg.ShowDialog() == true) {
                 Entity ent = dlg.mEntity;
-                ent.setProperty(mPara);
+                ent.setProperty(mEntityData.mPara);
                 mCopyEntityList = new List<Entity>();
                 if (ent != null)
                     mCopyEntityList.Add(ent);
-                mPara.mSymbolCategoryIndex = dlg.mDefualtCategory;
+                mEntityData.mPara.mSymbolCategoryIndex = dlg.mDefualtCategory;
             }
         }
 
@@ -1277,7 +1271,7 @@ namespace CadApp
             mSymbolDlg.Topmost = true;
             mSymbolDlg.Title = "シンボル選択";
             mSymbolDlg.mSymbolFolder = mMainWindow.mSymbolData.mSymbolFolder;
-            mSymbolDlg.mDefualtCategory = mPara.mSymbolCategoryIndex;
+            mSymbolDlg.mDefualtCategory = mEntityData.mPara.mSymbolCategoryIndex;
             mSymbolDlg.mCallBackOn = true;
             mSymbolDlg.callback = setSymbolData;
             mSymbolDlg.Show();
@@ -1289,11 +1283,11 @@ namespace CadApp
         public void setSymbolData()
         {
             Entity ent = mSymbolDlg.mEntity;
-            ent.setProperty(mPara);
+            ent.setProperty(mEntityData.mPara);
             mCopyEntityList = new List<Entity>();
             if (ent != null)
                 mCopyEntityList.Add(ent);
-            mPara.mSymbolCategoryIndex = mSymbolDlg.mDefualtCategory;
+            mEntityData.mPara.mSymbolCategoryIndex = mSymbolDlg.mDefualtCategory;
             mMainWindow.mOperation = OPERATION.createSymbol;
             mMainWindow.mLocMode = MainWindow.OPEMODE.loc;
             mLocPos.Clear();
@@ -1338,7 +1332,7 @@ namespace CadApp
                 filePath = ylib.fileOpenSelectDlg("イメージファイルの選択", ".", mImageFilters);
             if (File.Exists(filePath)) {
                 Entity ent = new ImageEntity(mImageData, filePath);
-                ent.setProperty(mPara);
+                ent.setProperty(mEntityData.mPara);
                 mCopyEntityList = new List<Entity>();
                 if (ent != null)
                     mCopyEntityList.Add(ent);
@@ -1395,7 +1389,7 @@ namespace CadApp
                 mEntityData.mOperationCouunt++;
                 string name = "__" + dlg.mEditText;
                 PartsEntity entity = new PartsEntity(name, lines, arcs, texts);
-                entity.setProperty(mPara);
+                entity.setProperty(mEntityData.mPara);
                 mEntityData.mEntityList.Add(entity);
                 entity.mOperationCount = mEntityData.mOperationCouunt;
                 for (int i = 0; i < pickEnt.Count; i++)
@@ -1538,12 +1532,11 @@ namespace CadApp
             dlg.Owner = mMainWindow;
             dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             dlg.Title = "作成レイヤー";
-            dlg.mText = mPara.mCreateLayerName;
+            dlg.mText = mEntityData.mPara.mCreateLayerName;
             dlg.mTextList = mEntityData.getLayerNameList();
             if (dlg.ShowDialog() == true) {
-                mPara.mCreateLayerName = dlg.mText;
-                mEntityData.addDispLayer(mPara.mCreateLayerName);
-                mPara.mDispLayerBit = mEntityData.mPara.mDispLayerBit;
+                mEntityData.mPara.mCreateLayerName = dlg.mText;
+                mEntityData.addDispLayer(mEntityData.mPara.mCreateLayerName);
                 mMainWindow.cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
                 mMainWindow.cbCreateLayer.SelectedIndex = mMainWindow.cbCreateLayer.Items.IndexOf(mEntityData.mPara.mCreateLayerName);
                 mEntityData.mOperationCouunt++;
@@ -1572,19 +1565,17 @@ namespace CadApp
         /// </summary>
         public void setLayerChk()
         {
-            ulong createLayerBit = mEntityData.getLayerBit(mPara.mCreateLayerName);
+            ulong createLayerBit = mEntityData.getLayerBit(mEntityData.mPara.mCreateLayerName);
             mEntityData.setDispLayerBit(mChkListDlg.mChkList);
             if ((createLayerBit & mEntityData.mPara.mDispLayerBit) == 0) {
                 ylib.messageBox(mMainWindow, "作成レイヤーを非表示にすることはできません");
-                mChkListDlg.visibleDataSet(mPara.mCreateLayerName);
+                mChkListDlg.visibleDataSet(mEntityData.mPara.mCreateLayerName);
                 mEntityData.mPara.mDispLayerBit |= createLayerBit;
             }
             if (mEntityData.mPara.mDispLayerBit != createLayerBit) {
                 mEntityData.mPara.mOneLayerDisp = false;
-                mPara.mOneLayerDisp = false;
             }
             mEntityData.updateData();
-            mPara.mDispLayerBit = mEntityData.mPara.mDispLayerBit;
             mMainWindow.commandClear();
         }
 
@@ -1593,10 +1584,8 @@ namespace CadApp
         /// </summary>
         public void setFulleDispLayer()
         {
-            mPara.mDispLayerBit = 0xffffffff;
-            mEntityData.mPara.mDispLayerBit = mPara.mDispLayerBit;
+            mEntityData.mPara.mDispLayerBit = 0xffffffff;
             mEntityData.updateData();
-            mPara.mOneLayerDisp = false;
             mEntityData.mPara.mOneLayerDisp = false;
             mEntityData.mOperationCouunt++;
         }
@@ -1608,11 +1597,10 @@ namespace CadApp
         public void setOneLayerDisp(bool oneLayer)
         {
             if (oneLayer) {
-                mPara.mDispLayerBit &= mEntityData.getLayerBit(mPara.mCreateLayerName);
-                mPara.mOneLayerDisp = true;
-                mEntityData.mPara = mPara.toCopy();
+                mEntityData.mPara.mDispLayerBit &= mEntityData.getLayerBit(mEntityData.mPara.mCreateLayerName);
+                mEntityData.mPara.mOneLayerDisp = true;
             } else {
-                mPara.mOneLayerDisp = true;
+                mEntityData.mPara.mOneLayerDisp = true;
             }
             mEntityData.mOperationCouunt++;
         }
@@ -1632,7 +1620,6 @@ namespace CadApp
             if (dlg.ShowDialog()==true) {
                 mEntityData.mOperationCouunt++;
                 mEntityData.changeLayerName(dlg.mSelectText, dlg.mEditText);
-                mPara.mCreateLayerName = mEntityData.mPara.mCreateLayerName;
                 mMainWindow.cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
                 mMainWindow.cbCreateLayer.SelectedIndex = mMainWindow.cbCreateLayer.Items.IndexOf(mEntityData.mPara.mCreateLayerName);
                 mMainWindow.btDummy.Focus();    //  ダミーフォーカス
@@ -1874,9 +1861,9 @@ namespace CadApp
             dlg.mMultiLine = true;
             dlg.mWindowSizeOutSet = true;
             dlg.Title = "図面のコメント";
-            dlg.mEditText = mPara.mComment;
+            dlg.mEditText = mEntityData.mPara.mComment;
             if (dlg.ShowDialog() == true) {
-                mPara.mComment = dlg.mEditText;
+                mEntityData.mPara.mComment = dlg.mEditText;
                 mEntityData.mOperationCouunt++;
             }
         }
@@ -1890,26 +1877,10 @@ namespace CadApp
             dlg.Owner = mMainWindow;
             dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             dlg.Title = "グリッドのサイズの設定";
-            dlg.mEditText = Math.Abs(mPara.mGridSize).ToString();
+            dlg.mEditText = Math.Abs(mEntityData.mPara.mGridSize).ToString();
             if (dlg.ShowDialog() == true) {
-                mPara.mGridSize = ylib.string2double(dlg.mEditText);
+                mEntityData.mPara.mGridSize = ylib.string2double(dlg.mEditText);
             }
-        }
-
-        /// <summary>
-        /// プロパティ値をEntityDataに設定
-        /// </summary>
-        public void setProperty()
-        {
-            mEntityData.mPara = mPara.toCopy();
-        }
-
-        /// <summary>
-        /// EntityDataからプロパティ値を取得
-        /// </summary>
-        public void getProperty()
-        {
-            mPara = mEntityData.mPara;
         }
 
         /// <summary>
@@ -1964,7 +1935,6 @@ namespace CadApp
             if (0 < filePath.Length) {
                 mEntityData.loadData(filePath);
                 mCurFilePath = filePath;
-                mPara = mEntityData.mPara;
                 return true;
             }
             return false;
@@ -1998,7 +1968,6 @@ namespace CadApp
             if (0 < filePath.Length) {
                 if (filePath.IndexOf(".csv") < 0)
                     filePath = filePath + ".csv";
-                setProperty();
                 mEntityData.saveData(filePath);
                 mCurFilePath = filePath;
             }

@@ -157,7 +157,7 @@ namespace CadApp
         /// <param name="ope"></param>
         public void setEntityProperty(CommandOpe ope)
         {
-            mPara = ope.mPara.toCopy();
+            mPara = ope.mEntityData.mPara.toCopy();
             mCopyArea = ope.mCopyArea;
             mCopyEntityList = ope.mCopyEntityList;
         }

@@ -588,12 +588,13 @@ namespace CadApp
         /// <returns>円データ</returns>
         public ArcD tangentCircle(List<(int no, PointD pos)> pickList, List<PointD> loc, double r = 0)
         {
-            if (1 < pickList.Count && loc.Count == 1) {
-                List<ArcD> arcList = null;
+            List<ArcD> arcList = null;
+            if (pickList.Count == 2 && loc.Count == 1) {
                 Entity ent0 = mEntityList[pickList[0].no];
                 Entity ent1 = mEntityList[pickList[1].no];
                 if ((ent0.mEntityId == EntityId.Line || ent0.mEntityId == EntityId.Polyline || ent0.mEntityId == EntityId.Polygon) &&
                     (ent1.mEntityId == EntityId.Line || ent1.mEntityId == EntityId.Polyline || ent1.mEntityId == EntityId.Polygon)) {
+                    //  2線分に接する円
                     LineD l0 = ent0.getLine(pickList[0].pos);
                     LineD l1 = ent1.getLine(pickList[1].pos);
                     if (!l0.isNaN() && !l1.isNaN()) {
@@ -603,17 +604,20 @@ namespace CadApp
                     }
                 } else if ((ent0.mEntityId == EntityId.Line || ent0.mEntityId == EntityId.Polyline || ent0.mEntityId == EntityId.Polygon) &&
                         ent1.mEntityId == EntityId.Arc) {
+                    //  線分と円弧に接する円
                     LineD l0 = ent0.getLine(pickList[0].pos);
                     ArcD arc = ((ArcEntity)ent1).mArc;
                     r = r == 0 ? l0.distance(loc[0]) : r;
                     arcList = arc.tangentCircle(l0, arc, r);
                 } else if ((ent1.mEntityId == EntityId.Line || ent1.mEntityId == EntityId.Polyline || ent1.mEntityId == EntityId.Polygon) &&
                         ent0.mEntityId == EntityId.Arc) {
+                    //  円弧と線分に接する円
                     LineD l1 = ent1.getLine(pickList[1].pos);
                     ArcD arc = ((ArcEntity)ent0).mArc;
                     r = r == 0 ? l1.distance(loc[0]) : r;
                     arcList = arc.tangentCircle(l1, arc, r);
                 } else if (ent0.mEntityId == EntityId.Arc && ent1.mEntityId == EntityId.Arc) {
+                    //  2円弧に接する円
                     ArcD arc0 = ((ArcEntity)ent0).mArc;
                     ArcD arc1 = ((ArcEntity)ent1).mArc;
                     r = r == 0 ? Math.Abs(arc0.mCp.length(loc[0]) - arc0.mR) : r;
@@ -621,9 +625,22 @@ namespace CadApp
                 } else {
                     return null;
                 }
-                return arcList.MinBy(p => p.mCp.length(loc[0]));
+            } else if (pickList.Count == 3 && loc.Count == 1) {
+                Entity ent0 = mEntityList[pickList[0].no];
+                Entity ent1 = mEntityList[pickList[1].no];
+                Entity ent2 = mEntityList[pickList[2].no];
+                if ((ent0.mEntityId == EntityId.Line || ent0.mEntityId == EntityId.Polyline|| ent0.mEntityId == EntityId.Polygon)
+                    && (ent1.mEntityId == EntityId.Line || ent1.mEntityId == EntityId.Polyline || ent1.mEntityId == EntityId.Polygon)
+                    && (ent2.mEntityId == EntityId.Line || ent2.mEntityId == EntityId.Polyline || ent2.mEntityId == EntityId.Polygon)) {
+                    //  3線分に接する円
+                    ArcD arc = new ArcD();
+                    arcList = arc.tangentCircle(ent0.getLine(pickList[0].pos), ent1.getLine(pickList[1].pos), ent2.getLine(pickList[2].pos));
+                }
             }
-            return null;
+            if (arcList != null)
+                return arcList.MinBy(p => p.mCp.length(loc[0]));
+            else
+                return null;
         }
 
         /// <summary>

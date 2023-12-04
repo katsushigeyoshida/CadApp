@@ -27,11 +27,30 @@ namespace CadApp
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        /// <param name="line"></param>
+        /// <param name="name">パーツ名</param>
+        /// <param name="lines">線分データ</param>
+        /// <param name="arcs">円弧データ</param>
+        /// <param name="texts">文字列データ</param>
         public PartsEntity(string name, List<LineD> lines, List<ArcD> arcs, List<TextD> texts)
         {
             mEntityId = EntityId.Parts;
             mParts = new PartsD(name, lines, arcs, texts);
+            mEntityName = "パーツ";
+            mArea = mParts.getBox();
+        }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="name">パーツ名</param>
+        /// <param name="points">点データ</param>
+        /// <param name="lines">線分データ</param>
+        /// <param name="arcs">円弧データ</param>
+        /// <param name="texts">文字列データ</param>
+        public PartsEntity(string name, List<PointD> points, List<LineD> lines, List<ArcD> arcs, List<TextD> texts)
+        {
+            mEntityId = EntityId.Parts;
+            mParts = new PartsD(name, points, lines, arcs, texts);
             mEntityName = "パーツ";
             mArea = mParts.getBox();
         }
@@ -59,6 +78,12 @@ namespace CadApp
             ydraw.mTextColor = mPick ? mPickColor : mColor;
             ydraw.mThickness = mThickness;
             ydraw.mLineType = mType;
+            ydraw.mPointSize = 1;
+            ydraw.mPointType = 1;
+            if (mParts.mPoints != null) {
+                foreach (var point in mParts.mPoints)
+                    ydraw.drawWPoint(point);
+            }
             if (mParts.mLines != null) {
                 foreach (var line in mParts.mLines)
                     ydraw.drawWLine(line);
@@ -86,7 +111,12 @@ namespace CadApp
             mParts.mTextSize = 0;
             for (int i = 0; i < data.Length - 1; i++) {
                 try {
-                    if (data[i] == "line") {
+                    if (data[i] == "point") {
+                        PointD point = new();
+                        point.x = ylib.string2double(data[++i]);
+                        point.y = ylib.string2double(data[++i]);
+                        mParts.mPoints.Add(point);
+                    } else if (data[i] == "line") {
                         LineD line = new();
                         line.ps.x = ylib.string2double(data[++i]);
                         line.ps.y = ylib.string2double(data[++i]);
@@ -159,6 +189,10 @@ namespace CadApp
         {
             string buf = "";
             buf += "name," + mParts.mName + ",";
+            if (mParts.mPoints != null) {
+                foreach (var point in mParts.mPoints)
+                    buf += $"point,{point.x},{point.y},";
+            }
             if (mParts.mLines != null) {
                 foreach (var line in mParts.mLines)
                     buf += $"line,{line.ps.x},{line.ps.y},{line.pe.x},{line.pe.y},";
@@ -203,6 +237,13 @@ namespace CadApp
             List<string> dataList = new List<string>();
             dataList.Add("name");
             dataList.Add(mParts.mName);
+            if (mParts.mPoints != null) {
+                foreach (var point in mParts.mPoints) {
+                    dataList.Add("point");
+                    dataList.Add(point.x.ToString());
+                    dataList.Add(point.y.ToString());
+                }
+            }
             if (mParts.mLines != null) {
                 foreach (var line in mParts.mLines) {
                     dataList.Add("line");
@@ -210,7 +251,6 @@ namespace CadApp
                     dataList.Add(line.ps.y.ToString());
                     dataList.Add(line.pe.x.ToString());
                     dataList.Add(line.pe.y.ToString());
-
                 }
             }
             if (mParts.mArcs != null) {
@@ -436,10 +476,14 @@ namespace CadApp
         public override bool intersectionChk(Box b)
         {
             List<PointD> plist = b.intersection(mParts);
-            if (plist.Count == 0)
-                return mParts.textInsideChk(b);
-            else
+            if (0 < plist.Count)
                 return true;
+            if (mParts.textInsideChk(b))
+                return true;
+            foreach (var point in mParts.mPoints)
+                if (b.insideChk(point))
+                    return true;
+            return false;
         }
 
         /// <summary>

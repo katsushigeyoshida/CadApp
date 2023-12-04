@@ -1349,12 +1349,16 @@ namespace CadApp
         /// <param name="pickEnt"></param>
         public void cnvSymbol(List<(int no, PointD pos)> pickEnt)
         {
+            List<PointD> points = new List<PointD>();
             List<LineD> lines = new List<LineD>();
             List<ArcD> arcs = new List<ArcD>();
             List<TextD> texts = new List<TextD>();
             for (int i = 0; i < pickEnt.Count; i++) {
                 int no = pickEnt[i].no;
-                if (mEntityData.mEntityList[no].mEntityId == EntityId.Line) {
+                if (mEntityData.mEntityList[no].mEntityId == EntityId.Point) {
+                    PointEntity PointEnt = (PointEntity)mEntityData.mEntityList[no];
+                    points.Add(PointEnt.mPoint);
+                } else if (mEntityData.mEntityList[no].mEntityId == EntityId.Line) {
                     LineEntity lineEnt = (LineEntity)mEntityData.mEntityList[no];
                     lines.Add(lineEnt.mLine);
                 } else if (mEntityData.mEntityList[no].mEntityId == EntityId.Arc) {
@@ -1388,7 +1392,7 @@ namespace CadApp
             if (dlg.ShowDialog() == true) {
                 mEntityData.mOperationCouunt++;
                 string name = "__" + dlg.mEditText;
-                PartsEntity entity = new PartsEntity(name, lines, arcs, texts);
+                PartsEntity entity = new PartsEntity(name, points, lines, arcs, texts);
                 entity.setProperty(mEntityData.mPara);
                 mEntityData.mEntityList.Add(entity);
                 entity.mOperationCount = mEntityData.mOperationCouunt;
@@ -1414,6 +1418,7 @@ namespace CadApp
                         dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
                         dlg.Title = "シンボル登録";
                         dlg.mTextList = mMainWindow.mSymbolData.getCategoryList();
+                        dlg.mListIndex = mEntityData.mPara.mSymbolCategoryIndex;
                         if (0 < dlg.mTextList.Count)
                             dlg.mText = dlg.mTextList[0];
                         if (dlg.ShowDialog() == true) {
@@ -1435,6 +1440,7 @@ namespace CadApp
             dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             dlg.Title = "シンボル管理";
             dlg.mSymbolFolder = mMainWindow.mSymbolData.mSymbolFolder;
+            dlg.mDefualtCategory = mEntityData.mPara.mSymbolCategoryIndex;
             dlg.mCancelEnable = false;
             if (dlg.ShowDialog() == true) {
 

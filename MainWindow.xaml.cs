@@ -27,7 +27,7 @@ namespace CadApp
         private string mHelpFile = "CadAppManual.pdf";       //  PDFのヘルプファイル
         private string mShortCutPath = "ShortCut.csv";
         private double[] mGridSizeMenu = {
-            0, 0.1, 0.2, 0.3, 0.4, 0.5, 1,1.5, 2, 2.5, 3, 4, 5, 10,
+            0, 0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 10,
             20, 30, 40, 50, 100, 200, 300, 400, 500, 1000
         };
         private double[] mTextSizeMenu = {
@@ -533,10 +533,18 @@ namespace CadApp
         private void Window_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             if (0 != e.Delta) {
-                double scaleStep = e.Delta > 0 ? 1.2 : 1 / 1.2;
-                Point point = e.GetPosition(cvCanvas);
-                PointD wp = mDataDrawing.cnvScreen2World(new PointD(point));
-                zoom(wp, scaleStep);
+                if (onControlKey()) {
+                    double scaleStep = e.Delta > 0 ? 1 : -1;
+                    scroll(0, mScrollSize * scaleStep);
+                } else if (onAltKey()) {
+                    double scaleStep = e.Delta > 0 ? 1 : -1;
+                    scroll(mScrollSize * scaleStep, 0);
+                } else {
+                    double scaleStep = e.Delta > 0 ? 1.2 : 1 / 1.2;
+                    Point point = e.GetPosition(cvCanvas);
+                    PointD wp = mDataDrawing.cnvScreen2World(new PointD(point));
+                    zoom(wp, scaleStep);
+                }
             }
         }
 
@@ -1064,6 +1072,15 @@ namespace CadApp
         private bool onControlKey()
         {
             return (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control;
+        }
+
+        /// <summary>
+        /// Altキーの確認
+        /// </summary>
+        /// <returns></returns>
+        private bool onAltKey()
+        {
+            return (Keyboard.Modifiers & ModifierKeys.Alt) == ModifierKeys.Alt;
         }
 
         /// <summary>

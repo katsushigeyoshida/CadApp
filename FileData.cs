@@ -333,9 +333,10 @@ namespace CadApp
         public List<string> getGenreList()
         {
             List<string> genreList = ylib.getDirectories(mBaseDataFolder);
-            if (genreList != null)
+            if (genreList != null) {
                 genreList.Sort();
-            genreList = genreList.ConvertAll(p => ylib.getLastFolder(p, 1));
+                genreList = genreList.ConvertAll(p => ylib.getLastFolder(p, 1));
+            }
             return genreList;
         }
 
@@ -348,9 +349,10 @@ namespace CadApp
             List<string> categoryList = new List<string>();
             try {
                 categoryList = ylib.getDirectories(getCurGenrePath());
-                if (categoryList != null)
+                if (categoryList != null) {
                     categoryList.Sort();
-                categoryList = categoryList.ConvertAll(p => ylib.getLastFolder(p, 1));
+                    categoryList = categoryList.ConvertAll(p => ylib.getLastFolder(p, 1));
+                }
             } catch (Exception e) {
                 ylib.messageBox(mMainWindow, e.Message);
             }
@@ -366,8 +368,10 @@ namespace CadApp
             List<string> fileNameList = new List<string>();
             try {
                 string[] files = ylib.getFiles(getCurCategoryPath() + "\\*.csv");
-                for (int i = 0; i < files.Length; i++) {
-                    fileNameList.Add(Path.GetFileNameWithoutExtension(files[i]));
+                if (files != null) {
+                    for (int i = 0; i < files.Length; i++) {
+                        fileNameList.Add(Path.GetFileNameWithoutExtension(files[i]));
+                    }
                 }
             } catch (Exception e) {
                 ylib.messageBox(mMainWindow, e.Message);

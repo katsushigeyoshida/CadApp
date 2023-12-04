@@ -864,6 +864,10 @@ namespace CadApp
                         break;
                     case EntityId.Parts:
                         PartsEntity partsEnt = (PartsEntity)entity;
+                        foreach (var point in partsEnt.mParts.mPoints) {
+                            addPoint(point);
+                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
+                        }
                         foreach (var line in partsEnt.mParts.mLines) {
                             addLine(line);
                             mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;

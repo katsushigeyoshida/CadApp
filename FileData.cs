@@ -516,7 +516,7 @@ namespace CadApp
                 bool noExistFileRemove = true;
                 if (0 < removeFile.Count) {
                     if (ylib.messageBox(mMainWindow,
-                        $"ソースにないファイルがバックアップに {removeFile.Count} ファイル存在します。\nこれも削除しますか?",
+                        $"ソースにないファイルがバックアップに {removeFile.Count} ファイル存在します。\nバックアップから削除しますか?",
                         "" ,"確認", MessageBoxButton.YesNo) == MessageBoxResult.No)
                         noExistFileRemove = false;
                 }
@@ -548,6 +548,66 @@ namespace CadApp
             dlg.mDestFolder = backupFolder;
             dlg.mDiffTool = mDiffTool;
             dlg.ShowDialog();
+        }
+
+        /// <summary>
+        /// 未使用イメージキャッシュファイルの削除
+        /// </summary>
+        /// <param name="imageCacheFolder">イメージキャッシュファイルフォルダ</param>
+        public void squeezeImageCache(string imageCacheFolder)
+        {
+            //  図面データファイルリストの取得
+            List<FileInfo> fileList = ylib.getDirectoriesInfo(mBaseDataFolder, "*.csv");
+            //  図面データ中のイメージキャッシュファイルのリストの作成
+            List<string> dataImageCacheFiles = new List<string>();
+            foreach (FileInfo file in fileList) {
+                //System.Diagnostics.Debug.WriteLine(file.FullName);
+                List<string> dataImageCacheFile = getImageCacheFile(file.FullName);
+                if (0 < dataImageCacheFile.Count) {
+                    foreach (string imagePath in dataImageCacheFile) {
+                        System.Diagnostics.Debug.WriteLine(file.Name + ": " + imagePath);
+                    }
+                    dataImageCacheFiles.AddRange(dataImageCacheFile);
+                }
+            }
+            int count = 0;
+            //  イメージキャッシュファイルの取得
+            string[] cacheFiles = ylib.getFiles(Path.Combine(imageCacheFolder, "*.*"));
+            if (0 < cacheFiles.Length) {
+                //  未使用イメージキャッシュファイルの削除
+                foreach (string cacheFile in cacheFiles) {
+                    if (!dataImageCacheFiles.Contains(Path.GetFileName(cacheFile))) {
+                        System.Diagnostics.Debug.WriteLine("Cache: " + Path.GetFileName(cacheFile));
+                        File.Delete(cacheFile);
+                        count++;
+                    }
+                }
+                if (0 < count) {
+                    ylib.messageBox(mMainWindow, $"{count} ファイルの未使用イメージファイルを削除");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 図面データ中のイメージキャッシュファイルの取得
+        /// </summary>
+        /// <param name="path">図面データファイルパス</param>
+        /// <returns>イメージファイルリスト</returns>
+        public List<string> getImageCacheFile(string path)
+        {
+            List<string > imagePaths = new List<string>();
+            if (!File.Exists(path))
+                return imagePaths;
+            List<string[]> dataList = ylib.loadCsvData(path);
+            for (int i = 0; i < dataList.Count; i++) {
+                string proerty = dataList[i++][0];
+                if (proerty == "Image") {
+                    string imagePath = dataList[i][0];      //  イメージファイルパス(オリジナル)
+                    string imageCachePath = dataList[i][7]; //  イメージファイルキャッシュパス
+                    imagePaths.Add(imageCachePath);
+                }
+            }
+            return imagePaths;
         }
     }
 }

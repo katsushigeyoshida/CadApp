@@ -58,10 +58,10 @@ namespace CadApp
             "垂点", "端点距離"
         };
         private List<string> mSystemSetMenu = new List<string>() {
-            "システム設定", "全バックアップ", "図面データバックアップ", "シンボルバックアップ",
-            "イメージファイルバックアップ",
+            "システム設定", "データバックアップ",
+            //"図面データバックアップ", "シンボルバックアップ", "イメージファイルバックアップ",
             "図面データバックアップ管理", "シンボルバックアップ管理",
-            "イメージファイルバックアップ管理"
+            "イメージファイルバックアップ管理", "未使用キャッシュイメージファイル削除"
         };
         private List<string> mPrintTypeMenu = new List<string>() {
             "A4 横", "A4 縦"
@@ -2008,7 +2008,7 @@ namespace CadApp
                 case "システム設定":
                     systemSettingdlg();
                     break;
-                case "全バックアップ":
+                case "データバックアップ":
                     int count = 0;
                     count += mFileData.dataBackUp(false);
                     count += mSymbolData.dataBackUp(false);
@@ -2032,6 +2032,9 @@ namespace CadApp
                     break;
                 case "イメージファイルバックアップ管理":
                     mImageData.dataRestor();
+                    break;
+                case "未使用キャッシュイメージファイル削除":
+                    mFileData.squeezeImageCache(mImageData.mImageFolder);
                     break;
             }
         }

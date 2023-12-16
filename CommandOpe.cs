@@ -422,6 +422,9 @@ namespace CadApp
                 case OPERATION.changeProperty:              //  属性変更
                     changeProperty(mPickEnt);
                     break;
+                case OPERATION.copyProperty:
+                    changeProperty(mPickEnt, true);
+                    break;
                 case OPERATION.changeProperties:            //  属性一括変更
                     changeProperties(mPickEnt);
                     break;
@@ -892,7 +895,7 @@ namespace CadApp
         /// ピックした要素の属性変更
         /// </summary>
         /// <returns></returns>
-        public bool changeProperty(List<(int, PointD)> pickEnt)
+        public bool changeProperty(List<(int, PointD)> pickEnt, bool copy = false )
         {
             mEntityData.mOperationCouunt++;
             foreach ((int no, PointD pos) pickNo in pickEnt) {
@@ -1025,7 +1028,8 @@ namespace CadApp
                     }
                     //  Undo処理
                     entity.mOperationCount = mEntityData.mOperationCouunt;
-                    mEntityData.removeEnt(pickNo.no);
+                    if (!copy)
+                        mEntityData.removeEnt(pickNo.no);
                 }
                 dlg.Close();
             }

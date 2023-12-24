@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Printing;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
@@ -128,10 +127,10 @@ namespace CadApp
             ydraw.clear();
             dispGrid(gridSize);
             entityData.drawingAll(ydraw);
-            mBitmapSource = canvas2Bitmap(mCanvas);
+            mBitmapSource = ylib.canvas2Bitmap(mCanvas, mMainWindow.lbCommand.ActualWidth + 10);
             //  コピーしたイメージを貼り付けなおすことで文字のクリッピングする
             ydraw.clear();
-            moveImage(mBitmapSource, 0, 0);
+            ylib.moveImage(mCanvas, mBitmapSource, 0, 0);
         }
 
         /// <summary>
@@ -722,15 +721,15 @@ namespace CadApp
             }
 
             //  移動した位置にBitmapの貼付け(ポリゴン塗潰しの境界線削除でoffsetを設定)
-            moveImage(mBitmapSource, dx, dy, 1);
+            ylib.moveImage(mCanvas, mBitmapSource, dx, dy, 1);
 
             //  Windowの設定を元に戻す
             ydraw.mClipBox = ydraw.mWorld.toCopy();
-            mBitmapSource = canvas2Bitmap(mCanvas);
+            mBitmapSource = ylib.canvas2Bitmap(mCanvas, mMainWindow.lbCommand.ActualWidth + 10);
 
             //  コピーしたイメージを貼り付けなおすことで文字のクリッピングする
             ydraw.clear();
-            moveImage(mBitmapSource, 0, 0);
+            ylib.moveImage(mCanvas, mBitmapSource, 0, 0);
         }
 
         /// <summary>
@@ -775,28 +774,6 @@ namespace CadApp
             ydraw.mPointType = 2;
             ydraw.mPointSize = 5;
             ydraw.drawWPoint(new PointD(0, 0));
-        }
-
-        /// <summary>
-        /// Bitmap 図形を移動させる
-        /// Bitmapをdx,dy分移動させてCanvasに貼り付ける(dx,dyのマイナス方向も可)
-        /// オフセットで指定した分Bitmapサイズをカットする(ポリゴンの塗潰しの境界線をカットするために必要)
-        /// </summary>
-        /// <param name="bitmapSource">Bitmap</param>
-        /// <param name="dx">移動量</param>
-        /// <param name="dy">移動量</param>
-        /// <param name="offset">オフセット</param>
-        private void moveImage(BitmapSource bitmapSource, double dx, double dy, int offset = 0)
-        {
-            System.Drawing.Bitmap bitmap = ylib.cnvBitmapSource2Bitmap(mBitmapSource);
-            double width = bitmap.Width - Math.Abs(dx);
-            double height = bitmap.Height - Math.Abs(dy);
-            Point sp = new Point(dx > 0 ? offset : -dx, dy > 0 ? offset : -dy);
-            Point ep = new Point(sp.X + width - offset, sp.Y + height - offset);
-            System.Drawing.Bitmap moveBitmap = ylib.trimingBitmap(bitmap, sp, ep);
-            BitmapImage bitmapImage = ylib.cnvBitmap2BitmapImage(moveBitmap);
-            ylib.setCanvasBitmapImage(mCanvas, bitmapImage, dx > 0 ? dx + offset : 0, dy > 0 ? dy + offset : 0,
-                width - offset, height - offset);
         }
 
         /// <summary>
@@ -866,33 +843,6 @@ namespace CadApp
         public double world2creenXlength(double x)
         {
             return ydraw.world2screenXlength(x);
-        }
-
-        /// <summary>
-        /// CanvasをBitmapに変換
-        /// 参照  https://qiita.com/tricogimmick/items/894914f6bbe224a45d49
-        /// </summary>
-        /// <param name="canvas"></param>
-        /// <returns></returns>
-        private BitmapSource canvas2Bitmap(Canvas canvas)
-        {
-            //  位置は CanvasのVisaulOffset値を設定したいが直接取れないので
-            Point preLoc = new Point(mMainWindow.lbCommand.ActualWidth + 10, 0);
-            // レイアウトを再計算させる
-            var size = new Size(canvas.ActualWidth, canvas.ActualHeight);
-            canvas.Measure(size);
-            canvas.Arrange(new Rect(new Point(0, 0), size));
-
-            // VisualObjectをBitmapに変換する
-            var renderBitmap = new RenderTargetBitmap((int)size.Width,       // 画像の幅
-                                                      (int)size.Height,      // 画像の高さ
-                                                      96.0d,                 // 横96.0DPI
-                                                      96.0d,                 // 縦96.0DPI
-                                                      PixelFormats.Pbgra32); // 32bit(RGBA各8bit)
-            renderBitmap.Render(canvas);
-            //  Canvasの位置を元に戻す(Canvas.VisualOffset値)
-            canvas.Arrange(new Rect(preLoc, size));
-            return renderBitmap;
         }
     }
 }

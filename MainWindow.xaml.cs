@@ -2101,7 +2101,7 @@ namespace CadApp
         /// </summary>
         public void screenCopy()
         {
-            BitmapSource bitmapSource = canvas2Bitmap(cvCanvas);
+            BitmapSource bitmapSource = ylib.canvas2Bitmap(cvCanvas, lbCommand.ActualWidth + 10);
             Clipboard.SetImage(bitmapSource);
         }
 
@@ -2110,7 +2110,7 @@ namespace CadApp
         /// </summary>
         public void screenSave()
         {
-            BitmapSource bitmapSource = canvas2Bitmap(cvCanvas);
+            BitmapSource bitmapSource = ylib.canvas2Bitmap(cvCanvas, lbCommand.ActualWidth + 10);
             string path = ylib.fileSaveSelectDlg("イメージ保存", ".", mCommandOpe.mImageFilters);
             if (0 < path.Length) {
                 if (Path.GetExtension(path).Length == 0)
@@ -2140,34 +2140,6 @@ namespace CadApp
                 mDataDrawing.initDraw(dispArea);
                 disp(mEntityData);
             }
-        }
-
-
-        /// <summary>
-        /// CanvasをBitmapに変換
-        /// 参照  https://qiita.com/tricogimmick/items/894914f6bbe224a45d49
-        /// </summary>
-        /// <param name="canvas"></param>
-        /// <returns></returns>
-        private BitmapSource canvas2Bitmap(Canvas canvas)
-        {
-            //  位置は CanvasのVisaulOffset値を設定したいが直接取れないので
-            Point preLoc = new Point(lbCommand.ActualWidth + 10, 0);
-            // レイアウトを再計算させる
-            var size = new Size(canvas.ActualWidth, canvas.ActualHeight);
-            canvas.Measure(size);
-            canvas.Arrange(new Rect(new Point(0, 0), size));
-
-            // VisualObjectをBitmapに変換する
-            var renderBitmap = new RenderTargetBitmap((int)size.Width,       // 画像の幅
-                                                      (int)size.Height,      // 画像の高さ
-                                                      96.0d,                 // 横96.0DPI
-                                                      96.0d,                 // 縦96.0DPI
-                                                      PixelFormats.Pbgra32); // 32bit(RGBA各8bit)
-            renderBitmap.Render(canvas);
-            //  Canvasの位置を元に戻す(Canvas.VisualOffset値)
-            canvas.Arrange(new Rect(preLoc, size));
-            return renderBitmap;
         }
     }
 }

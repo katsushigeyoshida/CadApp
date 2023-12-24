@@ -61,6 +61,9 @@ namespace CadApp
         public string mFontFamily = "";
         public string mFontStyle = "";
         public string mFontWeight = "";
+        public string mFillColorName = "Beige";
+        public Brush mFillColor = Brushes.Beige;
+        public bool mFillColorOn = false;
         public double mGridSize = 1;
 
         public bool mShowCheckBox     = false;
@@ -81,6 +84,7 @@ namespace CadApp
         public bool mFontFamilyChk    = false;
         public bool mFontStyleChk     = false;
         public bool mFontWeightChk    = false;
+        public bool mFillColorChk     = false;
 
 
         YDraw ydraw = new YDraw();
@@ -91,6 +95,7 @@ namespace CadApp
             InitializeComponent();
 
             cbColor.DataContext = ydraw.mColorList;
+            cbFillColor.DataContext = ylib.mBrushList;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -132,6 +137,8 @@ namespace CadApp
             cbFontFamily.SelectedIndex = mFontFamilyMenu.IndexOf(mFontFamily == "" ? SystemFonts.MessageFontFamily.Source : mFontFamily);
             cbFontStyle.SelectedIndex  = mFontStyleMenu.FindIndex(p =>p == mFontStyle);
             cbFontWeight.SelectedIndex = mFontWeightMenu.FindIndex(p => p == mFontWeight);
+            cbFillColor.SelectedIndex  = ylib.mBrushList.FindIndex(p => p.brush.ToString() == mFillColor.ToString());
+            chFillColorOn.IsChecked    = mFillColorOn;
 
             chColor.Visibility         = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
             lbBackDispTitle.Visibility = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
@@ -156,6 +163,10 @@ namespace CadApp
             chFontFamily.Visibility    = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
             chFontStyle.Visibility     = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
             chFontWeight.Visibility    = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
+            lbFillColorTitle.Visibility = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
+            cbFillColor.Visibility     = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
+            chFillColorOn.Visibility   = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
+            chFillColor.Visibility     = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
 
             chColor.IsChecked         = mColorChk;
             chLineType.IsChecked      = mLineTypeChk;
@@ -170,6 +181,7 @@ namespace CadApp
             chFontFamily.IsChecked    = mFontFamilyChk;
             chFontStyle.IsChecked     = mFontStyleChk;
             chFontWeight.IsChecked    = mFontWeightChk;
+            chFillColor.IsChecked     = mFillColorChk;
         }
 
         private void btOK_Click(object sender, RoutedEventArgs e)
@@ -208,6 +220,11 @@ namespace CadApp
             mFontFamily = cbFontFamily.Text;
             mFontStyle = cbFontStyle.Text;
             mFontWeight = cbFontWeight.Text;
+            if (0 <= cbFillColor.SelectedIndex) {
+                mFillColor = ylib.mBrushList[cbFillColor.SelectedIndex].brush;
+                mFillColorName = ylib.mBrushList[cbFillColor.SelectedIndex].colorTitle;
+            }
+            mFillColorOn = chFillColorOn.IsChecked == true;
 
             mBackDispChk      = chBackDispChk.IsChecked   == true;
             mColorChk         = chColor.IsChecked         == true;
@@ -226,6 +243,7 @@ namespace CadApp
             mFontFamilyChk    = chFontFamily.IsChecked    == true;
             mFontStyleChk     = chFontStyle.IsChecked     == true;
             mFontWeightChk    = chFontWeight.IsChecked    == true;
+            mFillColorChk     = chFillColor.IsChecked     == true;
 
             DialogResult = true;
             Close();

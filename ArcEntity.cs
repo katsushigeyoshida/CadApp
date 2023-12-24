@@ -349,7 +349,7 @@ namespace CadApp
         /// <returns>分割点</returns>
         public override PointD dividePos(int divideNo, PointD pos)
         {
-            List<PointD> plist = mArc.dividePoints(divideNo);
+            List<PointD> plist = mArc.toPointList(divideNo);
             return plist.MinBy(p => p.length(pos));
         }
 

@@ -1118,6 +1118,24 @@ namespace CadApp
                             partsEnt.mParts.mFontWeight = ylib.convFontWeight(dlg.mFontWeight);
                         partsEnt.mParts.remakeData();
                     }
+                    //  Polygon要素
+                    if (entity.mEntityId == EntityId.Polygon && dlg.mFillColorChk) {
+                        PolygonEntity polygon = (PolygonEntity)entity;
+                        polygon.mFillOn = dlg.mFillColorOn;
+                        polygon.mFillColor = dlg.mFillColor;
+                    }
+                    //  Arc要素
+                    if (entity.mEntityId == EntityId.Arc && dlg.mFillColorChk) {
+                        ArcEntity arc = (ArcEntity)entity;
+                        arc.mFillOn = dlg.mFillColorOn;
+                        arc.mFillColor = dlg.mFillColor;
+                    }
+                    //  Ellipse要素
+                    if (entity.mEntityId == EntityId.Ellipse && dlg.mFillColorChk) {
+                        EllipseEntity ellipse = (EllipseEntity)entity;
+                        ellipse.mFillOn = dlg.mFillColorOn;
+                        ellipse.mFillColor = dlg.mFillColor;
+                    }
                     entity.mOperationCount = mEntityData.mOperationCouunt;
                     mEntityData.removeEnt(pickNo.no);
                 }

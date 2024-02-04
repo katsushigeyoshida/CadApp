@@ -655,7 +655,7 @@ namespace CadApp
                 if (!entity.mRemove && 0 != (entity.mLayerBit & mPara.mDispLayerBit)
                     && entity.mEntityId != EntityId.Link
                     && entity.mBackDisp
-                    && !ydraw.mWorld.outsideChk(entity.mArea))
+                    && !ydraw.mClipBox.outsideChk(entity.mArea))
                     entity.draw(ydraw);
             }
             //  背景属性以外を表示
@@ -663,7 +663,7 @@ namespace CadApp
                 if (!entity.mRemove && 0 != (entity.mLayerBit & mPara.mDispLayerBit)
                     && entity.mEntityId != EntityId.Link
                     && !entity.mBackDisp
-                    && !ydraw.mWorld.outsideChk(entity.mArea))
+                    && !ydraw.mClipBox.outsideChk(entity.mArea))
                     entity.draw(ydraw);
             }
         }

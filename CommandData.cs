@@ -7,6 +7,7 @@ namespace CadApp
 {
     public enum ENTITY { non, all, point, line, polyline, polygon, 
                             arc, ellipse, text, parts, image, any }
+    public enum OPEMODE { non, pick, loc, areaDisp, areaPick }
     public enum OPERATION { non, loc, pic,
         createPoint, createLine, createHVLine, createTangentLine,
         createRect, createPolyline, createPolygon,
@@ -28,7 +29,7 @@ namespace CadApp
         setSymbol, manageSymbol,
 
         undo, redo,
-        copyScreen, saveScreen, screenCapture, print,
+        copyScreen, saveScreen, screenCapture, imageTrimming, print,
         cancel, close,
         back, save, saveAs, open,
 
@@ -130,6 +131,7 @@ namespace CadApp
             new Command("ツール",    "画面コピー",  "", OPERATION.copyScreen,           ENTITY.non),
             new Command("ツール",    "画面保存",    "", OPERATION.saveScreen,           ENTITY.non),
             new Command("ツール",    "スクリーンキャプチャ","", OPERATION.screenCapture,ENTITY.non),
+            new Command("ツール",    "イメージトリミング","", OPERATION.imageTrimming,  ENTITY.non),
             new Command("ツール",    "印刷",        "", OPERATION.print,                ENTITY.non),
             new Command("ツール",    "戻る",        "", OPERATION.back,                 ENTITY.non),
             new Command("キャンセル","キャンセル",  "", OPERATION.cancel,               ENTITY.non),

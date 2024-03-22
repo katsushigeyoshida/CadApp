@@ -7,6 +7,7 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>False</UseWindowsForms>
     <ApplicationIcon>CadApp.ico</ApplicationIcon>
+    <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <ItemGroup>

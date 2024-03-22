@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Printing;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
@@ -15,7 +16,9 @@ namespace CadApp
     /// </summary>
     public class DataDrawing
     {
-        public int mGridMinmumSize = 8;                            //  グリッドの最小表示スクリーンサイズ
+        private int mGridMinmumSize = 8;                            //  グリッドの最小表示スクリーンサイズ
+        private double mDispLeftMargine = 0.01;                     //  全体表示の左マージン
+        private double mDispRightMargine = 0.03;                    //  全体表示の右マージン
 
         private BitmapSource mBitmapSource;                         //  画像データ(描画データのバッファリング)
         private Brush mDraggingColor = Brushes.Green;               //  ドラッギング時の色
@@ -41,96 +44,6 @@ namespace CadApp
             mCanvas = canvas;
             mMainWindow = mainWindow;
             ydraw = new YWorldDraw(canvas);
-        }
-
-        /// <summary>
-        /// 表示画面の初期化
-        /// </summary>
-        /// <param name="dispArea"></param>
-        public void initDraw(Box dispArea)
-        {
-            ydraw = new YWorldDraw(mCanvas);
-
-            ydraw.setViewArea(0, 0, mCanvas.ActualWidth, mCanvas.ActualHeight);
-            ydraw.mAspectFix = true;
-            ydraw.mClipping = true;
-            ydraw.setWorldWindow(dispArea);
-        }
-
-        /// <summary>
-        /// 印刷処理
-        /// </summary>
-        /// <param name="entityData">要素データ</param>
-        /// <param name="dispArea">表示領域</param>
-        public void setPrint(EntityData entityData, Box dispArea, PageOrientation orient = PageOrientation.Landscape)
-        {
-            LocalPrintServer lps = new LocalPrintServer();
-            PrintQueue queue = lps.DefaultPrintQueue;
-            XpsDocumentWriter writer = PrintQueue.CreateXpsDocumentWriter(queue);
-            //  用紙サイズ
-            PrintTicket ticket = queue.DefaultPrintTicket;
-            ticket.PageMediaSize = new PageMediaSize(PageMediaSizeName.ISOA4);
-            ticket.PageOrientation = orient;
-            //  印刷領域
-            var area = queue.GetPrintCapabilities().PageImageableArea;
-
-            //  Canvasにデータを設定
-            Canvas canvas = new Canvas();
-            double width = area.ExtentWidth;
-            double height = area.ExtentHeight;
-            if (ticket.PageOrientation == PageOrientation.Landscape) {
-                YLib.Swap(ref width, ref height);
-            }
-
-            initPrint(canvas, dispArea, 30, -30, width, height);
-            ydraw.clear();
-            entityData.drawingAll(ydraw);
-
-            FixedPage page = new FixedPage();
-            page.Children.Add(canvas);
-
-            //  印刷実行
-            writer.Write(page, ticket);
-        }
-
-        /// <summary>
-        /// 印刷領域の設定
-        /// </summary>
-        /// <param name="canvas">Canvas</param>
-        /// <param name="dispArea">作図領域</param>
-        /// <param name="offsetWidth">印刷の位置</param>
-        /// <param name="offsetHeight">印刷の位置</param>
-        /// <param name="width">印刷幅</param>
-        /// <param name="height">印刷高さ</param>
-        public void initPrint(Canvas canvas, Box dispArea, double offsetWidth, double offsetHeight, double width, double height)
-        {
-            ydraw = new YWorldDraw(canvas);
-            System.Diagnostics.Debug.WriteLine($"initPrint: {width} {height} {offsetHeight}");
-            //  ViewとWorld領域を設定
-            ydraw.setViewArea(offsetWidth, offsetHeight, width, height);
-            ydraw.setWorldWindow(dispArea);
-            ydraw.mAspectFix = true;
-            ydraw.mClipping = true;
-        }
-
-        /// <summary>
-        /// 要素データの表示
-        /// </summary>
-        /// <param name="entityData">要素データリスト</param>
-        /// <param name="backColor">背景色</param>
-        /// <param name="gridSize">グリッドサイズ</param>
-        public void disp(EntityData entityData, Brush backColor, double gridSize)
-        {
-            if (entityData == null)
-                return;
-            ydraw.setBackColor(backColor);
-            ydraw.clear();
-            dispGrid(gridSize);
-            entityData.drawingAll(ydraw);
-            mBitmapSource = ylib.canvas2Bitmap(mCanvas, mMainWindow.lbCommand.ActualWidth + 10);
-            //  コピーしたイメージを貼り付けなおすことで文字のクリッピングする
-            ydraw.clear();
-            ylib.moveImage(mCanvas, mBitmapSource, 0, 0);
         }
 
         /// <summary>
@@ -174,6 +87,7 @@ namespace CadApp
                 return;
 
             PartsD parts;
+            LineD line;
             ArcD arc;
             preDragging();
             try {
@@ -225,6 +139,12 @@ namespace CadApp
                         if (1 < points.Count) {
                             EllipseD ellipse = new EllipseD(points[0], points[1]);
                             ydraw.drawWEllipse(ellipse);
+                        }
+                        break;
+                    case OPERATION.createTangentLine:
+                        line = entityData.tangentLine(pickList[0], points[0]);
+                        if (line != null) {
+                            ydraw.drawWLine(line);
                         }
                         break;
                     case OPERATION.createTangentCircle:
@@ -579,12 +499,14 @@ namespace CadApp
 
             ydraw.mBrush = mDraggingColor;
 
-            foreach ((int no, PointD pos) pickEnt in pickList) {
-                if (pickEnt.no < entityData.mEntityList.Count) {
-                    Entity ent = entityData.mEntityList[pickEnt.no].toCopy();
-                    ent.mColor = mDraggingColor;
-                    ent.offset(loc[0], loc[1]);
-                    ent.draw(ydraw);
+            for (int i = 1; i < loc.Count; i++) {
+                foreach ((int no, PointD pos) pickEnt in pickList) {
+                    if (pickEnt.no < entityData.mEntityList.Count) {
+                        Entity ent = entityData.mEntityList[pickEnt.no].toCopy();
+                        ent.mColor = mDraggingColor;
+                        ent.offset(loc[0], loc[i]);
+                        ent.draw(ydraw);
+                    }
                 }
             }
         }
@@ -658,7 +580,8 @@ namespace CadApp
         /// <summary>
         /// 要素をピックした時ピック色にして表示
         /// </summary>
-        /// <param name="entNo"></param>
+        /// <param name="entityData">要素リスト</param>
+        /// <param name="pickEnt">ピックリスト</param>
         public void pickDisp(EntityData entityData, List<(int, PointD)> pickList)
         {
             mMainWindow.imScreen.Source = mBitmapSource;
@@ -672,6 +595,88 @@ namespace CadApp
                     ent.mPick = false;
                 }
             }
+        }
+
+        /// <summary>
+        /// 表示画面の初期化
+        /// </summary>
+        /// <param name="dispArea"></param>
+        public void initDraw(Box dispArea)
+        {
+            ydraw = new YWorldDraw(mCanvas);
+
+            ydraw.setViewArea(0, 0, mCanvas.ActualWidth, mCanvas.ActualHeight);
+            ydraw.mAspectFix = true;
+            ydraw.mClipping = true;
+            ydraw.setWorldWindow(dispArea);
+        }
+
+        /// <summary>
+        /// 図面全体を表示する
+        /// </summary>
+        public void dispFit(EntityData entityData, List<(int no, PointD pos)> pickEnt)
+        {
+            if (entityData.mArea != null) {
+                entityData.mArea.normalize();
+                Box area = entityData.mArea.toCopy();
+                area.Left = entityData.mArea.Left - entityData.mArea.Width * mDispLeftMargine;
+                area.Right = entityData.mArea.Right + entityData.mArea.Width * mDispRightMargine;
+                mMainWindow.mCommandOpe.setDispArea(area);
+                initDraw(mMainWindow.mCommandOpe.mDispArea);
+                disp(entityData, pickEnt);
+            }
+        }
+
+        /// <summary>
+        /// 図面幅に合わせて表示
+        /// </summary>
+        public void dispWidthFit(EntityData entityData, List<(int no, PointD pos)> pickEnt)
+        {
+            if (entityData.mArea != null) {
+                entityData.mArea.normalize();
+                Box area = getWorldArea().toCopy();
+                PointD center = area.getCenter();
+                double rate = entityData.mArea.Width * area.Height / area.Width / entityData.mArea.Height;
+                area.Left = entityData.mArea.Left - entityData.mArea.Width * mDispLeftMargine;
+                area.Right = entityData.mArea.Right + entityData.mArea.Width * mDispRightMargine;
+                if (rate < 1) {
+                    area.Top = (area.Top - center.y) * rate + center.y;
+                    area.Bottom = (area.Bottom - center.y) * rate + center.y;
+                } else {
+                    area.Top = entityData.mArea.Top;
+                    area.Bottom = entityData.mArea.Bottom;
+                }
+                mMainWindow.mCommandOpe.setDispArea(area);
+                initDraw(mMainWindow.mCommandOpe.mDispArea);
+                disp(entityData, pickEnt);
+            }
+        }
+
+        /// <summary>
+        /// 画面スクロール
+        /// </summary>
+        /// <param name="ps">始点</param>
+        /// <param name="pe">終点</param>
+        /// <param name="entityData">要素リスト</param>
+        /// <param name="pickEnt">ピックリスト</param>
+        public void scroll(Point ps, Point pe, EntityData entityData, List<(int no, PointD pos)> pickEnt)
+        {
+            double dx = pe.X - ps.X;
+            double dy = pe.Y - ps.Y;
+            scroll(dx, dy, entityData, pickEnt);
+        }
+
+        /// <summary>
+        /// 画面スクロール
+        /// </summary>
+        /// <param name="dx">X移動量</param>
+        /// <param name="dy">Y移動量</param>
+        /// <param name="entityData">要素リスト</param>
+        /// <param name="pickEnt">ピックリスト</param>
+        public void scroll(double dx, double dy, EntityData entityData, List<(int no, PointD pos)> pickEnt)
+        {
+            scroll(entityData, dx, dy, entityData.mPara.mGridSize);
+            pickDisp(entityData, pickEnt);
         }
 
         /// <summary>
@@ -733,6 +738,62 @@ namespace CadApp
         }
 
         /// <summary>
+        /// 画面の拡大縮小
+        /// </summary>
+        /// <param name="scaleStep">拡大率</param>
+        /// <param name="entityData">要素リスト</param>
+        /// <param name="pickEnt">ピックリスト</param>
+        public void zoom(double scaleStep, EntityData entityData, List<(int no, PointD pos)> pickEnt)
+        {
+            PointD wp = getWorldArea().getCenter();
+            zoom(wp, scaleStep, entityData, pickEnt);
+        }
+
+        /// <summary>
+        /// 画面の拡大縮小
+        /// </summary>
+        /// <param name="wp">スケール中心</param>
+        /// <param name="scaleStep">拡大率</param>
+        /// <param name="entityData">要素リスト</param>
+        /// <param name="pickEnt">ピックリスト</param>
+        public void zoom(PointD wp, double scaleStep, EntityData entityData, List<(int no, PointD pos)> pickEnt)
+        {
+            setWorldZoom(wp, scaleStep, true);
+            disp(entityData, pickEnt);
+        }
+
+        /// <summary>
+        /// データ表示
+        /// </summary>
+        /// <param name="entityData">要素リスト</param>
+        /// <param name="pickEnt">ピックリスト</param>
+        public void disp(EntityData entityData, List<(int no, PointD pos)> pickEnt)
+        {
+            disp(entityData, mMainWindow.mCommandOpe.mBackColor, mMainWindow.mCommandOpe.mEntityData.mPara.mGridSize);
+            pickDisp(entityData, pickEnt);
+        }
+
+        /// <summary>
+        /// 要素データの表示
+        /// </summary>
+        /// <param name="entityData">要素データリスト</param>
+        /// <param name="backColor">背景色</param>
+        /// <param name="gridSize">グリッドサイズ</param>
+        public void disp(EntityData entityData, Brush backColor, double gridSize)
+        {
+            if (entityData == null)
+                return;
+            ydraw.setBackColor(backColor);
+            ydraw.clear();
+            dispGrid(gridSize);
+            entityData.drawingAll(ydraw);
+            mBitmapSource = ylib.canvas2Bitmap(mCanvas, mMainWindow.lbCommand.ActualWidth + 10);
+            //  コピーしたイメージを貼り付けなおすことで文字のクリッピングする
+            ydraw.clear();
+            ylib.moveImage(mCanvas, mBitmapSource, 0, 0);
+        }
+
+        /// <summary>
         /// グリッドの表示
         /// グリッド10個おきに大玉を表示
         /// </summary>
@@ -774,6 +835,62 @@ namespace CadApp
             ydraw.mPointType = 2;
             ydraw.mPointSize = 5;
             ydraw.drawWPoint(new PointD(0, 0));
+        }
+
+        /// <summary>
+        /// 印刷領域の設定
+        /// </summary>
+        /// <param name="canvas">Canvas</param>
+        /// <param name="dispArea">作図領域</param>
+        /// <param name="offsetWidth">印刷の位置</param>
+        /// <param name="offsetHeight">印刷の位置</param>
+        /// <param name="width">印刷幅</param>
+        /// <param name="height">印刷高さ</param>
+        public void initPrint(Canvas canvas, Box dispArea, double offsetWidth, double offsetHeight, double width, double height)
+        {
+            ydraw = new YWorldDraw(canvas);
+            System.Diagnostics.Debug.WriteLine($"initPrint: {width} {height} {offsetHeight}");
+            //  ViewとWorld領域を設定
+            ydraw.setViewArea(offsetWidth, offsetHeight, width, height);
+            ydraw.setWorldWindow(dispArea);
+            ydraw.mAspectFix = true;
+            ydraw.mClipping = true;
+        }
+
+        /// <summary>
+        /// 印刷処理
+        /// </summary>
+        /// <param name="entityData">要素データ</param>
+        /// <param name="dispArea">表示領域</param>
+        public void setPrint(EntityData entityData, Box dispArea, PageOrientation orient = PageOrientation.Landscape)
+        {
+            LocalPrintServer lps = new LocalPrintServer();
+            PrintQueue queue = lps.DefaultPrintQueue;
+            XpsDocumentWriter writer = PrintQueue.CreateXpsDocumentWriter(queue);
+            //  用紙サイズ
+            PrintTicket ticket = queue.DefaultPrintTicket;
+            ticket.PageMediaSize = new PageMediaSize(PageMediaSizeName.ISOA4);
+            ticket.PageOrientation = orient;
+            //  印刷領域
+            var area = queue.GetPrintCapabilities().PageImageableArea;
+
+            //  Canvasにデータを設定
+            Canvas canvas = new Canvas();
+            double width = area.ExtentWidth;
+            double height = area.ExtentHeight;
+            if (ticket.PageOrientation == PageOrientation.Landscape) {
+                YLib.Swap(ref width, ref height);
+            }
+
+            initPrint(canvas, dispArea, 30, -30, width, height);
+            ydraw.clear();
+            entityData.drawingAll(ydraw);
+
+            FixedPage page = new FixedPage();
+            page.Children.Add(canvas);
+
+            //  印刷実行
+            writer.Write(page, ticket);
         }
 
         /// <summary>

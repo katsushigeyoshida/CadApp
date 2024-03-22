@@ -14,7 +14,7 @@ namespace CadApp
         public DrawingPara mPara = new DrawingPara();
 
         public Box mArea;                       //  要素領域
-        public int mOperationCouunt = 0;        //  操作回数
+        public int mOperationCount = 0;         //  操作回数
         public int mFirstEntityCount = 0;       //  編集開始時の要素数
 
         private double mEps = 1E-8;
@@ -163,7 +163,7 @@ namespace CadApp
                 mArea.extension(pointEnt.mArea);
             }
             pointEnt.mNo = mEntityList.Count - 1;
-            pointEnt.mOperationCount = mOperationCouunt;
+            pointEnt.mOperationCount = mOperationCount;
             return pointEnt.mNo;
         }
 
@@ -196,7 +196,7 @@ namespace CadApp
                 mArea.extension(lineEnt.mArea);
             }
             lineEnt.mNo = mEntityList.Count - 1;
-            lineEnt.mOperationCount = mOperationCouunt;
+            lineEnt.mOperationCount = mOperationCount;
             return lineEnt.mNo;
         }
 
@@ -233,7 +233,7 @@ namespace CadApp
                 mArea.extension(polylineEnt.mArea);
             }
             polylineEnt.mNo = mEntityList.Count - 1;
-            polylineEnt.mOperationCount = mOperationCouunt;
+            polylineEnt.mOperationCount = mOperationCount;
             return polylineEnt.mNo;
         }
 
@@ -255,7 +255,7 @@ namespace CadApp
                 mArea.extension(polygonEnt.mArea);
             }
             polygonEnt.mNo = mEntityList.Count - 1;
-            polygonEnt.mOperationCount = mOperationCouunt;
+            polygonEnt.mOperationCount = mOperationCount;
             return polygonEnt.mNo;
         }
 
@@ -277,7 +277,7 @@ namespace CadApp
                 mArea.extension(arcEnt.mArea);
             }
             arcEnt.mNo = mEntityList.Count - 1;
-            arcEnt.mOperationCount = mOperationCouunt;
+            arcEnt.mOperationCount = mOperationCount;
             return arcEnt.mNo;
         }
 
@@ -300,7 +300,7 @@ namespace CadApp
                 mArea.extension(ellipseEnt.mArea);
             }
             ellipseEnt.mNo = mEntityList.Count - 1;
-            ellipseEnt.mOperationCount = mOperationCouunt;
+            ellipseEnt.mOperationCount = mOperationCount;
             return ellipseEnt.mNo;
         }
 
@@ -327,7 +327,7 @@ namespace CadApp
                 mArea.extension(textEnt.mArea);
             }
             textEnt.mNo = mEntityList.Count - 1;
-            textEnt.mOperationCount = mOperationCouunt;
+            textEnt.mOperationCount = mOperationCount;
             return textEnt.mNo;
         }
 
@@ -355,7 +355,7 @@ namespace CadApp
                 mArea.extension(partsEnt.mArea);
             }
             partsEnt.mNo = mEntityList.Count - 1;
-            partsEnt.mOperationCount = mOperationCouunt;
+            partsEnt.mOperationCount = mOperationCount;
             return partsEnt.mNo;
         }
 
@@ -386,7 +386,7 @@ namespace CadApp
                 mArea.extension(partsEnt.mArea);
             }
             partsEnt.mNo = mEntityList.Count - 1;
-            partsEnt.mOperationCount = mOperationCouunt;
+            partsEnt.mOperationCount = mOperationCount;
             return partsEnt.mNo;
         }
 
@@ -419,7 +419,7 @@ namespace CadApp
                 mArea.extension(partsEnt.mArea);
             }
             partsEnt.mNo = mEntityList.Count - 1;
-            partsEnt.mOperationCount = mOperationCouunt;
+            partsEnt.mOperationCount = mOperationCount;
             return partsEnt.mNo;
         }
 
@@ -475,7 +475,7 @@ namespace CadApp
                     mArea.extension(partsEnt.mArea);
                 }
                 partsEnt.mNo = mEntityList.Count - 1;
-                partsEnt.mOperationCount = mOperationCouunt;
+                partsEnt.mOperationCount = mOperationCount;
                 return partsEnt.mNo;
             }
             return -1;
@@ -512,7 +512,7 @@ namespace CadApp
                     mArea.extension(partsEnt.mArea);
                 }
                 partsEnt.mNo = mEntityList.Count - 1;
-                partsEnt.mOperationCount = mOperationCouunt;
+                partsEnt.mOperationCount = mOperationCount;
                 return partsEnt.mNo;
             }
             return -1;
@@ -549,14 +549,43 @@ namespace CadApp
                     mArea.extension(partsEnt.mArea);
                 }
                 partsEnt.mNo = mEntityList.Count - 1;
-                partsEnt.mOperationCount = mOperationCouunt;
+                partsEnt.mOperationCount = mOperationCount;
                 return partsEnt.mNo;
             }
             return -1;
         }
 
         /// <summary>
-        /// 接線を作成する
+        /// 円または楕円と点との接線
+        /// </summary>
+        /// <param name="pick">ピック要素</param>
+        /// <param name="loc">座標点</param>
+        /// <returns>線分</returns>
+        public LineD tangentLine((int no, PointD pos) pick, PointD loc)
+        {
+            Entity ent = mEntityList[pick.no];
+            List<PointD> plist;
+            if (ent.mEntityId == EntityId.Arc) {
+                ArcEntity arc0 = (ArcEntity)ent;
+                plist = arc0.mArc.tangentPoint(loc);
+            } else if (ent.mEntityId == EntityId.Ellipse) {
+                EllipseEntity ellipse = (EllipseEntity)ent;
+                plist = ellipse.mEllipse.tangentPoint(loc);
+            } else
+                return null;
+            if (plist.Count == 1) {
+                return new LineD(loc, plist[0]);
+            } else if (plist.Count == 2) {
+                if (pick.pos.length(plist[0]) < pick.pos.length(plist[1]))
+                    return new LineD(loc, plist[0]);
+                else
+                    return new LineD(loc, plist[1]);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 円弧同士の接線を作成する
         /// </summary>
         /// <param name="pickList">ピック要素リスト</param>
         /// <returns>線分データ</returns>
@@ -680,7 +709,7 @@ namespace CadApp
             foreach ((int no, PointD pos) entNo in pickList) {
                 mEntityList.Add(mEntityList[entNo.no].toCopy());
                 mEntityList[mEntityList.Count - 1].translate(vec);
-                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
+                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                 if (!copy)
                     removeEnt(entNo.no);
             }
@@ -701,7 +730,7 @@ namespace CadApp
             foreach ((int no, PointD pos) entNo in pickList) {
                 mEntityList.Add(mEntityList[entNo.no].toCopy());
                 mEntityList[mEntityList.Count - 1].rotate(cp, mp);
-                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
+                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                 if (!copy)
                     removeEnt(entNo.no);
             }
@@ -722,7 +751,7 @@ namespace CadApp
             foreach ((int no, PointD pos) entNo in pickList) {
                 mEntityList.Add(mEntityList[entNo.no].toCopy());
                 mEntityList[mEntityList.Count - 1].mirror(sp, ep);
-                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
+                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                 if (!copy)
                     removeEnt(entNo.no);
             }
@@ -743,7 +772,7 @@ namespace CadApp
             foreach ((int no, PointD pos) entNo in pickList) {
                 mEntityList.Add(mEntityList[entNo.no].toCopy());
                 mEntityList[mEntityList.Count - 1].scale(cp, scale);
-                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
+                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                 if (!copy)
                     removeEnt(entNo.no);
             }
@@ -764,7 +793,7 @@ namespace CadApp
             foreach ((int no, PointD pos) entNo in pickList) {
                 mEntityList.Add(mEntityList[entNo.no].toCopy());
                 mEntityList[mEntityList.Count - 1].offset(sp, ep);
-                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
+                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                 if (!copy)
                     removeEnt(entNo.no);
             }
@@ -785,7 +814,7 @@ namespace CadApp
             foreach ((int no, PointD pos) entNo in pickList) {
                 mEntityList.Add(mEntityList[entNo.no].toCopy());
                 mEntityList[mEntityList.Count - 1].trim(sp, ep);
-                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
+                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                 if (!copy)
                     removeEnt(entNo.no);
             }
@@ -806,7 +835,7 @@ namespace CadApp
                 if (entityList == null)
                     continue;
                 foreach(Entity ent in entityList) {
-                    ent.mOperationCount = mOperationCouunt;
+                    ent.mOperationCount = mOperationCount;
                     mEntityList.Add(ent);
                 }
                 removeEnt(entNo.no);
@@ -827,7 +856,7 @@ namespace CadApp
             foreach ((int no, PointD pos) entNo in pickList) {
                 mEntityList.Add(mEntityList[entNo.no].toCopy());
                 mEntityList[mEntityList.Count - 1].stretch(vec, entNo.pos);
-                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
+                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                 removeEnt(entNo.no);
             }
             updateData();
@@ -851,7 +880,7 @@ namespace CadApp
                         lines = polylineEnt.mPolyline.toLineList();
                         foreach (var line in lines) {
                             addLine(line);
-                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
+                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                         }
                         break;
                     case EntityId.Polygon:
@@ -859,26 +888,26 @@ namespace CadApp
                         lines = polygonEnt.mPolygon.toLineList();
                         foreach (var line in lines) {
                             addLine(line);
-                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
+                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                         }
                         break;
                     case EntityId.Parts:
                         PartsEntity partsEnt = (PartsEntity)entity;
                         foreach (var point in partsEnt.mParts.mPoints) {
                             addPoint(point);
-                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
+                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                         }
                         foreach (var line in partsEnt.mParts.mLines) {
                             addLine(line);
-                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
+                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                         }
                         foreach (var arc in partsEnt.mParts.mArcs) {
                             addArc(arc);
-                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
+                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                         }
                         foreach (var text in partsEnt.mParts.mTexts) {
                             addText(text);
-                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCouunt;
+                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                         }
                         break;
                 }
@@ -899,7 +928,7 @@ namespace CadApp
             entity.updateArea();
             mEntityList.Add(entity);
             entity.mNo = mEntityList.Count - 1;
-            entity.mOperationCount = mOperationCouunt;
+            entity.mOperationCount = mOperationCount;
             return entity.mNo;
         }
 
@@ -929,7 +958,7 @@ namespace CadApp
             LinkEntity link = new LinkEntity();
             link.mRemove = true;
             link.mLinkNo = entNo;
-            link.mOperationCount = mOperationCouunt;
+            link.mOperationCount = mOperationCount;
             mEntityList.Add(link);
         }
 
@@ -1190,7 +1219,7 @@ namespace CadApp
                     if (entity.mLayerName == oldName) {
                         Entity newEntity = entity.toCopy();
                         newEntity.mLayerName = newName;
-                        newEntity.mOperationCount = mOperationCouunt;
+                        newEntity.mOperationCount = mOperationCount;
                         mEntityList.Add(newEntity);
                         removeEnt(i);
                     }
@@ -1281,6 +1310,8 @@ namespace CadApp
             mEntityList = new List<Entity>();
             mPara.init();
             List<string[]> dataList = ylib.loadCsvData(path);
+            if (dataList.Count <= 0 && dataList[0][0] != "Property")
+                return;
             for (int i = 0; i < dataList.Count - 1; i++) {
                 Entity entity = setStringEntityData(dataList[i], dataList[i + 1]);
                 if (entity != null) {
@@ -1306,7 +1337,7 @@ namespace CadApp
             }
             updateData();
             mFirstEntityCount = mEntityList.Count;
-            mOperationCouunt = 0;
+            mOperationCount = 0;
         }
 
         /// <summary>
@@ -1317,7 +1348,7 @@ namespace CadApp
         public void saveData(string path, bool noOpeSave = true)
         {
             if (noOpeSave &&
-                (mFirstEntityCount == mEntityList.Count && 0 == mOperationCouunt))
+                (mFirstEntityCount == mEntityList.Count && 0 == mOperationCount))
                 return;
             List<string[]> listData = new List<string[]>();
             //  図面のプロパティ

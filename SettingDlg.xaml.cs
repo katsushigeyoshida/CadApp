@@ -29,6 +29,9 @@ namespace CadApp
         public string mBackupFolder = "";
         public string mDiffTool = "";
         public string mShortCutFilePath = "";
+        public FileData mFileData;
+        public ImageData mImageData;
+        public SymbolData mSymbolData;
 
         private List<string> mPointTypeMenu = new List<string>() {
             "・点", "X クロス", "+ 十字", "□ 四角", "〇 円", "△ 三角"
@@ -202,6 +205,60 @@ namespace CadApp
                 buf = dlg.mEditText;
                 ylib.saveTextFile(mShortCutFilePath, buf);
             }
+        }
+
+        /// <summary>
+        /// [バックアップ]ボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btBackup_Click(object sender, RoutedEventArgs e)
+        {
+            int count = 0;
+            count += mFileData.dataBackUp(false);
+            count += mSymbolData.dataBackUp(false);
+            count += mImageData.dataBackUp(false);
+            ylib.messageBox(this, $"{count} ファイルのバックアップを更新しました。");
+        }
+
+        /// <summary>
+        /// [図面データ復元]ボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btDataRestor_Click(object sender, RoutedEventArgs e)
+        {
+            mFileData.dataRestor();
+        }
+
+        /// <summary>
+        /// [シンボルデータ復元]ボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btSymbolRestor_Click(object sender, RoutedEventArgs e)
+        {
+            mSymbolData.dataRestor();
+        }
+
+        /// <summary>
+        /// [イメージデータ復元]ボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btImageRestor_Click(object sender, RoutedEventArgs e)
+        {
+            mImageData.dataRestor();
+        }
+
+        /// <summary>
+        /// [未使用イメージキャッシュ削除]ボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btCashClear_Click(object sender, RoutedEventArgs e)
+        {
+            mFileData.squeezeImageCache(mImageData.mImageFolder);
         }
     }
 }

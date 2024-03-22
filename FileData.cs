@@ -609,5 +609,74 @@ namespace CadApp
             }
             return imagePaths;
         }
+
+
+        /// <summary>
+        /// DXFファイルの選択とインポート
+        /// </summary>
+        /// <returns></returns>
+        public string importAsFile()
+        {
+            List<string[]> filters = new List<string[]>() {
+                    new string[] { "図面ファイル", "*.dxf" },
+                    new string[] { "すべてのファイル", "*.*"}
+                };
+            string filePath = ylib.fileOpenSelectDlg("データ読込", ".", filters);
+            if (filePath == null || filePath.Length == 0)
+                return "";
+            return importDxf(filePath);
+        }
+
+        /// <summary>
+        /// DXFファイルのインポート
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
+        public string importDxf(string filePath)
+        {
+            //  DXFファイルの読込
+            DxfReader dxfReader = new DxfReader(filePath);
+            //  DXFデータをEntityDataに変換
+            EntityData entityData = new EntityData();
+            foreach (var ent in dxfReader.mEntityList) {
+                switch (ent.mEntityName) {
+                    case "LINE":
+                        LineD line = ent.getLine();
+                        Entity lineEntity = new LineEntity(line);
+                        entityData.mEntityList.Add(lineEntity);
+                        break;
+                    case "ARC":
+                    case "CIRCLE":
+                        ArcD arc = ent.getArc();
+                        Entity arcEntity = new ArcEntity(arc);
+                        entityData.mEntityList.Add(arcEntity);
+                        break;
+                    case "LWPOLYLINE":
+                    case "POLYLINE":
+                        PolylineD polyline = ent.getPolyline();
+                        Entity polylineEntity = new PolylineEntity(polyline);
+                        entityData.mEntityList.Add(polylineEntity);
+                        break;
+                    case "DIMENSION":
+                        break;
+                    case "MTEXT":
+                    case "TEXT":
+                        TextD text = ent.getText();
+                        Entity textEntity = new TextEntity(text);
+                        entityData.mEntityList.Add(textEntity);
+                        break;
+                }
+            }
+            entityData.updateData();
+            //  CSVファイルに保存
+            string path = getItemFilePath(Path.GetFileNameWithoutExtension(filePath));
+            if (File.Exists(path)) {
+                if (ylib.messageBox(mMainWindow, "ファイルが既に存在します。上書きしてもよいですか?", "", "確認", MessageBoxButton.OKCancel) != MessageBoxResult.OK)
+                    return "";
+            }
+            entityData.saveData(path);
+
+            return Path.GetFileNameWithoutExtension(filePath);
+        }
     }
 }

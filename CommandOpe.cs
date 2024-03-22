@@ -254,8 +254,6 @@ namespace CadApp
         public string mTextString = "";                             //  文字列データ
         public string mCurFilePath = "";                            //  編集中のファイルパス
         public int mGridMinmumSize = 10;                            //  グリッドの最小表示スクリーンサイズ
-        public List<PointD> mLocPos = new();                        //  マウス指定点
-        public List<(int no, PointD pos)> mPickEnt = new();         //  ピックした要素リスト
 
         public Box mCopyArea;                                       //  クリップボードにコピーした要素の領域
         public List<Entity> mCopyEntityList;                        //  クリップボードにコピー下要素リスト
@@ -282,6 +280,7 @@ namespace CadApp
                 };
         public string mClipImagePath = "";
 
+        private LocPick mLocPick;
         private WindowState mWinState;
         private YCalc ycalc = new YCalc();
         private YLib ylib = new YLib();
@@ -291,11 +290,12 @@ namespace CadApp
         /// </summary>
         /// <param name="entityData">要素データ</param>
         /// <param name="canvas">Canvas</param>
-        public CommandOpe(EntityData entityData, MainWindow mainWindow)
+        public CommandOpe(EntityData entityData, LocPick locPick, MainWindow mainWindow)
         {
             mEntityData = entityData;
             mKeyCommand.mEntityData = mEntityData;
             mDispArea = new Box(mInitArea);
+            mLocPick = locPick;
             mMainWindow = mainWindow;
         }
 
@@ -322,41 +322,13 @@ namespace CadApp
         }
 
         /// <summary>
-        /// ロケイト点の追加
-        /// </summary>
-        /// <param name="loc">ロケイト点</param>
-        public void addLoc(PointD loc)
-        {
-            if (0 == mLocPos.Count || !mLocPos[mLocPos.Count - 1].isEqual(loc))
-                mLocPos.Add(loc);
-        }
-
-        /// <summary>
-        /// ピック要素Noの追加
-        /// すでに登録されている場合は削除する(アンピック)
-        /// </summary>
-        /// <param name="pick">ピックデータ</param>
-        public void addPick((int no, PointD pos) pick, bool unpick = false)
-        {
-            if (unpick) {
-                int index = mPickEnt.FindIndex(p => p.no == pick.no);
-                if (0 <= index) {
-                    mPickEnt.RemoveAt(index);
-                } else {
-                    mPickEnt.Add(pick);
-                }
-            } else
-                mPickEnt.Add(pick);
-        }
-
-        /// <summary>
         /// コマンド処理
         /// </summary>
         /// <param name="command">コマンド</param>
-        public MainWindow.OPEMODE executeCmd(OPERATION operation)
+        public OPEMODE executeCmd(OPERATION operation)
         {
             bool commandInit = true;
-            MainWindow.OPEMODE locMode = MainWindow.OPEMODE.pick;
+            OPEMODE locMode = OPEMODE.pick;
 
             switch (operation) {
                 case OPERATION.createPoint:
@@ -372,9 +344,9 @@ namespace CadApp
                 case OPERATION.createArrow:
                 case OPERATION.createLabel:
                 case OPERATION.createLocDimension:
-                    locMode = MainWindow.OPEMODE.loc;
-                    mPickEnt.Clear();
-                    mLocPos.Clear();
+                    locMode = OPEMODE.loc;
+                    mLocPick.mPickEnt.Clear();
+                    mLocPick.mLocPos.Clear();
                     commandInit = false;
                     break;
                 case OPERATION.createTangentCircle:
@@ -398,12 +370,18 @@ namespace CadApp
                 case OPERATION.copyOffset:
                 case OPERATION.measureDistance:             //  距離測定
                 case OPERATION.measureAngle:                //  角度測定
-                    locMode = MainWindow.OPEMODE.loc;
-                    mLocPos.Clear();
+                    locMode = OPEMODE.loc;
+                    mLocPick.mLocPos.Clear();
                     commandInit = false;
                     break;
                 case OPERATION.createTangentLine:           //  接線
-                    createTangentLine(mPickEnt);
+                    if (mLocPick.mPickEnt.Count ==2) {
+                        createTangentLine(mLocPick.mPickEnt);
+                    } else {
+                        locMode = OPEMODE.loc;
+                        mLocPick.mLocPos.Clear();
+                        commandInit = false;
+                    }
                     break;
                 case OPERATION.createSymbol:                //  シンボル配置
                     if (mSymbolDlg == null || !mSymbolDlg.IsActive)
@@ -414,54 +392,54 @@ namespace CadApp
                     commandInit = false;
                     break;
                 case OPERATION.changeText:                  //  文字列変更
-                    changeText(mPickEnt);
+                    changeText(mLocPick.mPickEnt);
                     break;
                 case OPERATION.changeRadius:                //  半径変更
-                    changeRadius(mPickEnt);
+                    changeRadius(mLocPick.mPickEnt);
                     break;
                 case OPERATION.changeProperty:              //  属性変更
-                    changeProperty(mPickEnt);
+                    changeProperty(mLocPick.mPickEnt);
                     break;
                 case OPERATION.copyProperty:
-                    changeProperty(mPickEnt, true);
+                    changeProperty(mLocPick.mPickEnt, true);
                     break;
                 case OPERATION.changeProperties:            //  属性一括変更
-                    changeProperties(mPickEnt);
+                    changeProperties(mLocPick.mPickEnt);
                     break;
                 case OPERATION.copyEntity:                  //  要素コピー
-                    entitiesCopy(mPickEnt);
+                    entitiesCopy(mLocPick.mPickEnt);
                     break;
                 case OPERATION.pasteEntity:                 //  要素貼付け
                     entitiesPaste();
-                    locMode = MainWindow.OPEMODE.loc;
-                    mLocPos.Clear();
+                    locMode = OPEMODE.loc;
+                    mLocPick.mLocPos.Clear();
                     commandInit = false;
                     break;
                 case OPERATION.symbolAssemble:             //  シンボル化
-                    cnvSymbol(mPickEnt);
+                    cnvSymbol(mLocPick.mPickEnt);
                     break;
                 case OPERATION.disassemble:                 //  分解
-                    if (0 < mPickEnt.Count) {
-                        mEntityData.mOperationCouunt++;
-                        mEntityData.disassemble(mPickEnt);
+                    if (0 < mLocPick.mPickEnt.Count) {
+                        mEntityData.mOperationCount++;
+                        mEntityData.disassemble(mLocPick.mPickEnt);
                     }
                     break;
                 case OPERATION.remove:                      //  削除
-                    if (0 < mPickEnt.Count) {
-                        mEntityData.mOperationCouunt++;
-                        mEntityData.removeEnt(mPickEnt);
+                    if (0 < mLocPick.mPickEnt.Count) {
+                        mEntityData.mOperationCount++;
+                        mEntityData.removeEnt(mLocPick.mPickEnt);
                     }
                     break;
                 case OPERATION.removeAll:                   //  全削除
                     break;
                 case OPERATION.measure:                     //  距離・角度測定
-                    measureDisp(mPickEnt);
+                    measureDisp(mLocPick.mPickEnt);
                     break;
                 case OPERATION.info:                        //  要素情報
-                    infoEntity(mPickEnt);
+                    infoEntity(mLocPick.mPickEnt);
                     break;
                 case OPERATION.infoData:                    //  要素データ情報
-                    infoEntityData(mPickEnt);
+                    infoEntityData(mLocPick.mPickEnt);
                     break;
                 case OPERATION.zumenComment:                //  図面のコメント設定
                     zumenComment();
@@ -486,7 +464,7 @@ namespace CadApp
                     changeLayerName();
                     break;
                 case OPERATION.setSymbol:                   //  シンボル登録
-                    setSymbol(mPickEnt);
+                    setSymbol(mLocPick.mPickEnt);
                     break;
                 case OPERATION.manageSymbol:                //  シンボル管理
                     manageSymbol();
@@ -503,15 +481,18 @@ namespace CadApp
                 case OPERATION.saveScreen:                  //  製図領域のイメージ保存
                     mMainWindow.screenSave();
                     break;
-                case OPERATION.screenCapture:
-                    screenCapture(mMainWindow);
+                case OPERATION.screenCapture:               //  スクリーンキャプチャ
+                    screenCapture(mMainWindow, 0);
+                    break;
+                case OPERATION.imageTrimming:               //  クリップボードのイメージトリミング
+                    imageTrimming(mMainWindow);
                     break;
                 case OPERATION.print:                       //  印刷
                     mMainWindow.print();
                     break;
                 case OPERATION.cancel:                      //  キャンセル
-                    mLocPos.Clear();
-                    mPickEnt.Clear();
+                    mLocPick.mLocPos.Clear();
+                    mLocPick.mPickEnt.Clear();
                     break;
                 case OPERATION.close:                       //  終了
                     mMainWindow.Close();
@@ -529,64 +510,31 @@ namespace CadApp
             if (commandInit) {
                 mMainWindow.commandClear();
             }
-            if (mEntityData.mOperationCouunt % mSaveOperationCount == 0)
+            if (mEntityData.mOperationCount % mSaveOperationCount == 0)
                 saveFile();
             return locMode;
         }
 
         /// <summary>
-        /// 要素追加コマンド
+        /// 要素追加編集コマンド
         /// </summary>
-        /// <param name="operation">操作名</param>
-        /// <param name="locPos">座標リスト</param>
-        public bool entityCommand(OPERATION operation, List<PointD> locPos, List<(int no, PointD pos)> pickEnt)
+        /// <param name="operation">操作コード</param>
+        /// <param name="locPos">ロケイトリスト</param>
+        /// <param name="pickEnt">ピックリスト</param>
+        /// <param name="lastLoc">ロケイト確定</param>
+        /// <returns>実行可否</returns>
+        public bool entityCommand(OPERATION operation, List<PointD> locPos, List<(int no, PointD pos)> pickEnt, bool lastLoc)
         {
             try {
-                mEntityData.mOperationCouunt++;
-                if (operation == OPERATION.createPoint || operation == OPERATION.createLine
-                    || operation == OPERATION.createRect || operation == OPERATION.createArc
-                    || operation == OPERATION.createCircle || operation == OPERATION.createEllipse
-                    || operation == OPERATION.createText || operation == OPERATION.createHVLine
-                    || operation == OPERATION.createPolyline || operation == OPERATION.createPolygon
-                    || operation == OPERATION.createArrow || operation == OPERATION.createLabel
-                    || operation == OPERATION.createImage || operation == OPERATION.createLocDimension
-                    || operation == OPERATION.pasteEntity || operation == OPERATION.createSymbol
-                    || operation == OPERATION.measureDistance || operation == OPERATION.measureAngle) {
+                mEntityData.mOperationCount++;
+                if (pickEnt.Count == 0) {
                     //  要素の追加 (Ctrlキーなし)
-                    if (createData(locPos, operation)) {
+                    if (createData(locPos, operation, lastLoc)) {
                         return true;
                     }
-                } else if (locPos.Count == 1 &&
-                    (operation == OPERATION.divide || operation == OPERATION.createTangentCircle
-                    || operation == OPERATION.createLinearDimension
-                    || operation == OPERATION.createAngleDimension
-                    || operation == OPERATION.createDiameterDimension
-                    || operation == OPERATION.createRadiusDimension)) {
+                } else {
                     //  編集コマンド
-                    if (changeData(locPos, pickEnt, operation)) {
-                        return true;
-                    }
-                } else if (locPos.Count == 2 &&
-                    (operation == OPERATION.translate || operation == OPERATION.rotate
-                    || operation == OPERATION.mirror || operation == OPERATION.trim
-                    || operation == OPERATION.offset
-                    || operation == OPERATION.copyMirror || operation == OPERATION.copyOffset
-                    || operation == OPERATION.copyTrim || operation == OPERATION.stretch)) {
-                    //  編集コマンド
-                    if (changeData(locPos, pickEnt, operation)) {
-                        return true;
-                    }
-                } else if (locPos.Count == 3 &&
-                    (operation == OPERATION.scale || operation == OPERATION.copyScale)) {
-                    //  編集コマンド
-                    if (changeData(locPos, pickEnt, operation)) {
-                        return true;
-                    }
-                } else if (1 < locPos.Count &&
-                    (operation == OPERATION.copyTranslate || operation == OPERATION.copyRotate
-                     || operation == OPERATION.copyOffset)) {
-                    //  編集コマンド
-                    if (changeData(locPos, pickEnt, operation)) {
+                    if (changeData(locPos, pickEnt, operation, lastLoc)) {
                         return true;
                     }
                 }
@@ -602,7 +550,7 @@ namespace CadApp
         /// <param name="points">ロケイト点配列</param>
         /// <param name="operation">操作</param>
         /// <returns></returns>
-        public bool createData(List<PointD> points, OPERATION operation)
+        public bool createData(List<PointD> points, OPERATION operation, bool lastLoc = false)
         {
             if (operation == OPERATION.createPoint && points.Count == 1) {
                 //  点要素作成
@@ -628,29 +576,29 @@ namespace CadApp
                 TextD text = new TextD(mTextString, points[0], mEntityData.mPara.mTextSize, mEntityData.mPara.mTextRotate,
                     mEntityData.mPara.mHa, mEntityData.mPara.mVa, mEntityData.mPara.mLinePitchRate);
                 mEntityData.addText(text);
-            } else if (operation == OPERATION.createHVLine) {
+            } else if (operation == OPERATION.createHVLine && lastLoc) {
                 //  水平垂直線分
                 if (1 < points.Count) {
                     PolylineD polyline = new PolylineD(points);
                     mEntityData.addPolyline(polyline.toHVLine());
                 } else {
-                    mEntityData.mOperationCouunt--;
+                    mEntityData.mOperationCount--;
                     return false;
                 }
-            } else if (operation == OPERATION.createPolyline) {
+            } else if (operation == OPERATION.createPolyline && lastLoc) {
                 //  ポリライン要素の作成
                 if (1 < points.Count)
                     mEntityData.addPolyline(points);
                 else {
-                    mEntityData.mOperationCouunt--;
+                    mEntityData.mOperationCount--;
                     return false;
                 }
-            } else if (operation == OPERATION.createPolygon) {
+            } else if (operation == OPERATION.createPolygon && lastLoc) {
                 //  ポリゴンの作成
                 if (1 < points.Count)
                     mEntityData.addPolygon(points);
                 else {
-                    mEntityData.mOperationCouunt--;
+                    mEntityData.mOperationCount--;
                     return false;
                 }
             } else if (operation == OPERATION.createImage && points.Count == 2) {
@@ -678,7 +626,7 @@ namespace CadApp
                 //  3点の角度
                 measureAngle(points[0], points[1], points[2]);
             } else {
-                mEntityData.mOperationCouunt--;
+                mEntityData.mOperationCount--;
                 return false;
             }
             mEntityData.updateLayerList();
@@ -690,12 +638,17 @@ namespace CadApp
         /// </summary>
         /// <param name="loc">ロケイト点リスト</param>
         /// <returns></returns>
-        public bool changeData(List<PointD> loc, List<(int, PointD)> pickEnt, OPERATION operation)
+        public bool changeData(List<PointD> loc, List<(int, PointD)> pickEnt, OPERATION operation, bool lastLoc = false)
         {
             if (loc.Count == 1) {
                 if (operation == OPERATION.divide) {
                     //  分割
                     mEntityData.divide(pickEnt, loc[0]);
+                } else if (operation == OPERATION.createTangentLine) {
+                    //  接線
+                    LineD line = mEntityData.tangentLine(pickEnt[0], loc[0]);
+                    if (line != null)
+                        mEntityData.addLine(line);
                 } else if (operation == OPERATION.createTangentCircle) {
                     //  接円
                     ArcD arc = mEntityData.tangentCircle(pickEnt, loc);
@@ -713,22 +666,35 @@ namespace CadApp
                 } else if (operation == OPERATION.createRadiusDimension) {
                     //  半径寸法線
                     mEntityData.addRadiusDimension(pickEnt, loc[0]);
+                } else {
+                    mEntityData.mOperationCount--;
+                    return false;
+                }
+            } else if (2 <= loc.Count && lastLoc) {
+                for (int i = 1; i < loc.Count; i++) {
+                    if (operation == OPERATION.copyTranslate) {
+                        //  コピー移動
+                        PointD vec = loc[0].vector(loc[i]);
+                        mEntityData.translate(pickEnt, vec, true);
+                    } else if (operation == OPERATION.copyRotate) {
+                        //  コピー回転
+                        mEntityData.rotate(pickEnt, loc[0], loc[i], true);
+                    } else if (operation == OPERATION.copyOffset) {
+                        //  コピーオフセット
+                        mEntityData.offset(pickEnt, loc[0], loc[i], true);
+                    } else {
+                        mEntityData.mOperationCount--;
+                        return false;
+                    }
                 }
             } else if (loc.Count == 2) {
                 if (operation == OPERATION.translate) {
                     //  移動
                     PointD vec = loc[0].vector(loc[1]);
                     mEntityData.translate(pickEnt, vec);
-                } else if (operation == OPERATION.copyTranslate) {
-                    //  コピー移動
-                    PointD vec = loc[0].vector(loc[1]);
-                    mEntityData.translate(pickEnt, vec, true);
                 } else if (operation == OPERATION.rotate) {
                     //  回転
                     mEntityData.rotate(pickEnt, loc[0], loc[1]);
-                } else if (operation == OPERATION.copyRotate) {
-                    //  コピー回転
-                    mEntityData.rotate(pickEnt, loc[0], loc[1], true);
                 } else if (operation == OPERATION.mirror) {
                     //  ミラー
                     mEntityData.mirror(pickEnt, loc[0], loc[1]);
@@ -738,9 +704,6 @@ namespace CadApp
                 } else if (operation == OPERATION.offset) {
                     //  オフセット
                     mEntityData.offset(pickEnt, loc[0], loc[1]);
-                } else if (operation == OPERATION.copyOffset) {
-                    //  コピーオフセット
-                    mEntityData.offset(pickEnt, loc[0], loc[1], true);
                 } else if (operation == OPERATION.trim) {
                     //  トリム
                     mEntityData.trim(pickEnt, loc[0], loc[1]);
@@ -755,7 +718,7 @@ namespace CadApp
                     PointD vec = loc[0].vector(loc[1]);
                     mEntityData.stretch(pickEnt, vec);
                 } else {
-                    mEntityData.mOperationCouunt--;
+                    mEntityData.mOperationCount--;
                     return false;
                 }
             } else if (loc.Count == 3 &&
@@ -768,23 +731,12 @@ namespace CadApp
                     //  拡大縮小
                     double scale = loc[0].length(loc[2]) / loc[0].length(loc[1]);
                     mEntityData.scale(pickEnt, loc[0], scale, true);
-                }
-            } else if (2 < loc.Count) {
-                for (int i = 1; i < loc.Count; i++) {
-                    if (operation == OPERATION.copyTranslate) {
-                        //  コピー移動
-                        PointD vec = loc[0].vector(loc[i]);
-                        mEntityData.translate(pickEnt, vec, true);
-                    } else if (operation == OPERATION.copyRotate) {
-                        //  コピー回転
-                        mEntityData.rotate(pickEnt, loc[0], loc[i], true);
-                    } else if (operation == OPERATION.copyOffset) {
-                        //  コピーオフセット
-                        mEntityData.offset(pickEnt, loc[0], loc[i], true);
-                    }
+                } else {
+                    mEntityData.mOperationCount--;
+                    return false;
                 }
             } else {
-                mEntityData.mOperationCouunt--;
+                mEntityData.mOperationCount--;
                 return false;
             }
             mEntityData.updateLayerList();
@@ -798,7 +750,7 @@ namespace CadApp
         /// <returns></returns>
         public bool keyCommand(string command, string text)
         {
-            mEntityData.mOperationCouunt++;
+            mEntityData.mOperationCount++;
             mKeyCommand.mTextString = text;
             return mKeyCommand.setCommand(command, mEntityData.mPara);
         }
@@ -810,7 +762,7 @@ namespace CadApp
         /// <returns></returns>
         public bool changeText(List<(int, PointD)> pickEnt)
         {
-            mEntityData.mOperationCouunt++;
+            mEntityData.mOperationCount++;
             int changeCount = 0;
             foreach ((int no, PointD pos) pickNo in pickEnt) {
                 InputBox dlg = new InputBox();
@@ -830,7 +782,7 @@ namespace CadApp
                             mEntityData.mEntityList.Add(mEntityData.mEntityList[pickNo.no].toCopy());
                             text = (TextEntity)mEntityData.mEntityList[mEntityData.mEntityList.Count - 1];
                             text.mText.mText = dlg.mEditText;
-                            mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mOperationCount = mEntityData.mOperationCouunt;
+                            mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mOperationCount = mEntityData.mOperationCount;
                             mEntityData.removeEnt(pickNo.no);
                         }
                         changeCount++;
@@ -845,7 +797,7 @@ namespace CadApp
                                 mEntityData.mEntityList.Add(mEntityData.mEntityList[pickNo.no].toCopy());
                                 parts = (PartsEntity)mEntityData.mEntityList[mEntityData.mEntityList.Count - 1];
                                 parts.mParts.mTexts[no].mText = dlg.mEditText;
-                                mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mOperationCount = mEntityData.mOperationCouunt;
+                                mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mOperationCount = mEntityData.mOperationCount;
                                 mEntityData.removeEnt(pickNo.no);
                             }
                             changeCount++;
@@ -867,7 +819,7 @@ namespace CadApp
         /// <returns></returns>
         public bool changeRadius(List<(int, PointD)> pickEnt)
         {
-            mEntityData.mOperationCouunt++;
+            mEntityData.mOperationCount++;
             foreach ((int no, PointD pos) pickNo in pickEnt) {
                 if (mEntityData.mEntityList[pickNo.no].mEntityId == EntityId.Arc) {
                     ArcEntity arc = (ArcEntity)mEntityData.mEntityList[pickNo.no];
@@ -880,7 +832,7 @@ namespace CadApp
                         mEntityData.mEntityList.Add(mEntityData.mEntityList[pickNo.no].toCopy());
                         arc = (ArcEntity)mEntityData.mEntityList[mEntityData.mEntityList.Count - 1];
                         arc.mArc.mR = ycalc.expression(dlg.mEditText);
-                        mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mOperationCount = mEntityData.mOperationCouunt;
+                        mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mOperationCount = mEntityData.mOperationCount;
                         mEntityData.removeEnt(pickNo.no);
                     }
                 }
@@ -897,7 +849,7 @@ namespace CadApp
         /// <returns></returns>
         public bool changeProperty(List<(int, PointD)> pickEnt, bool copy = false )
         {
-            mEntityData.mOperationCouunt++;
+            mEntityData.mOperationCount++;
             foreach ((int no, PointD pos) pickNo in pickEnt) {
                 EntProperty dlg = new EntProperty();
                 dlg.Owner = mMainWindow;
@@ -1027,7 +979,7 @@ namespace CadApp
                         ellipse.mFillColor = dlg.mFillColor;
                     }
                     //  Undo処理
-                    entity.mOperationCount = mEntityData.mOperationCouunt;
+                    entity.mOperationCount = mEntityData.mOperationCount;
                     if (!copy)
                         mEntityData.removeEnt(pickNo.no);
                 }
@@ -1056,7 +1008,7 @@ namespace CadApp
             mEntityData.updateLayerList();
             dlg.mLayerNameList = mEntityData.getLayerNameList();
             if (dlg.ShowDialog() == true) {
-                mEntityData.mOperationCouunt++;
+                mEntityData.mOperationCount++;
                 foreach ((int no, PointD pos) pickNo in pickEnt) {
                     mEntityData.mEntityList.Add(mEntityData.mEntityList[pickNo.no].toCopy());
                     Entity entity = mEntityData.mEntityList[mEntityData.mEntityList.Count - 1];
@@ -1136,7 +1088,7 @@ namespace CadApp
                         ellipse.mFillOn = dlg.mFillColorOn;
                         ellipse.mFillColor = dlg.mFillColor;
                     }
-                    entity.mOperationCount = mEntityData.mOperationCouunt;
+                    entity.mOperationCount = mEntityData.mOperationCount;
                     mEntityData.removeEnt(pickNo.no);
                 }
                 if (dlg.mLayerNameChk) {
@@ -1225,7 +1177,7 @@ namespace CadApp
             for (int i = 0; i < mCopyEntityList.Count; i++) {
                 Entity entity = mCopyEntityList[i];
                 entity.translate(vec);
-                entity.mOperationCount = mEntityData.mOperationCouunt;
+                entity.mOperationCount = mEntityData.mOperationCount;
                 mEntityData.addEntity(entity);
             }
             mEntityData.updateData();
@@ -1239,7 +1191,7 @@ namespace CadApp
         {
             LineD line = mEntityData.tangentLine(pickEnt);
             if (line != null) {
-                mEntityData.mOperationCouunt++;
+                mEntityData.mOperationCount++;
                 mEntityData.addLine(line);
                 mEntityData.updateData();
             }
@@ -1255,7 +1207,7 @@ namespace CadApp
                 PointD vec = loc - mCopyEntityList[0].mArea.getCenter();
                 Entity entity = mCopyEntityList[0].toCopy();
                 entity.translate(vec);
-                entity.mOperationCount = mEntityData.mOperationCouunt;
+                entity.mOperationCount = mEntityData.mOperationCount;
                 mEntityData.addEntity(entity);
                 mEntityData.updateData();
             }
@@ -1311,8 +1263,8 @@ namespace CadApp
                 mCopyEntityList.Add(ent);
             mEntityData.mPara.mSymbolCategoryIndex = mSymbolDlg.mDefualtCategory;
             mMainWindow.mOperation = OPERATION.createSymbol;
-            mMainWindow.mLocMode = MainWindow.OPEMODE.loc;
-            mLocPos.Clear();
+            mMainWindow.mLocMode = OPEMODE.loc;
+            mLocPick.mLocPos.Clear();
         }
 
         /// <summary>
@@ -1325,7 +1277,7 @@ namespace CadApp
             if (mCopyEntityList != null && 0 < mCopyEntityList.Count) {
                 ImageEntity entity = (ImageEntity)mCopyEntityList[0].toCopy();
                 entity.setPostion(sp, ep);
-                entity.mOperationCount = mEntityData.mOperationCouunt;
+                entity.mOperationCount = mEntityData.mOperationCount;
                 mEntityData.addEntity(entity);
                 mEntityData.updateData();
             }
@@ -1335,7 +1287,7 @@ namespace CadApp
         /// <summary>
         /// イメージ要素を設定
         /// </summary>
-        public MainWindow.OPEMODE setImage()
+        public OPEMODE setImage()
         {
             string filePath = "";
             if (0 < mClipImagePath.Length) {
@@ -1358,11 +1310,11 @@ namespace CadApp
                 mCopyEntityList = new List<Entity>();
                 if (ent != null)
                     mCopyEntityList.Add(ent);
-                mLocPos.Clear();
+                mLocPick.mLocPos.Clear();
                 mClipImagePath = "";
-                return MainWindow.OPEMODE.loc;
+                return OPEMODE.loc;
             }
-            return MainWindow.OPEMODE.non;
+            return OPEMODE.non;
         }
 
         /// <summary>
@@ -1412,12 +1364,12 @@ namespace CadApp
             dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             dlg.Title = "シンボルの選択";
             if (dlg.ShowDialog() == true) {
-                mEntityData.mOperationCouunt++;
+                mEntityData.mOperationCount++;
                 string name = "__" + dlg.mEditText;
                 PartsEntity entity = new PartsEntity(name, points, lines, arcs, texts);
                 entity.setProperty(mEntityData.mPara);
                 mEntityData.mEntityList.Add(entity);
-                entity.mOperationCount = mEntityData.mOperationCouunt;
+                entity.mOperationCount = mEntityData.mOperationCount;
                 for (int i = 0; i < pickEnt.Count; i++)
                     mEntityData.removeEnt(pickEnt[i].no);
                 mEntityData.updateData();
@@ -1543,7 +1495,7 @@ namespace CadApp
                 para.mArrowAngle = dlg.mArrowAngle;
                 para.mGridSize = dlg.mGridSize;
                 dlg.Close();
-                mEntityData.mOperationCouunt++;
+                mEntityData.mOperationCount++;
                 return true;
             } else {
                 dlg.Close();
@@ -1567,7 +1519,7 @@ namespace CadApp
                 mEntityData.addDispLayer(mEntityData.mPara.mCreateLayerName);
                 mMainWindow.cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
                 mMainWindow.cbCreateLayer.SelectedIndex = mMainWindow.cbCreateLayer.Items.IndexOf(mEntityData.mPara.mCreateLayerName);
-                mEntityData.mOperationCouunt++;
+                mEntityData.mOperationCount++;
             }
         }
 
@@ -1585,7 +1537,7 @@ namespace CadApp
             mChkListDlg.mCallBackOn = true;
             mChkListDlg.callback = setLayerChk;
             mChkListDlg.Show();
-            mEntityData.mOperationCouunt++;
+            mEntityData.mOperationCount++;
         }
 
         /// <summary>
@@ -1615,7 +1567,7 @@ namespace CadApp
             mEntityData.mPara.mDispLayerBit = 0xffffffff;
             mEntityData.updateData();
             mEntityData.mPara.mOneLayerDisp = false;
-            mEntityData.mOperationCouunt++;
+            mEntityData.mOperationCount++;
         }
 
         /// <summary>
@@ -1630,7 +1582,7 @@ namespace CadApp
             } else {
                 mEntityData.mPara.mOneLayerDisp = true;
             }
-            mEntityData.mOperationCouunt++;
+            mEntityData.mOperationCount++;
         }
 
         /// <summary>
@@ -1646,7 +1598,7 @@ namespace CadApp
             dlg.mTitle2 = "変更後";
             dlg.mSelectList = mEntityData.getLayerNameList();
             if (dlg.ShowDialog()==true) {
-                mEntityData.mOperationCouunt++;
+                mEntityData.mOperationCount++;
                 mEntityData.changeLayerName(dlg.mSelectText, dlg.mEditText);
                 mMainWindow.cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
                 mMainWindow.cbCreateLayer.SelectedIndex = mMainWindow.cbCreateLayer.Items.IndexOf(mEntityData.mPara.mCreateLayerName);
@@ -1853,7 +1805,7 @@ namespace CadApp
         /// <returns></returns>
         public bool infoEntityData(List<(int no, PointD pos)> pickEnt)
         {
-            mEntityData.mOperationCouunt++;
+            mEntityData.mOperationCount++;
 
             foreach ((int no, PointD pos) entNo in pickEnt) {
                 string propertyStr = mEntityData.mEntityList[entNo.no].toString();
@@ -1864,13 +1816,13 @@ namespace CadApp
                 dlg.Title = $"[{entNo.no}] {propertyStr}";
                 dlg.mEditText = dataStr;
                 if (dlg.ShowDialog() == true) {
-                    mEntityData.mOperationCouunt++;
+                    mEntityData.mOperationCount++;
                     dataStr = dlg.mEditText;
                     string[] property = propertyStr.Split(new char[] { ',' });
                     string[] data = dataStr.Split(new char[] { ',' });
                     Entity ent = mEntityData.setStringEntityData(property, data);
                     mEntityData.mEntityList.Add(ent);
-                    mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mOperationCount = mEntityData.mOperationCouunt;
+                    mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mOperationCount = mEntityData.mOperationCount;
                     mEntityData.removeEnt(entNo.no);
                 }
             }
@@ -1892,7 +1844,7 @@ namespace CadApp
             dlg.mEditText = mEntityData.mPara.mComment;
             if (dlg.ShowDialog() == true) {
                 mEntityData.mPara.mComment = dlg.mEditText;
-                mEntityData.mOperationCouunt++;
+                mEntityData.mOperationCount++;
             }
         }
 
@@ -1909,6 +1861,16 @@ namespace CadApp
             if (dlg.ShowDialog() == true) {
                 mEntityData.mPara.mGridSize = ylib.string2double(dlg.mEditText);
             }
+        }
+
+        /// <summary>
+        /// スクリーンキャプチャ
+        /// </summary>
+        private void screenCapture(Window window,int interval = 0)
+        {
+            System.Threading.Thread.Sleep(interval * 1000);
+            screenCapture(window);
+            imageTrimming(window);
         }
 
         /// <summary>
@@ -1939,6 +1901,29 @@ namespace CadApp
                 }
             }
         }
+
+        /// <summary>
+        /// クリップボードのイメージをトリミングする
+        /// </summary>
+        /// <param name="window"></param>
+        private void imageTrimming(Window window)
+        {
+            ImagePaste dlg = new ImagePaste();
+            dlg.Owner = window;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.Title = "画像のサイズ設定";
+            dlg.mCancelEnable = false;
+            if (dlg.ShowDialog() == true) {
+                //Image image = new Image();
+                //image.Stretch = Stretch.Fill;
+                //image.Width = dlg.mWidth;
+                //image.Height = dlg.mHeight;
+                //image.Source = dlg.mBitmapSource;
+                //var tp = rc.CaretPosition.GetInsertionPosition(LogicalDirection.Forward);
+                //new InlineUIContainer(image, tp);
+            }
+        }
+
 
         /// <summary>
         /// 図面ファイルを選択して読みだす

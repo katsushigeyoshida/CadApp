@@ -61,7 +61,7 @@ namespace CadApp
         private bool createEntity(Entity entity)
         {
             if (entity != null) {
-                entity.mOperationCount = mEntityData.mOperationCouunt;
+                entity.mOperationCount = mEntityData.mOperationCount;
                 entity.mColor = mPara.mColor;
                 entity.mThickness = mPara.mThickness;
                 entity.mType = mPara.mLineType;

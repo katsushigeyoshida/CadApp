@@ -1021,11 +1021,12 @@ namespace CadApp
         /// </summary>
         /// <param name="b">検索Box</param>
         /// <returns>検索要素No</returns>
-        public List<int> findIndex(Box b)
+        public List<int> findIndex(Box b, EntityId entityMask = EntityId.Non)
         {
             List<int> picks = new List<int>();
             for (int i = 0; i < mEntityList.Count; i++) {
                 if (mEntityList[i].mRemove || 0 == (mEntityList[i].mLayerBit & mPara.mDispLayerBit)
+                    || (entityMask != EntityId.Non && mEntityList[i].mEntityId != entityMask)
                     || mEntityList[i].mEntityId == EntityId.Non
                     || mEntityList[i].mEntityId == EntityId.Link)
                     continue;

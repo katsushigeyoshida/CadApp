@@ -35,6 +35,7 @@ namespace CadApp
         public string mCreateLayerName = "BaseLayer";               //  作成レイヤー名
         public bool mOneLayerDisp = false;                          //  1レイヤーのみの表示
         public int mSymbolCategoryIndex = 0;                        //  シンボル分類No
+        public Brush mBackColor = Brushes.White;                    //  背景色
 
         private YLib ylib = new YLib();
 
@@ -74,6 +75,7 @@ namespace CadApp
             para.mCreateLayerName = mCreateLayerName;
             para.mOneLayerDisp = mOneLayerDisp;
             para.mSymbolCategoryIndex = mSymbolCategoryIndex;
+            para.mBackColor = mBackColor;
             return para;
         }
 
@@ -103,6 +105,7 @@ namespace CadApp
             mCreateLayerName = "BaseLayer";                 //  作成レイヤー名
             mOneLayerDisp = false;                          //  1レイヤーのみの表示
             mSymbolCategoryIndex = 0;                       //  シンボル分類No
+            mBackColor = Brushes.White;                     //  背景色
         }
 
         /// <summary>
@@ -117,7 +120,7 @@ namespace CadApp
                 $"ArrowSize,{mArrowSize},ArrowAngle,{mArrowAngle},GridSize,{mGridSize},DispLaerBit,{mDispLayerBit}," +
                 $"CreateLayer,{ylib.strControlCodeCnv(mCreateLayerName)},OneLayerDisp,{mOneLayerDisp}," +
                 $"FontFamily,{mFontFamily},FontStyle,{mFontStyle},FontWeight,{mFontWeight}," +
-                $"SymbolCategoryIindex,{mSymbolCategoryIndex}";
+                $"SymbolCategoryIindex,{mSymbolCategoryIndex},BackColor,{ylib.getBrushName(mBackColor)}";
         }
 
         /// <summary>
@@ -190,6 +193,9 @@ namespace CadApp
                             case "SymbolCategoryIindex":
                                 mSymbolCategoryIndex = int.Parse(data[++i]);
                                 break;
+                            case "BackColor":
+                                mBackColor = ylib.getBrsh(data[++i]);
+                                break;
                         }
                     }
                 } else {
@@ -260,7 +266,6 @@ namespace CadApp
 
         public Box mInitArea = new(-10, 150, 250, -10);             //  初期表示領域
         public Box mDispArea;                                       //  表示領域
-        public Brush mBackColor = Brushes.White;                    //  背景色
         private readonly double mEps = 1E-8;
 
         private KeyCommand mKeyCommand = new();
@@ -1125,7 +1130,8 @@ namespace CadApp
                     bitmap = ylib.cnvBitmap2BitmapImage(ent.mBitmap);
                 }
             }
-            string buf = "area," + area.ToString() +"\n";
+            string buf = mMainWindow.mAppName + "\n";
+            buf += "area," + area.ToString() +"\n";
             foreach (string[] str in listData) {
                 buf += ylib.arrayStr2CsvData(str) + "\n";
             }
@@ -1145,13 +1151,16 @@ namespace CadApp
             mCopyEntityList = new List<Entity>();
             if (0 < buf.Length) {
                 string[] dataList = buf.Split(new char[] { '\n' });
-                if (0 < dataList.Length) {
-                    string[] areaStr = ylib.csvData2ArrayStr(dataList[0]);
+                if (1 < dataList.Length) {
+                    string[] appNameStr = ylib.csvData2ArrayStr(dataList[0]);
+                    if (appNameStr[0] != mMainWindow.mAppName)
+                        return;
+                    string[] areaStr = ylib.csvData2ArrayStr(dataList[1]);
                     if (4 < areaStr.Length && areaStr[0] == "area") {
                         mCopyArea = new Box($"{areaStr[1]},{areaStr[2]},{areaStr[3]},{areaStr[4]}");
                         mCopyArea.normalize();
                     }
-                    for (int i = 1; i < dataList.Length -1; i++) {
+                    for (int i = 2; i < dataList.Length -1; i++) {
                         string[] property = ylib.csvData2ArrayStr(dataList[i]);
                         if (property.Length <= 4)
                             continue;
@@ -1477,6 +1486,7 @@ namespace CadApp
             dlg.mArrowSize = para.mArrowSize;
             dlg.mArrowAngle = para.mArrowAngle;
             dlg.mGridSize = para.mGridSize;
+            dlg.mBackColor = para.mBackColor;
             if (dlg.ShowDialog() == true) {
                 para.mColor = dlg.mColor;
                 para.mLineType = dlg.mLineType;
@@ -1494,6 +1504,7 @@ namespace CadApp
                 para.mArrowSize = dlg.mArrowSize;
                 para.mArrowAngle = dlg.mArrowAngle;
                 para.mGridSize = dlg.mGridSize;
+                para.mBackColor = dlg.mBackColor;
                 dlg.Close();
                 mEntityData.mOperationCount++;
                 return true;

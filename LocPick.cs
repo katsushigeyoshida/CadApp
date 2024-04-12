@@ -20,7 +20,7 @@ namespace CadApp
 
         public List<PointD> mLocPos = new();                        //  マウス指定点
         public List<(int no, PointD pos)> mPickEnt = new();         //  ピックした要素リスト
-
+        public EntityId mPickMask = EntityId.Non;
         public EntityData mEntityData;
         public Window mMainWindow;
         private YCalc ycalc = new YCalc();
@@ -523,7 +523,7 @@ namespace CadApp
         /// <returns>要素Noリスト</returns>
         public List<int> getPickNo(Box b)
         {
-            return mEntityData.findIndex(b);
+            return mEntityData.findIndex(b, mPickMask);
         }
     }
 }

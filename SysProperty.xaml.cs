@@ -65,6 +65,7 @@ namespace CadApp
         public Brush mFillColor = Brushes.Beige;
         public bool mFillColorOn = false;
         public double mGridSize = 1;
+        public Brush mBackColor = Brushes.White;
 
         public bool mShowCheckBox     = false;
         public bool mColorChk         = false;
@@ -96,6 +97,7 @@ namespace CadApp
 
             cbColor.DataContext = ydraw.mColorList;
             cbFillColor.DataContext = ylib.mBrushList;
+            cbBackColor.DataContext = ylib.mBrushList;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -139,6 +141,7 @@ namespace CadApp
             cbFontWeight.SelectedIndex = mFontWeightMenu.FindIndex(p => p == mFontWeight);
             cbFillColor.SelectedIndex  = ylib.mBrushList.FindIndex(p => p.brush.ToString() == mFillColor.ToString());
             chFillColorOn.IsChecked    = mFillColorOn;
+            cbBackColor.SelectedIndex  = ylib.mBrushList.FindIndex(p => p.brush.ToString() == mBackColor.ToString());
 
             chColor.Visibility         = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
             lbBackDispTitle.Visibility = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
@@ -164,9 +167,11 @@ namespace CadApp
             chFontStyle.Visibility     = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
             chFontWeight.Visibility    = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
             lbFillColorTitle.Visibility = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
-            cbFillColor.Visibility     = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
-            chFillColorOn.Visibility   = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
-            chFillColor.Visibility     = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
+            cbFillColor.Visibility      = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
+            chFillColorOn.Visibility    = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
+            chFillColor.Visibility      = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
+            lbBackColorTitle.Visibility = mShowCheckBox ? Visibility.Hidden : Visibility.Visible;
+            cbBackColor.Visibility      = mShowCheckBox ? Visibility.Hidden : Visibility.Visible;
 
             chColor.IsChecked         = mColorChk;
             chLineType.IsChecked      = mLineTypeChk;
@@ -225,8 +230,12 @@ namespace CadApp
                 mFillColorName = ylib.mBrushList[cbFillColor.SelectedIndex].colorTitle;
             }
             mFillColorOn = chFillColorOn.IsChecked == true;
+            if (0 <= cbBackColor.SelectedIndex) {
+                mBackColor = ylib.mBrushList[cbBackColor.SelectedIndex].brush;
+                //mBackColorName = ylib.mBrushList[cbBackColor.SelectedIndex].colorTitle;
+            }
 
-            mBackDispChk      = chBackDispChk.IsChecked   == true;
+            mBackDispChk = chBackDispChk.IsChecked   == true;
             mColorChk         = chColor.IsChecked         == true;
             mLineTypeChk      = chLineType.IsChecked      == true;
             mPointTypeChk     = chPointType.IsChecked     == true;

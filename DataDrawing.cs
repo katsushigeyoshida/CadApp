@@ -769,7 +769,7 @@ namespace CadApp
         /// <param name="pickEnt">ピックリスト</param>
         public void disp(EntityData entityData, List<(int no, PointD pos)> pickEnt)
         {
-            disp(entityData, mMainWindow.mCommandOpe.mBackColor, mMainWindow.mCommandOpe.mEntityData.mPara.mGridSize);
+            disp(entityData, mMainWindow.mCommandOpe.mEntityData.mPara.mBackColor, mMainWindow.mCommandOpe.mEntityData.mPara.mGridSize);
             pickDisp(entityData, pickEnt);
         }
 

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CadApp"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800"  Loaded="Window_Loaded" Closing="Window_Closing"
+        Title="MainWindow" Height="450" Width="850"  Loaded="Window_Loaded" Closing="Window_Closing"
         MouseLeftButtonDown="Window_MouseLeftButtonDown" MouseMove="Window_MouseMove" LayoutUpdated="Window_LayoutUpdated"
         MouseLeftButtonUp="Window_MouseLeftButtonUp" MouseWheel="Window_MouseWheel" MouseRightButtonDown="Window_MouseRightButtonDown"
         PreviewKeyDown="Window_PreviewKeyDown" MouseDoubleClick="Window_MouseDoubleClick" >
@@ -46,6 +46,10 @@
                             ToolTip="領域拡大 F2" >
                         <Image Source="Icon\ZoomOriginalSize.png" ></Image>
                     </Button>
+                    <Button x:Name="btZoomFit" Width="25" Height="25" Click="btZoom_Click"
+                            ToolTip="全体表示 F3" >
+                        <Image Source="Icon\ZoomToFit.png" ></Image>
+                    </Button>
                     <Button x:Name="btZoomIn" Width="25" Height="25" Click="btZoom_Click"
                             ToolTip="拡大表示 F4" >
                         <Image Source="Icon\ZoomIn.png" ></Image>
@@ -54,25 +58,21 @@
                             ToolTip="縮小表示 F5" >
                         <Image Source="Icon\ZoomOut.png" ></Image>
                     </Button>
-                    <Button x:Name="btZoomFit" Width="25" Height="25" Click="btZoom_Click"
-                            ToolTip="全体表示 F3" >
-                        <Image Source="Icon\ZoomToFit.png" ></Image>
-                    </Button>
                     <Button x:Name="btZoomWidthFit" Width="25" Height="25" Click="btZoom_Click"
                             ToolTip="全幅表示 F6" >
                         <Image Source="Icon\ZoomToWidth.png" ></Image>
                     </Button>
-                    <Button x:Name="btMenu" Width="25" Height="25" Click="btMenu_Click" 
-                            ToolTip="ロケイトメニュー F6">
-                        <Image Source="Icon\MenuItem.png" ></Image>
-                    </Button>
                     <Button x:Name="btAreaPick" ToolTip="領域ピック F7" Width="25" Height="25" Click="btAreaPick_Click"  >
                         <Image Source="Icon\WebPartZone.png" ></Image>
+                    </Button>
+                    <Button x:Name="btMenu" Width="25" Height="25" Click="btMenu_Click" 
+                            ToolTip="ロケイトメニュー F8">
+                        <Image Source="Icon\MenuItem.png" ></Image>
                     </Button>
                 </ToolBar>
                 <ToolBar Height="25" >
                     <TextBlock Text="色" FontSize="11" VerticalAlignment="Center"/>
-                    <ComboBox Name="cbColor" Width="80" ItemsSource="{Binding}" 
+                    <ComboBox Name="cbColor" Width="40" ItemsSource="{Binding}" 
                               ToolTip="要素の色設定" SelectionChanged="cbColor_SelectionChanged" >
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
@@ -100,6 +100,9 @@
                     <TextBlock Text="グリッド" FontSize="11" VerticalAlignment="Center"/>
                     <ComboBox Name="cbGridSize" Width="40" ToolTip="グリッドのサイズ"
                               SelectionChanged="cbGridSize_SelectionChanged" />
+                    <TextBlock Text="マスク" FontSize="11" VerticalAlignment="Center"/>
+                    <ComboBox Name="cbEntityMask" Width="50" ToolTip="ピック時の要素マスク"
+                              SelectionChanged="cbEntityMask_SelectionChanged" />
                 </ToolBar>
             </ToolBarTray>
             <StackPanel DockPanel.Dock="Bottom" Height="56">

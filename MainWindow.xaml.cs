@@ -23,7 +23,7 @@ namespace CadApp
         private double mPrevWindowWidth;        //  変更前のウィンドウ幅
         private WindowState mWindowState = WindowState.Normal;  //  ウィンドウの状態(最大化/最小化)
 
-        private string mAppName = "CadApp";                     //  アプリケーション名
+        public string mAppName = "CadApp";                      //  アプリケーション名
         private string mHelpFile = "CadAppManual.pdf";          //  PDFのヘルプファイル
         private string mShortCutPath = "ShortCut.csv";          //  ショートカットキーファイル
         private double[] mGridSizeMenu = {
@@ -44,6 +44,10 @@ namespace CadApp
         };
         private List<string> mLineTypeMenu = new List<string>() {
             "実線", "破線", "一点鎖線", "二点鎖線"
+        };
+        private List<string> mEntityMaskMenu = new List<string>() {
+            "なし", "点", "線分", "円弧", "折線", "ポリゴン", "テキスト",
+            "寸法線,矢印,ラベル,シンボル"
         };
         private string[] mHorizontalAlignmentMenu = { "左", "中", "右" };
         private string[] mVerticalAlignmentMenu = { "上", "中", "下" };
@@ -126,6 +130,7 @@ namespace CadApp
             cbPointSize.ItemsSource   = mEntSizeMenu;
             cbLineType.ItemsSource    = mLineTypeMenu;
             cbEntSize.ItemsSource     = mEntSizeMenu;
+            cbEntityMask.ItemsSource  = mEntityMaskMenu;
             cbTextSize.ItemsSource    = mTextSizeMenu;
             cbTextHorizontal.ItemsSource = mHorizontalAlignmentMenu;
             cbTextVertical.ItemsSource   = mVerticalAlignmentMenu;
@@ -817,6 +822,28 @@ namespace CadApp
         }
 
         /// <summary>
+        /// ピック要素マスク
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void cbEntityMask_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            int n = cbEntityMask.SelectedIndex;
+            switch (mEntityMaskMenu[n]) {
+                case "なし": mLocPick.mPickMask = EntityId.Non; break;
+                case "点": mLocPick.mPickMask = EntityId.Point; break;
+                case "線分": mLocPick.mPickMask = EntityId.Line; break;
+                case "円弧": mLocPick.mPickMask = EntityId.Arc; break;
+                case "折線": mLocPick.mPickMask = EntityId.Polyline; break;
+                case "ポリゴン": mLocPick.mPickMask = EntityId.Polygon; break;
+                case "テキスト": mLocPick.mPickMask = EntityId.Text; break;
+                case "寸法線,矢印,ラベル,シンボル": mLocPick.mPickMask = EntityId.Parts; break;
+                default: mLocPick.mPickMask = EntityId.Non; break;
+
+            }
+        }
+
+        /// <summary>
         /// 文字サイズの設定
         /// </summary>
         /// <param name="sender"></param>
@@ -991,17 +1018,18 @@ namespace CadApp
         {
             if (control) {
                 switch (key) {
-                    case Key.F1: mCommandOpe.mEntityData.mPara.mGridSize *= -1; mDataDrawing.disp(mEntityData, mLocPick.mPickEnt); break;   //  グリッド表示反転
+                    case Key.F1: mCommandOpe.mEntityData.mPara.mGridSize *= -1;
+                                    mDataDrawing.disp(mEntityData, mLocPick.mPickEnt); break;       //  グリッド表示反転
                     case Key.F2: break;
                     case Key.F3: break;
                     case Key.F4: break;
                     case Key.F5: break;
-                    case Key.Left: mDataDrawing.scroll(mScrollSize, 0, mEntityData, mLocPick.mPickEnt); break;
-                    case Key.Right: mDataDrawing.scroll(-mScrollSize, 0, mEntityData, mLocPick.mPickEnt); break;
-                    case Key.Up: mDataDrawing.scroll(0, mScrollSize, mEntityData, mLocPick.mPickEnt); break;
-                    case Key.Down: mDataDrawing.scroll(0, -mScrollSize, mEntityData, mLocPick.mPickEnt); break;
-                    case Key.PageUp: mDataDrawing.zoom(1.1, mEntityData, mLocPick.mPickEnt); break;
-                    case Key.PageDown: mDataDrawing.zoom(1 / 1.1, mEntityData, mLocPick.mPickEnt); break;
+                    case Key.Left: mDataDrawing.scroll(mScrollSize, 0, mEntityData, mLocPick.mPickEnt); break;  //  左画面移動
+                    case Key.Right: mDataDrawing.scroll(-mScrollSize, 0, mEntityData, mLocPick.mPickEnt); break;//  右画面移動
+                    case Key.Up: mDataDrawing.scroll(0, mScrollSize, mEntityData, mLocPick.mPickEnt); break;    //  上画面移動
+                    case Key.Down: mDataDrawing.scroll(0, -mScrollSize, mEntityData, mLocPick.mPickEnt); break; //  下画面移動
+                    case Key.PageUp: mDataDrawing.zoom(1.1, mEntityData, mLocPick.mPickEnt); break;             //  画面拡大
+                    case Key.PageDown: mDataDrawing.zoom(1 / 1.1, mEntityData, mLocPick.mPickEnt); break;       //  画面縮小
                     default:
                         //  ショートカットキー(Ctrl + 〇)
                         if (mCommandData.mShortCutList.ContainsKey(key))
@@ -1017,13 +1045,13 @@ namespace CadApp
                 switch (key) {
                     case Key.Escape: commandClear(); break;             //  ESCキーでキャンセル
                     case Key.Return: break;                             //  コントロールごとに実行
-                    case Key.F1: mDataDrawing.disp(mEntityData, mLocPick.mPickEnt); break;              //  再表示
-                    case Key.F2: mPrevMode = mLocMode; mLocMode = OPEMODE.areaDisp; break;  //  領域拡大
-                    case Key.F3: mDataDrawing.dispFit(mEntityData, mLocPick.mPickEnt); break;                      //  全体表示
-                    case Key.F4: mDataDrawing.zoom(1.2, mEntityData, mLocPick.mPickEnt); break;                      //  拡大表示
-                    case Key.F5: mDataDrawing.zoom(1 / 1.2, mEntityData, mLocPick.mPickEnt); break;                  //  縮小表示
-                    case Key.F6: mDataDrawing.dispWidthFit(mEntityData, mLocPick.mPickEnt); break;                 //  全幅表示
-                    case Key.F7: mPrevMode = mLocMode; mLocMode = OPEMODE.areaPick; break;  //  領域ピック
+                    case Key.F1: mDataDrawing.disp(mEntityData, mLocPick.mPickEnt); break;          //  再表示
+                    case Key.F2: mPrevMode = mLocMode; mLocMode = OPEMODE.areaDisp; break;          //  領域拡大
+                    case Key.F3: mDataDrawing.dispFit(mEntityData, mLocPick.mPickEnt); break;       //  全体表示
+                    case Key.F4: mDataDrawing.zoom(1.2, mEntityData, mLocPick.mPickEnt); break;     //  拡大表示
+                    case Key.F5: mDataDrawing.zoom(1 / 1.2, mEntityData, mLocPick.mPickEnt); break; //  縮小表示
+                    case Key.F6: mDataDrawing.dispWidthFit(mEntityData, mLocPick.mPickEnt); break;  //  全幅表示
+                    case Key.F7: mPrevMode = mLocMode; mLocMode = OPEMODE.areaPick; break;          //  領域ピック
                     case Key.F8: locMenu(); break;                      //  ロケイトメニュー
                     case Key.F9: break;
                     case Key.F10: break;
@@ -1355,19 +1383,20 @@ namespace CadApp
         /// </summary>
         public void setZumenProperty()
         {
-            cbColor.SelectedIndex     = ylib.mColorList.FindIndex(p => p.brush == mCommandOpe.mEntityData.mPara.mColor);
-            cbGridSize.SelectedIndex  = mGridSizeMenu.FindIndex(Math.Abs(mCommandOpe.mEntityData.mPara.mGridSize));
-            cbPointType.SelectedIndex = mCommandOpe.mEntityData.mPara.mPointType;
-            cbPointSize.SelectedIndex = mEntSizeMenu.FindIndex(p => mCommandOpe.mEntityData.mPara.mPointSize <= p);
-            cbLineType.SelectedIndex  = mCommandOpe.mEntityData.mPara.mLineType;
-            cbEntSize.SelectedIndex   = mEntSizeMenu.FindIndex(p => mCommandOpe.mEntityData.mPara.mThickness <= p);
-            cbTextSize.SelectedIndex  = mTextSizeMenu.FindIndex((p) => mCommandOpe.mEntityData.mPara.mTextSize <= p);
+            cbColor.SelectedIndex      = ylib.mColorList.FindIndex(p => p.brush == mCommandOpe.mEntityData.mPara.mColor);
+            cbGridSize.SelectedIndex   = mGridSizeMenu.FindIndex(Math.Abs(mCommandOpe.mEntityData.mPara.mGridSize));
+            cbEntityMask.SelectedIndex = 0;
+            cbPointType.SelectedIndex  = mCommandOpe.mEntityData.mPara.mPointType;
+            cbPointSize.SelectedIndex  = mEntSizeMenu.FindIndex(p => mCommandOpe.mEntityData.mPara.mPointSize <= p);
+            cbLineType.SelectedIndex   = mCommandOpe.mEntityData.mPara.mLineType;
+            cbEntSize.SelectedIndex    = mEntSizeMenu.FindIndex(p => mCommandOpe.mEntityData.mPara.mThickness <= p);
+            cbTextSize.SelectedIndex   = mTextSizeMenu.FindIndex((p) => mCommandOpe.mEntityData.mPara.mTextSize <= p);
             cbTextHorizontal.SelectedIndex = mCommandOpe.mEntityData.mPara.mHa == HorizontalAlignment.Left ? 0 :
                                          mCommandOpe.mEntityData.mPara.mHa == HorizontalAlignment.Center ? 1 : 2;
-            cbTextVertical.SelectedIndex   = mCommandOpe.mEntityData.mPara.mVa == VerticalAlignment.Top ? 0 :
+            cbTextVertical.SelectedIndex = mCommandOpe.mEntityData.mPara.mVa == VerticalAlignment.Top ? 0 :
                                          mCommandOpe.mEntityData.mPara.mVa == VerticalAlignment.Center ? 1 : 2;
-            cbTextRotate.SelectedIndex = mTextRotateMenu.FindIndex(p => ylib.R2D(mCommandOpe.mEntityData.mPara.mTextRotate) <= p);
-            cbCreateLayer.ItemsSource  = mEntityData.getLayerNameList();
+            cbTextRotate.SelectedIndex  = mTextRotateMenu.FindIndex(p => ylib.R2D(mCommandOpe.mEntityData.mPara.mTextRotate) <= p);
+            cbCreateLayer.ItemsSource   = mEntityData.getLayerNameList();
             setCreateLayer(mEntityData.mPara.mCreateLayerName);
         }
 

@@ -215,7 +215,7 @@ namespace CadApp
         /// </summary>
         /// <param name="vec">移動ベクトル</param>
         /// <param name="pickPos">ピック位置</param>
-        public override void stretch(PointD vec, PointD pickPos)
+        public override void stretch(PointD vec, PointD pickPos, bool arc = false)
         {
             mText.mPos.offset(vec);
             mArea.offset(vec);

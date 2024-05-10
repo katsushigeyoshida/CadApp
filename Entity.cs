@@ -238,7 +238,7 @@ namespace CadApp
         /// </summary>
         /// <param name="vec">移動ベクトル</param>
         /// <param name="pickPos">ピックした位置</param>
-        abstract public void stretch(PointD vec, PointD pickPos);
+        abstract public void stretch(PointD vec, PointD pickPos, bool arc);
 
         /// <summary>
         /// 参照点に対する垂点を求める

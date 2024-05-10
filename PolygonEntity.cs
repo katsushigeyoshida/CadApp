@@ -100,11 +100,21 @@ namespace CadApp
                             break;
                         }
                     }
-                    for (; i < data.Length - 1; i += 2) {
-                        PointD ps = new PointD();
-                        ps.x = double.Parse(data[i]);
-                        ps.y = double.Parse(data[i + 1]);
-                        polygon.Add(ps);
+                    if (data[i] == "multi") {
+                        for (++i; i < data.Length - 1; i += 3) {
+                            PointD ps = new PointD();
+                            ps.x = double.Parse(data[i]);
+                            ps.y = double.Parse(data[i + 1]);
+                            ps.type = int.Parse(data[i + 2]);
+                            polygon.Add(ps);
+                        }
+                    } else {
+                        for (; i < data.Length - 1; i += 2) {
+                            PointD ps = new PointD();
+                            ps.x = double.Parse(data[i]);
+                            ps.y = double.Parse(data[i + 1]);
+                            polygon.Add(ps);
+                        }
                     }
                     polygon.squeeze();
                     mPolygon = polygon;
@@ -113,6 +123,32 @@ namespace CadApp
                     ylib.messageBox(null, e.Message, "", "例外エラー");
                 }
             }
+        }
+
+        /// <summary>
+        /// データを文字列リストに変換
+        /// </summary>
+        /// <returns></returns>
+        public override List<string> toDataList()
+        {
+            int n = mPolygon.mPolygon.FindIndex(p => p.type != 0);
+            List<string> dataList = new List<string> {
+                "FILL", mFillOn.ToString(), ylib.getColorName(mFillColor)
+            };
+            if (0 <= n) {
+                dataList.Add("multi");
+                foreach (PointD p in mPolygon.mPolygon) {
+                    dataList.Add(p.x.ToString());
+                    dataList.Add(p.y.ToString());
+                    dataList.Add(p.type.ToString());
+                }
+            } else {
+                foreach (PointD p in mPolygon.mPolygon) {
+                    dataList.Add(p.x.ToString());
+                    dataList.Add(p.y.ToString());
+                }
+            }
+            return dataList;
         }
 
         /// <summary>
@@ -127,22 +163,6 @@ namespace CadApp
                 buf += $"{p.x},{p.y},";
             }
             return buf.TrimEnd(',');
-        }
-
-        /// <summary>
-        /// データを文字列リストに変換
-        /// </summary>
-        /// <returns></returns>
-        public override List<string> toDataList()
-        {
-            List<string> dataList = new List<string> {
-                "FILL", mFillOn.ToString(), ylib.getColorName(mFillColor)
-            };
-            foreach (PointD p in mPolygon.mPolygon) {
-                dataList.Add(p.x.ToString());
-                dataList.Add(p.y.ToString());
-            }
-            return dataList;
         }
 
         /// <summary>
@@ -260,9 +280,10 @@ namespace CadApp
         /// </summary>
         /// <param name="vec">移動ベクトル</param>
         /// <param name="pickPos">ピック位置</param>
-        public override void stretch(PointD vec, PointD pickPos)
+        public override void stretch(PointD vec, PointD pickPos, bool arc = false)
         {
-            mPolygon.stretch(vec, pickPos);
+            mPolygon.stretch(vec, pickPos, arc);
+            mPolygon.squeeze();
             mArea = mPolygon.getBox();
         }
 

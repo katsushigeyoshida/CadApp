@@ -673,6 +673,34 @@ namespace CadApp
         }
 
         /// <summary>
+        /// 表示する要素をフィルタリング
+        /// </summary>
+        /// <param name="entity">要素</param>
+        /// <returns></returns>
+        private bool drawChk(Entity entity)
+        {
+            if (!entity.mRemove
+                && 0 != (entity.mLayerBit & mPara.mDispLayerBit)
+                && entity.mEntityId != EntityId.Link)
+                return true;
+            return false;
+        }
+
+        /// <summary>
+        /// 表示する要素をカウント
+        /// </summary>
+        /// <returns>表示用素数</returns>
+        public int drawEntityCount()
+        {
+            int count = 0;
+            foreach (var entity in mEntityList) {
+                if (drawChk(entity))
+                    count++;
+            }
+            return count;
+        }
+
+        /// <summary>
         /// 全データを表示する
         /// イメージ要素を先に表示する
         /// </summary>
@@ -681,17 +709,13 @@ namespace CadApp
         {
             //  背景属性要素を優先に表示
             foreach (var entity in mEntityList) {
-                if (!entity.mRemove && 0 != (entity.mLayerBit & mPara.mDispLayerBit)
-                    && entity.mEntityId != EntityId.Link
-                    && entity.mBackDisp
+                if (drawChk(entity) && entity.mBackDisp
                     && !ydraw.mClipBox.outsideChk(entity.mArea))
                     entity.draw(ydraw);
             }
             //  背景属性以外を表示
             foreach (var entity in mEntityList) {
-                if (!entity.mRemove && 0 != (entity.mLayerBit & mPara.mDispLayerBit)
-                    && entity.mEntityId != EntityId.Link
-                    && !entity.mBackDisp
+                if (drawChk(entity) && !entity.mBackDisp
                     && !ydraw.mClipBox.outsideChk(entity.mArea))
                     entity.draw(ydraw);
             }
@@ -851,11 +875,11 @@ namespace CadApp
         /// <param name="vec">移動ベクトル</param>
         /// <param name="pickPos">ピック位置</param>
         /// <returns></returns>
-        public bool stretch(List<(int no, PointD pos)> pickList, PointD vec)
+        public bool stretch(List<(int no, PointD pos)> pickList, PointD vec, bool arc = false)
         {
             foreach ((int no, PointD pos) entNo in pickList) {
                 mEntityList.Add(mEntityList[entNo.no].toCopy());
-                mEntityList[mEntityList.Count - 1].stretch(vec, entNo.pos);
+                mEntityList[mEntityList.Count - 1].stretch(vec, entNo.pos, arc);
                 mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                 removeEnt(entNo.no);
             }
@@ -871,23 +895,34 @@ namespace CadApp
         public bool disassemble(List<(int no, PointD pos)> pickList)
         {
             List<LineD> lines;
+            List<ArcD> arcs;
             foreach ((int no, PointD pos) entNo in pickList) {
                 Entity entity = mEntityList[entNo.no];
                 getProperty(entity);
                 switch (entity.mEntityId) {
                     case EntityId.Polyline:
                         PolylineEntity polylineEnt = (PolylineEntity)entity;
-                        lines = polylineEnt.mPolyline.toLineList();
+                        lines = polylineEnt.mPolyline.toLineList(true);
                         foreach (var line in lines) {
                             addLine(line);
+                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
+                        }
+                        arcs = polylineEnt.mPolyline.toArcList();
+                        foreach (var arc in arcs) {
+                            addArc(arc);
                             mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                         }
                         break;
                     case EntityId.Polygon:
                         PolygonEntity polygonEnt = (PolygonEntity)entity;
-                        lines = polygonEnt.mPolygon.toLineList();
+                        lines = polygonEnt.mPolygon.toLineList(true);
                         foreach (var line in lines) {
                             addLine(line);
+                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
+                        }
+                        arcs = polygonEnt.mPolygon.toArcList();
+                        foreach (var arc in arcs) {
+                            addArc(arc);
                             mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                         }
                         break;
@@ -1242,61 +1277,65 @@ namespace CadApp
         public Entity setStringEntityData(string[] property, string[] dataStr)
         {
             if (0 < property.Length) {
-                if (0 <= property[0].IndexOf(EntityId.Point.ToString())) {
-                    //  点要素
-                    PointEntity pointEntity = new PointEntity();
-                    pointEntity.setProperty(property);
-                    pointEntity.setData(dataStr);
-                    return pointEntity;
-                } else if (0 <= property[0].IndexOf(EntityId.Line.ToString())) {
-                    //  線分要素
-                    LineEntity lineEntity = new LineEntity();
-                    lineEntity.setProperty(property);
-                    lineEntity.setData(dataStr);
-                    return lineEntity;
-                } else if (0 <= property[0].IndexOf(EntityId.Polyline.ToString())) {
-                    //  ポリライン要素
-                    PolylineEntity polylineEntity = new PolylineEntity();
-                    polylineEntity.setProperty(property);
-                    polylineEntity.setData(dataStr);
-                    return polylineEntity;
-                } else if (0 <= property[0].IndexOf(EntityId.Polygon.ToString())) {
-                    //  ポリゴン要素
-                    PolygonEntity polygonEntity = new PolygonEntity();
-                    polygonEntity.setProperty(property);
-                    polygonEntity.setData(dataStr);
-                    return polygonEntity;
-                } else if (0 <= property[0].IndexOf(EntityId.Arc.ToString())) {
-                    //  円弧要素
-                    ArcEntity arcEntity = new ArcEntity();
-                    arcEntity.setProperty(property);
-                    arcEntity.setData(dataStr);
-                    return arcEntity;
-                } else if (0 <= property[0].IndexOf(EntityId.Ellipse.ToString())) {
-                    //  楕円要素
-                    EllipseEntity ellipseEntity = new EllipseEntity();
-                    ellipseEntity.setProperty(property);
-                    ellipseEntity.setData(dataStr);
-                    return ellipseEntity;
-                } else if (0 <= property[0].IndexOf(EntityId.Text.ToString())) {
-                    //  テキスト要素
-                    TextEntity textEntity = new TextEntity();
-                    textEntity.setProperty(property);
-                    textEntity.setData(dataStr);
-                    return textEntity;
-                } else if (0 <= property[0].IndexOf(EntityId.Parts.ToString())) {
-                    //  パーツ要素
-                    PartsEntity partsEntity = new PartsEntity();
-                    partsEntity.setProperty(property);
-                    partsEntity.setData(dataStr);
-                    return partsEntity;
-                } else if (0 <= property[0].IndexOf(EntityId.Image.ToString())) {
-                    //  イメージ要素
-                    ImageEntity imageEntity = new ImageEntity(mImageData);
-                    imageEntity.setProperty(property);
-                    imageEntity.setData(dataStr);
-                    imageEntity.fileUpdate();
-                    return imageEntity;
+                try {
+                    if (0 <= property[0].IndexOf(EntityId.Point.ToString())) {
+                        //  点要素
+                        PointEntity pointEntity = new PointEntity();
+                        pointEntity.setProperty(property);
+                        pointEntity.setData(dataStr);
+                        return pointEntity;
+                    } else if (0 <= property[0].IndexOf(EntityId.Line.ToString())) {
+                        //  線分要素
+                        LineEntity lineEntity = new LineEntity();
+                        lineEntity.setProperty(property);
+                        lineEntity.setData(dataStr);
+                        return lineEntity;
+                    } else if (0 <= property[0].IndexOf(EntityId.Polyline.ToString())) {
+                        //  ポリライン要素
+                        PolylineEntity polylineEntity = new PolylineEntity();
+                        polylineEntity.setProperty(property);
+                        polylineEntity.setData(dataStr);
+                        return polylineEntity;
+                    } else if (0 <= property[0].IndexOf(EntityId.Polygon.ToString())) {
+                        //  ポリゴン要素
+                        PolygonEntity polygonEntity = new PolygonEntity();
+                        polygonEntity.setProperty(property);
+                        polygonEntity.setData(dataStr);
+                        return polygonEntity;
+                    } else if (0 <= property[0].IndexOf(EntityId.Arc.ToString())) {
+                        //  円弧要素
+                        ArcEntity arcEntity = new ArcEntity();
+                        arcEntity.setProperty(property);
+                        arcEntity.setData(dataStr);
+                        return arcEntity;
+                    } else if (0 <= property[0].IndexOf(EntityId.Ellipse.ToString())) {
+                        //  楕円要素
+                        EllipseEntity ellipseEntity = new EllipseEntity();
+                        ellipseEntity.setProperty(property);
+                        ellipseEntity.setData(dataStr);
+                        return ellipseEntity;
+                    } else if (0 <= property[0].IndexOf(EntityId.Text.ToString())) {
+                        //  テキスト要素
+                        TextEntity textEntity = new TextEntity();
+                        textEntity.setProperty(property);
+                        textEntity.setData(dataStr);
+                        return textEntity;
+                    } else if (0 <= property[0].IndexOf(EntityId.Parts.ToString())) {
+                        //  パーツ要素
+                        PartsEntity partsEntity = new PartsEntity();
+                        partsEntity.setProperty(property);
+                        partsEntity.setData(dataStr);
+                        return partsEntity;
+                    } else if (0 <= property[0].IndexOf(EntityId.Image.ToString())) {
+                        //  イメージ要素
+                        ImageEntity imageEntity = new ImageEntity(mImageData);
+                        imageEntity.setProperty(property);
+                        imageEntity.setData(dataStr);
+                        imageEntity.fileUpdate();
+                        return imageEntity;
+                    }
+                } catch (Exception e) {
+                    System.Diagnostics.Debug.WriteLine($"{property[0]} {e.Message}");
                 }
             }
             return null;

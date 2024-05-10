@@ -282,7 +282,7 @@ namespace CadApp
         /// <returns>座標</returns>
         private PointD getPoint(string xy, PointD prev)
         {
-            PointD p = new PointD();
+            PointD p = new PointD(0, 0);
             string[] sep = { "x", "y", "dx", "dy", ",", " " };
             List<string> list = ylib.splitString(xy, sep);
             for (int i = 0; i < list.Count; i++) {

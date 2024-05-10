@@ -59,25 +59,6 @@ namespace CadApp
         }
 
         /// <summary>
-        /// 文字データによる座標設定
-        /// </summary>
-        /// <param name="data"></param>
-        public override void setData(string[] data)
-        {
-            mPolyline = new PolylineD();
-            if (2 < data.Length) {
-                for (int i = 0; i < data.Length - 1; i += 2) {
-                    PointD ps = new PointD();
-                    ps.x = double.Parse(data[i]);
-                    ps.y = double.Parse(data[i + 1]);
-                    mPolyline.Add(ps);
-                }
-                mPolyline.squeeze();
-                mArea = mPolyline.getBox();
-            }
-        }
-
-        /// <summary>
         /// 描画処理
         /// </summary>
         /// <param name="ydraw"></param>
@@ -87,6 +68,59 @@ namespace CadApp
             ydraw.mThickness = mThickness;
             ydraw.mLineType = mType;
             ydraw.drawWPolyline(mPolyline);
+        }
+
+        /// <summary>
+        /// 文字データによる座標設定
+        /// </summary>
+        /// <param name="data"></param>
+        public override void setData(string[] data)
+        {
+            mPolyline = new PolylineD();
+            if (2 < data.Length) {
+                if (data[0] == "multi") {
+                    for (int i = 1; i < data.Length - 1; i += 3) {
+                        PointD ps = new PointD();
+                        ps.x = double.Parse(data[i]);
+                        ps.y = double.Parse(data[i + 1]);
+                        ps.type = int.Parse(data[i + 2]);
+                        mPolyline.Add(ps);
+                    }
+                } else {
+                    for (int i = 0; i < data.Length - 1; i += 2) {
+                        PointD ps = new PointD();
+                        ps.x = double.Parse(data[i]);
+                        ps.y = double.Parse(data[i + 1]);
+                        mPolyline.Add(ps);
+                    }
+                }
+                mPolyline.squeeze();
+                mArea = mPolyline.getBox();
+            }
+        }
+
+        /// <summary>
+        /// データを文字列リストに変換
+        /// </summary>
+        /// <returns></returns>
+        public override List<string> toDataList()
+        {
+            List<string> dataList = new List<string>();
+            int n = mPolyline.mPolyline.FindIndex(p => p.type != 0);
+            if (0 <= n) {
+                dataList.Add("multi");
+                foreach (PointD p in mPolyline.mPolyline) {
+                    dataList.Add(p.x.ToString());
+                    dataList.Add(p.y.ToString());
+                    dataList.Add(p.type.ToString());
+                }
+            } else {
+                foreach (PointD p in mPolyline.mPolyline) {
+                    dataList.Add(p.x.ToString());
+                    dataList.Add(p.y.ToString());
+                }
+            }
+            return dataList;
         }
 
         /// <summary>
@@ -100,20 +134,6 @@ namespace CadApp
                 buf += $"{p.x},{p.y},";
             }
             return buf.TrimEnd(',');
-        }
-
-        /// <summary>
-        /// データを文字列リストに変換
-        /// </summary>
-        /// <returns></returns>
-        public override List<string> toDataList()
-        {
-            List<string> dataList = new List<string>();
-            foreach (PointD p in mPolyline.mPolyline) {
-                dataList.Add(p.x.ToString());
-                dataList.Add(p.y.ToString());
-            }
-            return dataList;
         }
 
         /// <summary>
@@ -209,6 +229,7 @@ namespace CadApp
         public override void trim(PointD sp, PointD ep)
         {
             mPolyline.trim(sp, ep);
+            mPolyline.squeeze();
             mArea = mPolyline.getBox();
         }
 
@@ -237,9 +258,10 @@ namespace CadApp
         /// </summary>
         /// <param name="vec">移動ベクトル</param>
         /// <param name="pickPos">ピック位置</param>
-        public override void stretch(PointD vec, PointD pickPos)
+        public override void stretch(PointD vec, PointD pickPos, bool arc = false)
         {
-            mPolyline.stretch(vec, pickPos);
+            mPolyline.stretch(vec, pickPos, arc);
+            mPolyline.squeeze();
             mArea = mPolyline.getBox();
         }
 

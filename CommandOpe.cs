@@ -722,6 +722,10 @@ namespace CadApp
                     //  ストレッチ
                     PointD vec = loc[0].vector(loc[1]);
                     mEntityData.stretch(pickEnt, vec);
+                } else if (operation == OPERATION.stretchArc) {
+                    //  ストレッチ(円弧)
+                    PointD vec = loc[0].vector(loc[1]);
+                    mEntityData.stretch(pickEnt, vec, true);
                 } else {
                     mEntityData.mOperationCount--;
                     return false;
@@ -1349,10 +1353,12 @@ namespace CadApp
                     arcs.Add(arcEnt.mArc);
                 } else if (mEntityData.mEntityList[no].mEntityId == EntityId.Polyline) {
                     PolylineEntity polylineEnt = (PolylineEntity)mEntityData.mEntityList[no];
-                    lines.AddRange(polylineEnt.mPolyline.toLineList());
+                    lines.AddRange(polylineEnt.mPolyline.toLineList(true));
+                    arcs.AddRange(polylineEnt.mPolyline.toArcList());
                 } else if (mEntityData.mEntityList[no].mEntityId == EntityId.Polygon) {
                     PolygonEntity polygonEnt = (PolygonEntity)mEntityData.mEntityList[no];
-                    lines.AddRange(polygonEnt.mPolygon.toLineList());
+                    lines.AddRange(polygonEnt.mPolygon.toLineList(true));
+                    arcs.AddRange(polygonEnt.mPolygon.toArcList());
                 } else if (mEntityData.mEntityList[no].mEntityId == EntityId.Text) {
                     TextEntity textEnt = (TextEntity)mEntityData.mEntityList[no];
                     texts.Add(textEnt.mText);

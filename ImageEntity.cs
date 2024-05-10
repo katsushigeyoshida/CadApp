@@ -302,7 +302,7 @@ namespace CadApp
         /// </summary>
         /// <param name="vec">移動ベクトル</param>
         /// <param name="pickPos">ピックした位置</param>
-        public override void stretch(PointD vec, PointD pickPos)
+        public override void stretch(PointD vec, PointD pickPos, bool arc = false)
         {
             List<PointD> plist = mDispPosSize.ToPointList();
             double dis = double.MaxValue;

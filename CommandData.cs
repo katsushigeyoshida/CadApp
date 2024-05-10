@@ -16,7 +16,7 @@ namespace CadApp
         createLocDimension, createLinearDimension, createAngleDimension,
         createDiameterDimension, createRadiusDimension,
 
-        translate, rotate, mirror, scale, trim, divide, stretch, offset, symbolAssemble,
+        translate, rotate, mirror, scale, trim, divide, stretch, stretchArc, offset, symbolAssemble,
         disassemble, changeText, changeRadius, changeProperty, changeProperties,
 
         copyTranslate, copyRotate, copyMirror, copyScale, copyTrim, copyOffset,

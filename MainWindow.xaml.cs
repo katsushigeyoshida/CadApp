@@ -3,7 +3,6 @@ using CoreLib;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -408,6 +407,8 @@ namespace CadApp
                     mLocMode = mPrevMode;
             } else if (mLocMode == OPEMODE.loc && !onControlKey()) {
                 //  要素追加(ロケイト数不定コマンドを除く)
+                if (mOperation == OPERATION.stretch && ylib.onAltKey())
+                    mOperation = OPERATION.stretchArc;
                 if (0 < mCommandOpe.mEntityData.mPara.mGridSize)
                     wp.round(Math.Abs(mCommandOpe.mEntityData.mPara.mGridSize));
                 mLocPick.mLocPos.Add(wp);
@@ -459,7 +460,7 @@ namespace CadApp
             dispMode();
         }
 
-        /// <summary>
+         /// <summary>
         /// [マウス左ボタンアップ] Window_MouseLeftButtonUp 
         /// </summary>
         /// <param name="sender"></param>
@@ -672,7 +673,7 @@ namespace CadApp
                     mCommandOpe.mSymbolDlg.Close();
                 if (mCommandOpe.openFile(mFileData.getItemFilePath(lbItemList.Items[index].ToString() ?? ""))) {
                     mFileData.mDataName = lbItemList.Items[index].ToString() ?? "";
-                    Title = $"{mAppName} [{lbItemList.Items[index]}]";
+                    dispTitle();
                     setZumenProperty();
                     commandClear();
                     dispMode();
@@ -1210,6 +1211,7 @@ namespace CadApp
             lbCommand.SelectedIndex = -1;
             chOneLayer.IsChecked = mCommandOpe.mEntityData.mPara.mOneLayerDisp;
             mDataDrawing.disp(mEntityData, mLocPick.mPickEnt);
+            dispTitle();
         }
 
         /// <summary>
@@ -1283,6 +1285,14 @@ namespace CadApp
         private void dispMode()
         {
             tbStatusInfo.Text = $"Mode:[{mLocMode}] Loc:[{mLocPick.mLocPos.Count}] Pick:[{mLocPick.mPickEnt.Count}]";
+        }
+
+        /// <summary>
+        /// タイトルバーの表示
+        /// </summary>
+        public void dispTitle()
+        {
+            Title = $"{mAppName} [{mFileData.mDataName}][{mEntityData.drawEntityCount()}/{mEntityData.mEntityList.Count}]";
         }
 
         /// <summary>

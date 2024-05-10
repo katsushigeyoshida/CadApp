@@ -219,6 +219,9 @@ namespace CadApp
                     case OPERATION.stretch:
                         stretchDragging(entityData, points, pickList);
                         break;
+                    case OPERATION.stretchArc:
+                        stretchDragging(entityData, points, pickList, true);
+                        break;
                     case OPERATION.pasteEntity:
                         if (mCopyArea != null) {
                             Box b = new Box(points[0], mCopyArea.Size);
@@ -539,7 +542,7 @@ namespace CadApp
         /// <param name="entityData">要素データリスト</param>
         /// <param name="loc">ロケイト点リスト</param>
         /// <param name="pickList">ピック要素リスト</param>
-        private void stretchDragging(EntityData entityData, List<PointD> loc, List<(int no, PointD pos)> pickList)
+        private void stretchDragging(EntityData entityData, List<PointD> loc, List<(int no, PointD pos)> pickList, bool arc = false)
         {
             if (loc.Count < 2) return;
 
@@ -550,7 +553,7 @@ namespace CadApp
                 if (pickEnt.no < entityData.mEntityList.Count) {
                     Entity ent = entityData.mEntityList[pickEnt.no].toCopy();
                     ent.mColor = mDraggingColor;
-                    ent.stretch(vec, pickEnt.pos);
+                    ent.stretch(vec, pickEnt.pos, arc);
                     ent.draw(ydraw);
                 }
             }

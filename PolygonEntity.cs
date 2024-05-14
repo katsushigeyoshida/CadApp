@@ -171,9 +171,7 @@ namespace CadApp
         /// <returns></returns>
         public override string entityInfo()
         {
-            double l = 0;
-            for (int i = 0; i < mPolygon.mPolygon.Count - 1; i++)
-                l += mPolygon.mPolygon[i].length(mPolygon.mPolygon[i + 1]);
+            double l = mPolygon.length();
             string buf = "";
             buf += $"要素番号: {mNo}";
             buf += $"\n要素種別: {mEntityName}要素";
@@ -248,6 +246,7 @@ namespace CadApp
         public override void offset(PointD sp, PointD ep)
         {
             mPolygon.offset(sp, ep);
+            mPolygon.squeeze();
             mArea = mPolygon.getBox();
         }
 

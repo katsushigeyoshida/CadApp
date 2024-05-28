@@ -175,6 +175,15 @@ namespace CadApp
         }
 
         /// <summary>
+        /// 座標リストに変換
+        /// </summary>
+        /// <returns>座標リスト</returns>
+        public override List<PointD> toPointList()
+        {
+            return mArea.ToPointList();
+        }
+
+        /// <summary>
         /// 要素のコピーを作成
         /// </summary>
         /// <returns></returns>
@@ -201,7 +210,7 @@ namespace CadApp
         {
             string buf = "";
             buf += $"要素番号: {mNo}";
-            buf += $"\n要素種別: {mEntityName}要素";
+            buf += $"\n要素種別: {mEntityId}要素";
             buf += $"\nファイルパス: {mImagePath}";
             buf += $"\nキャッシュ名: {mCacheName}";
             buf += $"\n元サイズ　: {mOrgSize.Width.ToString("f4")} x {mOrgSize.Height.ToString("f4")}";

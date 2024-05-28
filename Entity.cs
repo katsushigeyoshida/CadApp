@@ -167,6 +167,12 @@ namespace CadApp
         abstract public List<string> toDataList();
 
         /// <summary>
+        /// 座標リストに変換
+        /// </summary>
+        /// <returns>座標リスト</returns>
+        abstract public List<PointD> toPointList();
+
+        /// <summary>
         /// 要素のコピーを作成
         /// </summary>
         /// <returns></returns>

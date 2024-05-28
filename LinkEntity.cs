@@ -55,6 +55,15 @@ namespace CadApp
         }
 
         /// <summary>
+        /// 座標リストに変換
+        /// </summary>
+        /// <returns>座標リスト</returns>
+        public override List<PointD> toPointList()
+        {
+            return new List<PointD>();
+        }
+
+        /// <summary>
         /// 要素のコピーを作成
         /// </summary>
         /// <returns></returns>

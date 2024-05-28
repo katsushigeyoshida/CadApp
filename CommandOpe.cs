@@ -392,6 +392,9 @@ namespace CadApp
                     if (mSymbolDlg == null || !mSymbolDlg.IsActive)
                         setSymbol();
                     break;
+                case OPERATION.connect:                     //  接続
+                    connect(mLocPick.mPickEnt);
+                    break;
                 case OPERATION.createImage:                 //  イメージデータの貼付け
                     locMode = setImage();
                     commandInit = false;
@@ -405,7 +408,7 @@ namespace CadApp
                 case OPERATION.changeProperty:              //  属性変更
                     changeProperty(mLocPick.mPickEnt);
                     break;
-                case OPERATION.copyProperty:
+                case OPERATION.copyProperty:                //  属性変更+コピー
                     changeProperty(mLocPick.mPickEnt, true);
                     break;
                 case OPERATION.changeProperties:            //  属性一括変更
@@ -872,8 +875,8 @@ namespace CadApp
                 dlg.mLineType  = entity.mType;
                 dlg.mThickness = entity.mThickness;
                 dlg.mLayerName = entity.mLayerName;
-                dlg.mBackDisp = entity.mBackDisp;
-                dlg.Title = entity.mEntityName + "要素属性";
+                dlg.mBackDisp  = entity.mBackDisp;
+                dlg.Title = entity.mEntityId + "要素属性";
                 //  Text要素
                 if (entity.mEntityId == EntityId.Text) {
                     TextEntity text = (TextEntity)entity;
@@ -1109,6 +1112,47 @@ namespace CadApp
             mMainWindow.cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
             mMainWindow.cbCreateLayer.SelectedIndex = mMainWindow.cbCreateLayer.Items.IndexOf(mEntityData.mPara.mCreateLayerName);
             return true;
+        }
+
+        /// <summary>
+        /// 要素同士の接続
+        /// </summary>
+        /// <param name="pickEnt"></param>
+        public void connect(List<(int no, PointD pos)> pickEnt)
+        {
+            if (pickEnt.Count == 0)
+                return;
+            Entity entity = mEntityData.mEntityList[pickEnt[0].no];
+            if (entity.mEntityId != EntityId.Line &&
+                entity.mEntityId != EntityId.Arc &&
+                entity.mEntityId != EntityId.Polyline)
+                return;
+            List<PointD> plist = entity.toPointList();
+            mEntityData.mOperationCount++;
+            if (pickEnt.Count == 1) {
+                //  ポリゴンに変換
+                mEntityData.addPolygon(plist);
+                mEntityData.mEntityList[^1].setProperty(entity);
+            } else if (pickEnt.Count == 2) {
+                //  ピック位置に近い端点を接続
+                PolylineD polyline = new PolylineD(plist);
+                Entity ent2 = mEntityData.mEntityList[pickEnt[1].no];
+                polyline.connect(pickEnt[0].pos, ent2.toPointList(), pickEnt[1].pos);
+                mEntityData.addPolyline(polyline.mPolyline);
+                mEntityData.mEntityList[^1].setProperty(entity);
+            } else {
+                //  近い端点同士を接続
+                PolylineD polyline = new PolylineD(plist);
+                for (int i = 1; i < pickEnt.Count; i++) {
+                    Entity ent2 = mEntityData.mEntityList[pickEnt[i].no];
+                    polyline.connect(ent2.toPointList());
+                }
+                mEntityData.addPolyline(polyline.mPolyline);
+                mEntityData.mEntityList[^1].setProperty(entity);
+            }
+            for (int i = 0; i < pickEnt.Count;i++)
+                mEntityData.removeEnt(pickEnt[i].no);
+            mEntityData.updateData();
         }
 
         /// <summary>

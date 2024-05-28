@@ -95,6 +95,15 @@ namespace CadApp
         }
 
         /// <summary>
+        /// 座標リストに変換
+        /// </summary>
+        /// <returns>座標リスト</returns>
+        public override List<PointD> toPointList()
+        {
+            return mLine.toPointList();
+        }
+
+        /// <summary>
         /// 要素情報を文字列に変換
         /// </summary>
         /// <param name="entNo">要素番号</param>
@@ -103,7 +112,7 @@ namespace CadApp
         {
             string buf = "";
             buf += $"要素番号: {mNo}";
-            buf += $"\n要素種別: {mEntityName}要素";
+            buf += $"\n要素種別: {mEntityId}要素";
             buf += $"\n始点 {mLine.ps.ToString("f4")} 終点 {mLine.pe.ToString("f4")}";
             buf += $"\n長さ {mLine.length().ToString("f4")}";
             buf += $"\nカラー　: {getColorName(mColor)}";

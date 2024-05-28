@@ -82,6 +82,15 @@ namespace CadApp
         }
 
         /// <summary>
+        /// 座標リストに変換
+        /// </summary>
+        /// <returns>座標リスト</returns>
+        public override List<PointD> toPointList()
+        {
+            return new List<PointD>();
+        }
+
+        /// <summary>
         /// 要素のコピーを作成
         /// </summary>
         /// <returns></returns>
@@ -105,7 +114,7 @@ namespace CadApp
         {
             string buf = "";
             buf += $"要素番号: {mNo}";
-            buf += $"\n要素種別: {mEntityName}要素";
+            buf += $"\n要素種別: {mEntityId}要素";
             buf += $"\n中心 {mEllipse.mCp.ToString("f4")} 半径 {mEllipse.mRx.ToString("f4")},{mEllipse.mRy.ToString("f4")}";
             buf += $"\n開始角 {R2D(mEllipse.mSa).ToString("f2")} 終了角 {R2D(mEllipse.mEa).ToString("f2")} 回転角 {R2D(mEllipse.mRotate).ToString("f2")}";
             buf += $"\nカラー: {getColorName(mColor)}";

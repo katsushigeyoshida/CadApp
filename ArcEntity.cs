@@ -124,6 +124,15 @@ namespace CadApp
         }
 
         /// <summary>
+        /// 座標リストに変換
+        /// </summary>
+        /// <returns>座標リスト</returns>
+        public override List<PointD> toPointList()
+        {
+            return mArc.to3PointList();
+        }
+
+        /// <summary>
         /// 要素情報を文字列に変換
         /// </summary>
         /// <param name="entNo">要素番号</param>
@@ -132,7 +141,7 @@ namespace CadApp
         {
             string buf = "";
             buf += $"要素番号: {mNo}";
-            buf += $"\n要素種別: {mEntityName}要素";
+            buf += $"\n要素種別: {mEntityId}要素";
             buf += $"\n中心 {mArc.mCp.ToString("f4")} 半径 {mArc.mR.ToString("f4")} 開始角 {R2D(mArc.mSa).ToString("f2")} 終了角 {R2D(mArc.mEa).ToString("f2")}";
             buf += $"\nカラー　: {getColorName(mColor)}";
             buf += $"\n太さ　　: {mThickness}";

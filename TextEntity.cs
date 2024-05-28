@@ -111,6 +111,16 @@ namespace CadApp
             return dataList;
         }
 
+
+        /// <summary>
+        /// 座標リストに変換
+        /// </summary>
+        /// <returns>座標リスト</returns>
+        public override List<PointD> toPointList()
+        {
+            return mText.getArea();
+        }
+
         /// <summary>
         /// 要素情報を文字列に変換
         /// </summary>
@@ -120,7 +130,7 @@ namespace CadApp
         {
             string buf = "";
             buf += $"要素番号: {mNo}";
-            buf += $"\n要素種別: {mEntityName}要素";
+            buf += $"\n要素種別: {mEntityId}要素";
             buf += $"\n文字列　: {mText.mText}";
             buf += $"\n起点    : {mText.mPos.ToString("f4")}";
             buf += $"\n文字高さ: {mText.mTextSize.ToString("f4")} 水平位置 {mText.mHa} 垂直位置 {mText.mVa}";

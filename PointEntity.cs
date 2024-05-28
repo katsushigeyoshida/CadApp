@@ -91,6 +91,18 @@ namespace CadApp
         }
 
         /// <summary>
+        /// 座標リストに変換
+        /// </summary>
+        /// <returns>座標リスト</returns>
+        public override List<PointD> toPointList()
+        {
+            List<PointD> plist = new List<PointD>() {
+                mPoint
+            };
+            return plist;
+        }
+
+        /// <summary>
         /// 要素情報を文字列に変換
         /// </summary>
         /// <returns></returns>
@@ -98,7 +110,7 @@ namespace CadApp
         {
             string buf = "";
             buf += $"要素番号: {mNo}";
-            buf += $"\n要素種別: {mEntityName}要素";
+            buf += $"\n要素種別: {mEntityId}要素";
             buf += $"\n座標: {mPoint.ToString("f4")}";
             buf += $"\nカラー　: {getColorName(mColor)}";
             buf += $"\n大きさ　: {mThickness}";

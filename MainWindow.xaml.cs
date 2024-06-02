@@ -48,6 +48,10 @@ namespace CadApp
             "なし", "点", "線分", "円弧", "折線", "ポリゴン", "テキスト",
             "寸法線,矢印,ラベル,シンボル"
         };
+        private double[] mFilletSizeMenu = {
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 15, 16, 18, 20, 25, 30
+        };
+
         private string[] mHorizontalAlignmentMenu = { "左", "中", "右" };
         private string[] mVerticalAlignmentMenu = { "上", "中", "下" };
         private double[] mTextRotateMenu = { 
@@ -132,8 +136,10 @@ namespace CadApp
             cbEntityMask.ItemsSource  = mEntityMaskMenu;
             cbTextSize.ItemsSource    = mTextSizeMenu;
             cbTextHorizontal.ItemsSource = mHorizontalAlignmentMenu;
-            cbTextVertical.ItemsSource   = mVerticalAlignmentMenu;
-            cbTextRotate.ItemsSource     = mTextRotateMenu;
+            cbTextVertical.ItemsSource = mVerticalAlignmentMenu;
+            cbTextRotate.ItemsSource   = mTextRotateMenu;
+            cbFilletSize.ItemsSource   = mFilletSizeMenu;
+            cbFilletSize.SelectedIndex = 0;
 
             setZumenProperty();
 
@@ -894,6 +900,31 @@ namespace CadApp
             int index = cbTextRotate.SelectedIndex;
             if (0 <= index) {
                 mCommandOpe.mEntityData.mPara.mTextRotate = ylib.D2R(mTextRotateMenu[index]);
+            }
+        }
+
+        /// <summary>
+        /// R面取りの半径設定
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void cbFilletSize_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            int index = cbFilletSize.SelectedIndex;
+            if (0 <= index) {
+                mCommandOpe.mEntityData.mPara.mFilletSize = mFilletSizeMenu[index];
+            }
+        }
+
+        /// <summary>
+        /// R面取りの半径設定
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void cbFilletSize_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter) {
+                mCommandOpe.mEntityData.mPara.mFilletSize = ylib.doubleParse(cbFilletSize.Text, 0);
             }
         }
 

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -25,7 +26,7 @@ namespace CadApp
         public string mFontFamily = "";                             //  フォント種別(Yu Gothic UI)
         public FontStyle mFontStyle = FontStyles.Normal;            //  斜体 Normal,Italic
         public FontWeight mFontWeight = FontWeights.Normal;         //  太字 Thin,Normal,Bold
-
+        public double mFilletSize = 0;                              //  R面の半径
         public double mArrowAngle = Math.PI / 6;                    //  矢印の角度
         public double mArrowSize = 5;                               //  矢印の大きさ
         public Brush mColor = Brushes.Black;                        //  要素の色
@@ -394,6 +395,9 @@ namespace CadApp
                     break;
                 case OPERATION.connect:                     //  接続
                     connect(mLocPick.mPickEnt);
+                    break;
+                case OPERATION.fillet:                      //  R面
+                    fillet(mLocPick.mPickEnt);
                     break;
                 case OPERATION.createImage:                 //  イメージデータの貼付け
                     locMode = setImage();
@@ -1122,6 +1126,7 @@ namespace CadApp
         {
             if (pickEnt.Count == 0)
                 return;
+            mEntityData.mOperationCount++;
             Entity entity = mEntityData.mEntityList[pickEnt[0].no];
             if (entity.mEntityId != EntityId.Line &&
                 entity.mEntityId != EntityId.Arc &&
@@ -1153,6 +1158,382 @@ namespace CadApp
             for (int i = 0; i < pickEnt.Count;i++)
                 mEntityData.removeEnt(pickEnt[i].no);
             mEntityData.updateData();
+        }
+
+        /// <summary>
+        /// R面の作成
+        /// </summary>
+        /// <param name="pickEnt">ピックリスト</param>
+        public void fillet(List<(int no, PointD pos)> pickEnt)
+        {
+            mEntityData.mOperationCount++;
+            double r = mEntityData.mPara.mFilletSize;
+            if (pickEnt.Count == 2) {
+                Entity ent0 = mEntityData.mEntityList[pickEnt[0].no];
+                Entity ent1 = mEntityData.mEntityList[pickEnt[1].no];
+                if (ent0.mEntityId == EntityId.Line && ent1.mEntityId == EntityId.Line) {
+                    if (!filletLineLine(r, (LineEntity)ent0, pickEnt[0].pos, (LineEntity)ent1, pickEnt[1].pos))
+                        return;
+                } else if (ent0.mEntityId == EntityId.Line && ent1.mEntityId == EntityId.Arc) {
+                    if (!filletLineArc(r, (LineEntity)ent0, pickEnt[0].pos, (ArcEntity)ent1, pickEnt[1].pos))
+                        return;
+                } else if (ent0.mEntityId == EntityId.Arc && ent1.mEntityId == EntityId.Line) {
+                    if (!filletLineArc(r, (LineEntity)ent1, pickEnt[1].pos, (ArcEntity)ent0, pickEnt[0].pos))
+                        return;
+                } else if (ent0.mEntityId == EntityId.Line && ent1.mEntityId == EntityId.Polyline) {
+                    if (!filletLinePolyline(r, (LineEntity)ent0, pickEnt[0].pos, (PolylineEntity)ent1, pickEnt[1].pos))
+                        return;
+                } else if (ent0.mEntityId == EntityId.Polyline && ent1.mEntityId == EntityId.Line) {
+                    if (!filletLinePolyline(r, (LineEntity)ent1, pickEnt[1].pos, (PolylineEntity)ent0, pickEnt[0].pos))
+                        return;
+                } else if (ent0.mEntityId == EntityId.Arc && ent1.mEntityId == EntityId.Arc) {
+                    if (!filletArcArc(r, (ArcEntity)ent1, pickEnt[1].pos, (ArcEntity)ent0, pickEnt[0].pos))
+                        return;
+                } else if (ent0.mEntityId == EntityId.Arc && ent1.mEntityId == EntityId.Polyline) {
+                    if (!filletArcPolyline(r, (ArcEntity)ent0, pickEnt[0].pos, (PolylineEntity)ent1, pickEnt[1].pos))
+                        return;
+                } else if (ent0.mEntityId == EntityId.Polyline && ent1.mEntityId == EntityId.Arc) {
+                    if (!filletArcPolyline(r, (ArcEntity)ent1, pickEnt[1].pos, (PolylineEntity)ent0, pickEnt[0].pos))
+                        return;
+                } else if (ent0.mEntityId == EntityId.Polyline && ent1.mEntityId == EntityId.Polyline) {
+                    if (!filletPolylinePolyline(r, (PolylineEntity)ent0, pickEnt[0].pos, (PolylineEntity)ent1, pickEnt[1].pos))
+                        return;
+                } else
+                    return;
+            } else if (pickEnt.Count == 1) {
+                Entity ent = mEntityData.mEntityList[pickEnt[0].no];
+                if (ent.mEntityId == EntityId.Polyline) {
+                    if (!filletPolyline(r, (PolylineEntity)ent, pickEnt[0].pos))
+                        return;
+                } else if (ent.mEntityId == EntityId.Polygon) {
+                    if (!filletPolygon(r, (PolygonEntity)ent, pickEnt[0].pos))
+                        return;
+                }
+            } else
+                return;
+
+            for (int i = 0; i < pickEnt.Count; i++)
+                mEntityData.removeEnt(pickEnt[i].no);
+            mEntityData.updateData();
+        }
+
+        /// <summary>
+        /// 線分要素同士のフィレット(R面)作成
+        /// </summary>
+        /// <param name="r">半径</param>
+        /// <param name="l0">線分要素</param>
+        /// <param name="pos0">ピック位置0</param>
+        /// <param name="l1">線分要素</param>
+        /// <param name="pos1">ピック位置</param>
+        /// <returns>可否</returns>
+        private bool filletLineLine(double r, LineEntity l0, PointD pos0, LineEntity l1, PointD pos1)
+        {
+            LineD line0 = l0.mLine.toCopy();
+            LineD line1 = l1.mLine.toCopy();
+            if (r == 0) {
+                PointD ip = line0.intersection(line1);
+                line0.trimOn(ip, pos0);
+                line1.trimOn(ip, pos1);
+            } else if (0 < r) {
+                ArcD arc = new ArcD(r, line0, pos0, line1, pos1);
+                if (arc.mCp != null && !arc.mCp.isNaN()) {
+                    mEntityData.addArc(arc);
+                    mEntityData.mEntityList[^1].setProperty(l0);
+                    PointD p0 = arc.startPoint();
+                    PointD p1 = arc.endPoint();
+                    if (line0.onPointEx(p0)) {
+                        line0.trimOn(p0, pos0);
+                        line1.trimOn(p1, pos1);
+                    } else {
+                        line0.trimOn(p1, pos0);
+                        line1.trimOn(p0, pos1);
+                    }
+                } else
+                    return false;
+            } else
+                return false;
+            mEntityData.addLine(line0);
+            mEntityData.mEntityList[^1].setProperty(l0);
+            mEntityData.addLine(line1);
+            mEntityData.mEntityList[^1].setProperty(l1);
+            return true;
+        }
+
+        /// <summary>
+        /// 線分と円弧要素のフィレット(R面)作成
+        /// </summary>
+        /// <param name="r">半径</param>
+        /// <param name="l">線分要素</param>
+        /// <param name="posLine">ピック位置</param>
+        /// <param name="a">円弧要素</param>
+        /// <param name="posArc">ピック位置</param>
+        /// <returns>可否</returns>
+        private bool filletLineArc(double r, LineEntity l, PointD posLine, ArcEntity a, PointD posArc)
+        {
+            LineD line = l.mLine.toCopy();
+            ArcD arc = a.mArc.toCopy();
+            if (r == 0) {
+                List<PointD> plist = arc.intersection(line, false);
+                PointD ip;
+                if (plist.Count == 1) {
+                    ip = plist[0];
+                } else if (1 < plist.Count) {
+                    ip = (plist[0].length(posLine) + plist[0].length(posArc)) < (plist[1].length(posLine) + plist[1].length(posArc)) ? plist[0] : plist[1];
+                } else
+                    return false;
+                line.trimOn(ip, posLine);
+                arc.trimOn(ip, posArc);
+            } else if (0 < r) {
+                ArcD fillet = new ArcD(r, line, posLine, arc, posArc);
+                if (fillet.mCp == null || fillet.mCp.isNaN())
+                    return false;
+                mEntityData.addArc(fillet);
+                mEntityData.mEntityList[^1].setProperty(l);
+                PointD p0 = fillet.startPoint();
+                PointD p1 = fillet.endPoint();
+                if (line.onPointEx(p0)) {
+                    line.trimOn(p0, posLine);
+                    arc.trimOn(p1, posArc);
+                } else {
+                    line.trimOn(p1, posLine);
+                    arc.trimOn(p0, posArc);
+                }
+            } else
+                return false;
+            mEntityData.addLine(line);
+            mEntityData.mEntityList[^1].setProperty(l);
+            mEntityData.addArc(arc);
+            mEntityData.mEntityList[^1].setProperty(a);
+            return true;
+        }
+
+        /// <summary>
+        /// 線分とポリラインのフィレット(R面)作成
+        /// </summary>
+        /// <param name="r">半径</param>
+        /// <param name="l">線分要素</param>
+        /// <param name="posLine">ピック位置</param>
+        /// <param name="pl">ポリライン要素</param>
+        /// <param name="posPolyline">ピック位置</param>
+        /// <returns>可否</returns>
+        private bool filletLinePolyline(double r, LineEntity l, PointD posLine, PolylineEntity pl, PointD posPolyline)
+        {
+            LineD line = l.mLine.toCopy();
+            PolylineD polyline = pl.mPolyline.toCopy();
+            if (r == 0) {
+                List<PointD> plist = polyline.intersection(line);
+                PointD ip;
+                if (0 < plist.Count) {
+                   ip = plist.MinBy(p => p.length(posLine));
+                } else
+                    return false;
+                line.trimOn(ip, posLine);
+                polyline.trimOn(ip, posPolyline);
+            } else if (0 < r) {
+                ArcD fillet = new ArcD(r, line, posLine, polyline, posPolyline);
+                if (fillet.mCp == null || fillet.mCp.isNaN())
+                    return false;
+                mEntityData.addArc(fillet);
+                mEntityData.mEntityList[^1].setProperty(l);
+                PointD p0 = fillet.startPoint();
+                PointD p1 = fillet.endPoint();
+                if (line.onPointEx(p0)) {
+                    line.trimOn(p0, posLine);
+                    polyline.trimOn(p1, posPolyline);
+                } else {
+                    line.trimOn(p1, posLine);
+                    polyline.trimOn(p0, posPolyline);
+                }
+            } else
+                return false;
+            mEntityData.addLine(line);
+            mEntityData.mEntityList[^1].setProperty(l);
+            mEntityData.addPolyline(polyline.mPolyline);
+            mEntityData.mEntityList[^1].setProperty(pl);
+            return true;
+        }
+
+        /// <summary>
+        /// 円弧同士のフィレット(R面)作成
+        /// </summary>
+        /// <param name="r">フィレット半径</param>
+        /// <param name="a0">円弧要素</param>
+        /// <param name="posArc0">ピック位置</param>
+        /// <param name="a1">円弧要素</param>
+        /// <param name="posArc1">ピック位置</param>
+        /// <returns>可否</returns>
+        private bool filletArcArc(double r, ArcEntity a0, PointD posArc0, ArcEntity a1, PointD posArc1)
+        {
+            ArcD arc0 = a0.mArc.toCopy();
+            ArcD arc1 = a1.mArc.toCopy();
+            if (r == 0) {
+                List<PointD> plist = arc1.intersection(arc0);
+                PointD ip;
+                if (plist.Count == 1) {
+                    ip = plist[0];
+                } else if (1 < plist.Count) {
+                    ip = posArc0.length(plist[0]) < posArc0.length(plist[1]) ? plist[0] : plist[1];
+                } else
+                    return false;
+                arc0.trimOn(ip, posArc0);
+                arc1.trimOn(ip, posArc1);
+            } else if (0 < r) {
+                ArcD fillet = new ArcD(r, arc0, posArc0, arc1, posArc1);
+                if (fillet.mCp == null || fillet.mCp.isNaN())
+                    return false;
+                mEntityData.addArc(fillet);
+                mEntityData.mEntityList[^1].setProperty(a0);
+                PointD p0 = fillet.startPoint();
+                PointD p1 = fillet.endPoint();
+                if (arc0.onPoint(p0)) {
+                    arc0.trimOn(p0, posArc0);
+                    arc1.trimOn(p1, posArc1);
+                } else {
+                    arc0.trimOn(p1, posArc0);
+                    arc1.trimOn(p0, posArc1);
+                }
+            } else
+                return false;
+            mEntityData.addArc(arc0);
+            mEntityData.mEntityList[^1].setProperty(a0);
+            mEntityData.addArc(arc1);
+            mEntityData.mEntityList[^1].setProperty(a1);
+            return true;
+        }
+
+        /// <summary>
+        /// 円弧とポリラインのフィレット(R面)作成
+        /// </summary>
+        /// <param name="r">フィレット半径</param>
+        /// <param name="a">円弧要素</param>
+        /// <param name="posArc">ピック位置</param>
+        /// <param name="pl">ポリライン要素</param>
+        /// <param name="posPolyline">ピック位置</param>
+        /// <returns></returns>
+        private bool filletArcPolyline(double r, ArcEntity a, PointD posArc, PolylineEntity pl, PointD posPolyline)
+        {
+            ArcD arc = a.mArc.toCopy();
+            PolylineD polyline = pl.mPolyline.toCopy();
+            if (r == 0) {
+                List<PointD> plist = polyline.intersection(arc);
+                PointD ip;
+                if (plist.Count == 1) {
+                    ip = plist[0];
+                } else if (1 < plist.Count) {
+                    ip = plist.MinBy(p => p.length(posArc) + p.length(posPolyline));
+                } else
+                    return false;
+                arc.trimOn(ip, posArc);
+                polyline.trimOn(ip, posPolyline);
+            } else if (0 < r) {
+                ArcD fillet = new ArcD(r, arc, posArc, polyline, posPolyline);
+                if (fillet.mCp == null || fillet.mCp.isNaN())
+                    return false;
+                mEntityData.addArc(fillet);
+                mEntityData.mEntityList[^1].setProperty(a);
+                PointD p0 = fillet.startPoint();
+                PointD p1 = fillet.endPoint();
+                if (arc.onPoint(p0)) {
+                    arc.trimOn(p0, posArc);
+                    polyline.trimOn(p1, posPolyline);
+                } else {
+                    arc.trimOn(p1, posArc);
+                    polyline.trimOn(p0, posPolyline);
+                }
+            } else
+                return false;
+            mEntityData.addArc(arc);
+            mEntityData.mEntityList[^1].setProperty(a);
+            mEntityData.addPolyline(polyline.mPolyline);
+            mEntityData.mEntityList[^1].setProperty(pl);
+            return true;
+        }
+
+        /// <summary>
+        /// ポリライン同士のフィレット剥製
+        /// </summary>
+        /// <param name="r">半径</param>
+        /// <param name="pl0">ポリライン要素</param>
+        /// <param name="posPolyline0">ピック位置</param>
+        /// <param name="pl1">ポリライン要素</param>
+        /// <param name="posPolyline1">ピック位置</param>
+        /// <returns></returns>
+        private bool filletPolylinePolyline(double r, PolylineEntity pl0, PointD posPolyline0, PolylineEntity pl1, PointD posPolyline1)
+        {
+            PolylineD polyline0 = pl0.mPolyline.toCopy();
+            PolylineD polyline1 = pl1.mPolyline.toCopy();
+            if (r == 0) {
+                List<PointD> plist = polyline0.intersection(polyline1);
+                if (plist.Count < 1)
+                    return false;
+                PointD ip = plist.MinBy(p => p.length(posPolyline0) + p.length(posPolyline1));
+                polyline0.trimOn(ip, posPolyline0);
+                polyline1.trimOn(ip, posPolyline1);
+            } else if (0 < r) {
+                ArcD fillet = new ArcD(r, polyline0, posPolyline0, polyline1, posPolyline1);
+                if (fillet.mCp == null || fillet.mCp.isNaN())
+                    return false;
+                mEntityData.addArc(fillet);
+                mEntityData.mEntityList[^1].setProperty(pl0);
+                PointD p0 = fillet.startPoint();
+                PointD p1 = fillet.endPoint();
+                if (polyline0.onPoint(p0)) {
+                    polyline0.trimOn(p0, posPolyline0);
+                    polyline1.trimOn(p1, posPolyline1);
+                } else {
+                    polyline0.trimOn(p1, posPolyline0);
+                    polyline1.trimOn(p0, posPolyline1);
+                }
+            } else
+                return false;
+            mEntityData.addPolyline(polyline0.mPolyline);
+            mEntityData.mEntityList[^1].setProperty(pl0);
+            mEntityData.addPolyline(polyline1.mPolyline);
+            mEntityData.mEntityList[^1].setProperty(pl1);
+            return true;
+        }
+
+        /// <summary>
+        /// ポリラインの頂点のR面取り(フィレット)を作成
+        /// </summary>
+        /// <param name="r">フィレット半径</param>
+        /// <param name="pl">ポリライン</param>
+        /// <param name="posPolyline">ピック位置</param>
+        /// <returns>可否</returns>
+        private bool filletPolyline(double r, PolylineEntity pl, PointD posPolyline)
+        {
+            PolylineD polyline = pl.mPolyline.toCopy();
+            if (r <= 0)
+                return false;
+            polyline.fillet(r, posPolyline);
+            if (polyline.mPolyline.Count == pl.mPolyline.mPolyline.Count)
+                return false;
+            mEntityData.addPolyline(polyline.mPolyline);
+            mEntityData.mEntityList[^1].setProperty(pl);
+
+            return true;
+        }
+
+
+        /// <summary>
+        /// ポリラインの頂点のR面取り(フィレット)を作成
+        /// </summary>
+        /// <param name="r">フィレット半径</param>
+        /// <param name="pl">ポリライン</param>
+        /// <param name="posPolyline">ピック位置</param>
+        /// <returns>可否</returns>
+        private bool filletPolygon(double r, PolygonEntity pl, PointD posPolyline)
+        {
+            PolygonD polygon = pl.mPolygon.toCopy();
+            if (r <= 0)
+                return false;
+            polygon.fillet(r, posPolyline);
+            if (polygon.mPolygon.Count == pl.mPolygon.mPolygon.Count)
+                return false;
+            mEntityData.addPolygon(polygon.mPolygon);
+            mEntityData.mEntityList[^1].setProperty(pl);
+
+            return true;
         }
 
         /// <summary>

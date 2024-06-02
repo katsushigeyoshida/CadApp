@@ -16,7 +16,8 @@ namespace CadApp
         createLocDimension, createLinearDimension, createAngleDimension,
         createDiameterDimension, createRadiusDimension,
 
-        translate, rotate, mirror, scale, trim, divide, stretch, stretchArc, offset, connect,
+        translate, rotate, mirror, scale, trim, divide, stretch, stretchArc, offset, 
+        connect, fillet,
         symbolAssemble, disassemble, changeText, changeRadius, changeProperty, changeProperties,
 
         copyTranslate, copyRotate, copyMirror, copyScale, copyTrim, copyOffset,
@@ -89,6 +90,7 @@ namespace CadApp
             new Command("編集",      "分割",        "", OPERATION.divide,               ENTITY.any),
             new Command("編集",      "ストレッチ",  "", OPERATION.stretch,              ENTITY.any),
             new Command("編集",      "オフセット",  "", OPERATION.offset,               ENTITY.any),
+            new Command("編集",      "Ｒ面",        "", OPERATION.fillet,               ENTITY.any),
             new Command("編集",      "接続",        "", OPERATION.connect,              ENTITY.any),
             new Command("編集",      "シンボル変換","", OPERATION.symbolAssemble,       ENTITY.any),
             new Command("編集",      "分解",        "", OPERATION.disassemble,          ENTITY.any),
@@ -158,7 +160,8 @@ namespace CadApp
             "createArrow, createLabel, createSymbol, createImage",
             "createLocDimension, createDimension, createAngleDimension",
             "createDiameterDimension, createRadiusDimension",
-            "translate, rotate, mirror, scale, trim, divide, stretch, offset, connect",
+            "translate, rotate, mirror, scale, trim, divide, stretch, offset",
+            "connect, fillet",
             "symbolAssemble, disassemble, changeText, changeRadius, changeProperty, changeProperties",
             "copyTranslate, copyRotate, copyMirror, copyScale, copyTrim, copyOffset",
             "copyEntity, pasteEntity, copyProperty",

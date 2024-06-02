@@ -113,7 +113,7 @@
                         <Image Source="Icon\StatusHelpOutline.png" ></Image>
                     </Button>
                     <TextBlock Text="文字　入力" FontSize="11"/>
-                    <TextBox x:Name="tbTextString" Width="340" MouseDoubleClick="tbTextString_MouseDoubleClick"
+                    <TextBox x:Name="tbTextString" Width="280" MouseDoubleClick="tbTextString_MouseDoubleClick"
                              ToolTip="文字入力欄、Ctrl+Enterまたはダブルクリックで複数行入力ダイヤログを開く" KeyDown="tbTextString_KeyDown"/>
                     <TextBlock Text="サイズ" FontSize="11"/>
                     <ComboBox Name="cbTextSize" Width="60" ToolTip="テキストサイズ" SelectionChanged="cbTextSize_SelectionChanged" />
@@ -122,6 +122,8 @@
                     <ComboBox Name="cbTextVertical" Width="40" ToolTip="垂直アライメント" SelectionChanged="cbTextVertical_SelectionChanged"  />
                     <TextBlock Text="回転" FontSize="11"/>
                     <ComboBox Name="cbTextRotate" Width="40" ToolTip="文字列の回転" SelectionChanged="cbTextRotate_SelectionChanged" />
+                    <TextBlock Text="R面" FontSize="11"/>
+                    <ComboBox x:Name="cbFilletSize" Width="50" IsEditable="True" ToolTip="R面の半径" SelectionChanged="cbFilletSize_SelectionChanged" PreviewKeyDown="cbFilletSize_PreviewKeyDown" />
                     <StatusBarItem HorizontalAlignment="Right">
                         <TextBlock x:Name="tbPosition" />
                     </StatusBarItem>
@@ -133,7 +135,7 @@
                         <Image Source="Icon\Settings.png" ></Image>
                     </Button>
                     <TextBlock Text="コマンド" FontSize="11"/>
-                    <ComboBox x:Name="cbCommand" Width="370" IsEditable="True" PreviewKeyDown="cbCommand_PreviewKeyDown"
+                    <ComboBox x:Name="cbCommand" Width="300" IsEditable="True" PreviewKeyDown="cbCommand_PreviewKeyDown"
                               ToolTip="コマンド入力欄、Enterキーで実行"/>
                     <TextBlock Text="作成レイヤ" FontSize="11"/>
                     <ComboBox x:Name="cbCreateLayer" Width="130" IsEditable="True" SelectionChanged="cbCreateLayer_SelectionChanged" PreviewKeyDown="cbCreateLayer_PreviewKeyDown"

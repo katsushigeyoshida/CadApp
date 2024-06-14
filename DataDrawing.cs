@@ -217,6 +217,7 @@ namespace CadApp
                     case OPERATION.divide:
                         break;
                     case OPERATION.stretch:
+                    case OPERATION.copyStretch:
                         stretchDragging(entityData, points, pickList);
                         break;
                     case OPERATION.stretchArc:

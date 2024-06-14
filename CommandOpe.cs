@@ -373,6 +373,7 @@ namespace CadApp
                 case OPERATION.copyMirror:
                 case OPERATION.copyScale:
                 case OPERATION.copyTrim:
+                case OPERATION.copyStretch:
                 case OPERATION.copyOffset:
                 case OPERATION.measureDistance:             //  距離測定
                 case OPERATION.measureAngle:                //  角度測定
@@ -729,10 +730,18 @@ namespace CadApp
                     //  ストレッチ
                     PointD vec = loc[0].vector(loc[1]);
                     mEntityData.stretch(pickEnt, vec);
+                } else if (operation == OPERATION.copyStretch) {
+                    //  ストレッチ
+                    PointD vec = loc[0].vector(loc[1]);
+                    mEntityData.stretch(pickEnt, vec, false, true);
                 } else if (operation == OPERATION.stretchArc) {
                     //  ストレッチ(円弧)
                     PointD vec = loc[0].vector(loc[1]);
                     mEntityData.stretch(pickEnt, vec, true);
+                } else if (operation == OPERATION.copyStretchArc) {
+                    //  ストレッチ(円弧)
+                    PointD vec = loc[0].vector(loc[1]);
+                    mEntityData.stretch(pickEnt, vec, true, true);
                 } else {
                     mEntityData.mOperationCount--;
                     return false;
@@ -1142,7 +1151,9 @@ namespace CadApp
                 //  ピック位置に近い端点を接続
                 PolylineD polyline = new PolylineD(plist);
                 Entity ent2 = mEntityData.mEntityList[pickEnt[1].no];
-                polyline.connect(pickEnt[0].pos, ent2.toPointList(), pickEnt[1].pos);
+                PolylineD polyline2 = new PolylineD(ent2.toPointList());
+                polyline.connect(pickEnt[0].pos, polyline2, pickEnt[1].pos);
+                //polyline.connect(pickEnt[0].pos, ent2.toPointList(), pickEnt[1].pos);
                 mEntityData.addPolyline(polyline.mPolyline);
                 mEntityData.mEntityList[^1].setProperty(entity);
             } else {

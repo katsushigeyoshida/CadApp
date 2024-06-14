@@ -288,6 +288,7 @@ namespace CadApp
         /// </summary>
         /// <param name="vec">移動ベクトル</param>
         /// <param name="pickPos">ピック位置</param>
+        /// <param name="arc">Polyline/Polygonの円弧ストレッチ</param>
         public override void stretch(PointD vec, PointD pickPos, bool arc = false)
         {
             mPolygon.stretch(vec, pickPos, arc);
@@ -347,7 +348,9 @@ namespace CadApp
         /// <returns></returns>
         public override bool intersectionChk(Box b)
         {
-            List<PointD> plist = b.intersection(mPolygon.mPolygon, true, true);
+            List<PointD> polygon = mPolygon.mPolygon.ConvertAll(p => p.toCopy());
+            polygon.Add(mPolygon.mPolygon[0]);
+            List<PointD> plist = b.intersection(polygon, true, true);
             return 0 < plist.Count;
         }
 

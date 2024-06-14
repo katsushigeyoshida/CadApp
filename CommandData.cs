@@ -20,8 +20,8 @@ namespace CadApp
         connect, fillet,
         symbolAssemble, disassemble, changeText, changeRadius, changeProperty, changeProperties,
 
-        copyTranslate, copyRotate, copyMirror, copyScale, copyTrim, copyOffset,
-        copyEntity, pasteEntity, copyProperty,
+        copyTranslate, copyRotate, copyMirror, copyScale, copyTrim, copyStretch, copyStretchArc,
+        copyOffset, copyEntity, pasteEntity, copyProperty,
 
         info, infoData, zumenComment,
         measure, measureDistance, measureAngle,
@@ -104,6 +104,7 @@ namespace CadApp
             new Command("コピー",    "反転",        "", OPERATION.copyMirror,           ENTITY.any),
             new Command("コピー",    "拡大縮小",    "", OPERATION.copyScale,            ENTITY.any),
             new Command("コピー",    "トリム",      "", OPERATION.copyTrim,             ENTITY.any),
+            new Command("コピー",    "ストレッチ",  "", OPERATION.copyStretch,          ENTITY.any),
             new Command("コピー",    "オフセット",  "", OPERATION.copyOffset,           ENTITY.any),
             new Command("コピー",    "属性変更",    "", OPERATION.copyProperty,         ENTITY.any),
             new Command("コピー",    "要素コピー",  "", OPERATION.copyEntity,           ENTITY.non),
@@ -163,7 +164,7 @@ namespace CadApp
             "translate, rotate, mirror, scale, trim, divide, stretch, offset",
             "connect, fillet",
             "symbolAssemble, disassemble, changeText, changeRadius, changeProperty, changeProperties",
-            "copyTranslate, copyRotate, copyMirror, copyScale, copyTrim, copyOffset",
+            "copyTranslate, copyRotate, copyMirror, copyScale, copyTrim, copyStretch, copyOffset",
             "copyEntity, pasteEntity, copyProperty",
             "info, infoData, zumenComment",
             "measure, measureDistance, measureAngle",

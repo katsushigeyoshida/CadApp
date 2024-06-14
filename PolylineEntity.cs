@@ -265,6 +265,7 @@ namespace CadApp
         /// </summary>
         /// <param name="vec">移動ベクトル</param>
         /// <param name="pickPos">ピック位置</param>
+        /// <param name="arc">Polyline/Polygonの円弧ストレッチ</param>
         public override void stretch(PointD vec, PointD pickPos, bool arc = false)
         {
             mPolyline.stretch(vec, pickPos, arc);

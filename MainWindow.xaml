@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CadApp"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="850"  Loaded="Window_Loaded" Closing="Window_Closing"
+        Title="MainWindow" Height="450" Width="900"  Loaded="Window_Loaded" Closing="Window_Closing"
         MouseLeftButtonDown="Window_MouseLeftButtonDown" MouseMove="Window_MouseMove" LayoutUpdated="Window_LayoutUpdated"
         MouseLeftButtonUp="Window_MouseLeftButtonUp" MouseWheel="Window_MouseWheel" MouseRightButtonDown="Window_MouseRightButtonDown"
         PreviewKeyDown="Window_PreviewKeyDown" MouseDoubleClick="Window_MouseDoubleClick" >
@@ -98,7 +98,7 @@
                     <ComboBox Name="cbEntSize" Width="30" ToolTip="点の大きさ/線の太さ"
                               SelectionChanged="cbEntSize_SelectionChanged"  />
                     <TextBlock Text="グリッド" FontSize="11" VerticalAlignment="Center"/>
-                    <ComboBox Name="cbGridSize" Width="40" ToolTip="グリッドのサイズ"
+                    <ComboBox Name="cbGridSize" Width="40" ToolTip="グリッドのサイズ(Ctrl+F1でON/OFF)"
                               SelectionChanged="cbGridSize_SelectionChanged" />
                     <TextBlock Text="マスク" FontSize="11" VerticalAlignment="Center"/>
                     <ComboBox Name="cbEntityMask" Width="50" ToolTip="ピック時の要素マスク"

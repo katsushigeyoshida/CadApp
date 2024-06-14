@@ -413,8 +413,12 @@ namespace CadApp
                     mLocMode = mPrevMode;
             } else if (mLocMode == OPEMODE.loc && !onControlKey()) {
                 //  要素追加(ロケイト数不定コマンドを除く)
-                if (mOperation == OPERATION.stretch && ylib.onAltKey())
-                    mOperation = OPERATION.stretchArc;
+                if (ylib.onAltKey()) {
+                    if (mOperation == OPERATION.stretch)
+                        mOperation = OPERATION.stretchArc;
+                    else if (mOperation == OPERATION.copyStretch)
+                        mOperation = OPERATION.copyStretchArc;
+                }
                 if (0 < mCommandOpe.mEntityData.mPara.mGridSize)
                     wp.round(Math.Abs(mCommandOpe.mEntityData.mPara.mGridSize));
                 mLocPick.mLocPos.Add(wp);
@@ -458,7 +462,7 @@ namespace CadApp
                     int pickNo = mLocPick.pickSelect(picks, mLocMode);
                     if (0 <= pickNo) {
                         //  ピック要素の登録
-                        mLocPick.addPick((pickNo, pickPos.toCopy()), onControlKey());
+                        mLocPick.addPick((pickNo, pickPos.toCopy()), true);
                         mDataDrawing.pickDisp(mEntityData, mLocPick.mPickEnt);
                     }
                 }
@@ -1154,7 +1158,7 @@ namespace CadApp
                             PointD pickPos = dispArea.getCenter();
                             List<int> picks = mLocPick.getPickNo(dispArea);
                             foreach (int pickNo in picks)
-                                mLocPick.addPick((pickNo, pickPos), onControlKey());
+                                mLocPick.addPick((pickNo, pickPos), true);
                             mDataDrawing.pickDisp(mEntityData, mLocPick.mPickEnt);
                         }
                     }

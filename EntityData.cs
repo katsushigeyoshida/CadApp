@@ -246,7 +246,7 @@ namespace CadApp
         {
             if (polygon == null || polygon.Count < 3) 
                 return -1;
-            Entity polygonEnt = new PolygonEntity(polygon);
+            PolygonEntity polygonEnt = new PolygonEntity(polygon);
             polygonEnt.setProperty(mPara);
             mEntityList.Add(polygonEnt);
             if (mArea == null) {
@@ -874,14 +874,17 @@ namespace CadApp
         /// <param name="pickList">要素リスト</param>
         /// <param name="vec">移動ベクトル</param>
         /// <param name="pickPos">ピック位置</param>
+        /// <param name="arc">円弧ストレッチ(Polyline/Polygonのみ)</param>
+        /// <param name="copy">コピー作成</param>
         /// <returns></returns>
-        public bool stretch(List<(int no, PointD pos)> pickList, PointD vec, bool arc = false)
+        public bool stretch(List<(int no, PointD pos)> pickList, PointD vec, bool arc = false, bool copy = false)
         {
             foreach ((int no, PointD pos) entNo in pickList) {
                 mEntityList.Add(mEntityList[entNo.no].toCopy());
                 mEntityList[mEntityList.Count - 1].stretch(vec, entNo.pos, arc);
                 mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
-                removeEnt(entNo.no);
+                if (!copy)
+                    removeEnt(entNo.no);
             }
             updateData();
             return true;

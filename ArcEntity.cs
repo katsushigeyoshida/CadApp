@@ -129,7 +129,12 @@ namespace CadApp
         /// <returns>座標リスト</returns>
         public override List<PointD> toPointList()
         {
-            return mArc.to3PointList();
+            int divNo = Math.PI * 1.9 < (mArc.mEa - mArc.mSa) ? 4 : 2;
+            List<PointD> plist = mArc.toPointList(divNo);
+            plist[1].type = 1;
+            if (divNo == 4)
+                plist[3].type = 1;
+            return plist;
         }
 
         /// <summary>
@@ -250,6 +255,7 @@ namespace CadApp
         /// </summary>
         /// <param name="vec">移動ベクトル</param>
         /// <param name="pickPos">ピック位置</param>
+        /// <param name="arc">Polyline/Polygonの円弧ストレッチ</param>
         public override void stretch(PointD vec, PointD pickPos, bool arc = false)
         {
             mArc.stretch(vec, pickPos);

@@ -86,13 +86,15 @@ namespace CadApp
                     break;
                 case EntityId.Polyline:
                     PolylineEntity polyline = (PolylineEntity)ent;
-                    LineD pl = polyline.mPolyline.nearLine(p);
-                    pos = pl.nearPoint(p, 4);
+                    pos = polyline.mPolyline.nearPoint(p, 4);
+                    //LineD pl = polyline.mPolyline.nearLine(p);
+                    //pos = pl.nearPoint(p, 4);
                     break;
                 case EntityId.Polygon:
                     PolygonEntity polygon = (PolygonEntity)ent;
-                    LineD pgl = polygon.mPolygon.nearLine(p);
-                    pos = pgl.nearPoint(p, 4);
+                    pos = polygon.mPolygon.nearPoint(p, 4);
+                    //LineD pgl = polygon.mPolygon.nearLine(p);
+                    //pos = pgl.nearPoint(p, 4);
                     break;
                 case EntityId.Arc:
                     ArcEntity arc = (ArcEntity)ent;

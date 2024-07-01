@@ -3,6 +3,7 @@ using CoreLib;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -48,7 +49,7 @@ namespace CadApp
             "なし", "点", "線分", "円弧", "折線", "ポリゴン", "テキスト",
             "寸法線,矢印,ラベル,シンボル"
         };
-        private double[] mFilletSizeMenu = {
+        private List<double> mFilletSizeMenu = new List<double>(){
             0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 15, 16, 18, 20, 25, 30
         };
 
@@ -138,7 +139,8 @@ namespace CadApp
             cbTextHorizontal.ItemsSource = mHorizontalAlignmentMenu;
             cbTextVertical.ItemsSource = mVerticalAlignmentMenu;
             cbTextRotate.ItemsSource   = mTextRotateMenu;
-            cbFilletSize.ItemsSource   = mFilletSizeMenu;
+            cbFilletSize.Items.Clear();
+            mFilletSizeMenu.ForEach(p => cbFilletSize.Items.Add(p));
             cbFilletSize.SelectedIndex = 0;
 
             setZumenProperty();
@@ -929,6 +931,12 @@ namespace CadApp
         {
             if (e.Key == Key.Enter) {
                 mCommandOpe.mEntityData.mPara.mFilletSize = ylib.doubleParse(cbFilletSize.Text, 0);
+                if (!mFilletSizeMenu.Contains(mCommandOpe.mEntityData.mPara.mFilletSize)) {
+                    mFilletSizeMenu.Add(mCommandOpe.mEntityData.mPara.mFilletSize);
+                    mFilletSizeMenu.Sort();
+                    cbFilletSize.Items.Clear();
+                    mFilletSizeMenu.ForEach(p => cbFilletSize.Items.Add(p));
+                }
             }
         }
 

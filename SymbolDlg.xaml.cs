@@ -1,5 +1,6 @@
 ﻿using CoreLib;
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -18,10 +19,15 @@ namespace CadApp
         private double mPrevWindowWidth;        //  変更前のウィンドウ幅
         private WindowState mWindowState = WindowState.Normal;  //  ウィンドウの状態(最大化/最小化)
 
-        public string mSymbolFolder;
-        public string mCategory;
-        public string mSymbolName;
-        public int mDefualtCategory = 0;
+        public string mSymbolFolder;                            //  シンボルフォルダ
+        public string mCategory;                                //  分類名
+        public string mSymbolName;                              //  シンボル名
+        public int mDefualtCategory = 0;                        //  初期分類
+        public double mScale = 1.0;                             //  シンボルの倍率
+        public List<double> mScaleMenu = new List<double>() {   //  シンボルの倍率リスト
+            0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 
+            2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 20, 30
+        };
         public Entity mEntity;
 
         public SymbolData mSymbolData;
@@ -52,6 +58,8 @@ namespace CadApp
                 string path = mSymbolData.getSymbolFilePath(cbCategory.Items[cbCategory.SelectedIndex].ToString() ?? "");
                 lbSymbolName.ItemsSource = mSymbolData.getSymbolList(path, true);
             }
+            mScaleMenu.ForEach(p => cbScale.Items.Add(p));
+            cbScale.SelectedIndex = mScaleMenu.IndexOf(1);
             if (mCallBackOn) {
                 btOK.Visibility = Visibility.Collapsed;
                 btCancel.Visibility = Visibility.Collapsed;
@@ -268,6 +276,7 @@ namespace CadApp
         private void btLoc_Click(object sender, RoutedEventArgs e)
         {
             mDefualtCategory = cbCategory.SelectedIndex;
+            mScale = mScaleMenu[cbScale.SelectedIndex];
             if (mCallBackOn)
                 callback();
         }

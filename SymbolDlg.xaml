@@ -7,8 +7,10 @@
         mc:Ignorable="d"
         Title="SymbolDlg" Height="250" Width="300" Loaded="Window_Loaded" Closing="Window_Closing" LayoutUpdated="Window_LayoutUpdated">
     <Grid>
-        <Label Content="分類" HorizontalAlignment="Left" Margin="10,5,0,0" VerticalAlignment="Top" RenderTransformOrigin="-3.673,0.468" Width="42"/>
-        <ComboBox Name="cbCategory" IsEditable="True" Margin="50,8,10,0" VerticalAlignment="Top" SelectionChanged="cbCategory_SelectionChanged"/>
+        <Label Content="分類" HorizontalAlignment="Left" Margin="0,5,0,0" VerticalAlignment="Top" Width="42"/>
+        <ComboBox Name="cbCategory" IsEditable="True" Margin="40,8,100,0" VerticalAlignment="Top" SelectionChanged="cbCategory_SelectionChanged"/>
+        <Label Content="倍率" Margin="0,5,55,0" Width="40" VerticalAlignment="Top" HorizontalAlignment="Right"/>
+        <ComboBox Name="cbScale" IsEditable="True" Margin="0,8,10,0" Width="50" VerticalAlignment="Top" HorizontalAlignment="Right" />
         <ListBox Name="lbSymbolName" Width="100" Margin="0,36,0,30" HorizontalAlignment="Left" SelectionChanged="lbSymbolName_SelectionChanged">
             <ListBox.ContextMenu>
                 <ContextMenu>

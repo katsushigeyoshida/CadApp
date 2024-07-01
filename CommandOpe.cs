@@ -1705,7 +1705,8 @@ namespace CadApp
         /// </summary>
         public void setSymbolData()
         {
-            Entity ent = mSymbolDlg.mEntity;
+            Entity ent = mSymbolDlg.mEntity.toCopy();
+            ent.scale(ent.mArea.getCenter(), mSymbolDlg.mScale);
             ent.setProperty(mEntityData.mPara);
             mCopyEntityList = new List<Entity>();
             if (ent != null)

@@ -2,12 +2,12 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net7.0-windows7.0</TargetFramework>
+    <TargetFramework>net8.0-windows8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>False</UseWindowsForms>
     <ApplicationIcon>CadApp.ico</ApplicationIcon>
-    <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion>8.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <ItemGroup>

@@ -3,7 +3,6 @@ using CoreLib;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -1039,7 +1038,6 @@ namespace CadApp
         /// <param name="e"></param>
         private void btSetting_Click(object sender, RoutedEventArgs e)
         {
-            //systemMenu();
             systemSettingdlg();
         }
 
@@ -1417,6 +1415,7 @@ namespace CadApp
                 mImageData.mImageFolder = dlg.mImageFolder;
                 if (!Directory.Exists(mImageData.mImageFolder))
                     Directory.CreateDirectory(mImageData.mImageFolder);
+                mImageData.mBackupFolder = dlg.mBackupFolder;
                 mFileData.mDiffTool = dlg.mDiffTool;
                 mCommandData.loadShortCut(mShortCutPath);
             }

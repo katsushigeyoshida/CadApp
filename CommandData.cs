@@ -30,7 +30,7 @@ namespace CadApp
         setSymbol, manageSymbol,
 
         undo, redo,
-        copyScreen, saveScreen, screenCapture, imageTrimming, print,
+        copyScreen, saveScreen, screenCapture, imageTrimming, print, memo,
         cancel, close,
         back, save, saveAs, open,
 
@@ -136,6 +136,7 @@ namespace CadApp
             new Command("ツール",    "画面保存",    "", OPERATION.saveScreen,           ENTITY.non),
             new Command("ツール",    "スクリーンキャプチャ","", OPERATION.screenCapture,ENTITY.non),
             new Command("ツール",    "イメージトリミング","", OPERATION.imageTrimming,  ENTITY.non),
+            new Command("ツール",    "メモ",        "", OPERATION.memo,                 ENTITY.non),
             new Command("ツール",    "印刷",        "", OPERATION.print,                ENTITY.non),
             new Command("ツール",    "戻る",        "", OPERATION.back,                 ENTITY.non),
             new Command("キャンセル","キャンセル",  "", OPERATION.cancel,               ENTITY.non),
@@ -172,7 +173,7 @@ namespace CadApp
             "zumenInfo, createLayer, setDispLayer, setAllDispLayer, oneLayerDisp, changeLayerName",
             "setSymbol, manageSymbol",
             "undo",
-            "copyScreen, saveScreen, screenCapture, print",
+            "copyScreen, saveScreen, screenCapture, print, memo",
             "cancel, close",
             "back, save, saveAs, open, gridSize",
             "",

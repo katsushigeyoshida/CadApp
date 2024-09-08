@@ -486,7 +486,6 @@ namespace CadApp
             return false;
         }
 
-
         /// <summary>
         /// ピック要素Noの追加
         /// すでに登録されている場合は削除する(アンピック)
@@ -504,7 +503,6 @@ namespace CadApp
             } else
                 mPickEnt.Add(pick);
         }
-
 
         /// <summary>
         /// ピックした要素Noを求める

@@ -211,6 +211,8 @@ namespace CadApp
         {
             //if (ylib.messageBox(this, "終了します", "", "確認", MessageBoxButton.OKCancel) != MessageBoxResult.OK)
             //    e.Cancel = true;
+            if (mCommandOpe.mMemoDlg != null)
+                mCommandOpe.mMemoDlg.Close();
             if (mCommandOpe.mChkListDlg != null)
                 mCommandOpe.mChkListDlg.Close();
             if (mCommandOpe.mSymbolDlg != null)
@@ -678,6 +680,8 @@ namespace CadApp
             int index = lbItemList.SelectedIndex;
             if (0 <= index) {
                 mCommandOpe.saveFile(true);
+                if (mCommandOpe.mMemoDlg != null)
+                    mCommandOpe.mMemoDlg.Close();
                 if (mCommandOpe.mChkListDlg != null)
                     mCommandOpe.mChkListDlg.Close();
                 if (mCommandOpe.mSymbolDlg != null)

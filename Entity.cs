@@ -106,8 +106,12 @@ namespace CadApp
         public List<string> toList()
         {
             List<string> propertyLis = new List<string>() {
-                mEntityId.ToString(), ydraw.getColorName(mColor), mThickness.ToString(),
-                mType.ToString(), mLayerName, mBackDisp.ToString(),
+                mEntityId.ToString(),
+                ydraw.getColorName(mColor),
+                mThickness.ToString(),
+                mType.ToString(),
+                mLayerName,
+                mBackDisp.ToString(),
             };
             return propertyLis;
         }

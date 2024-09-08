@@ -32,6 +32,7 @@ namespace CadApp
         public Brush mColor = Brushes.Black;                        //  要素の色
         public double mGridSize = 1.0;                              //  マウス座標の丸め値
         public string mComment = "";                                //  図面のコメント
+        public string mMemo = "";
         public ulong mDispLayerBit = 0xffffffff;                    //  表示レイヤービットフィルタ
         public string mCreateLayerName = "BaseLayer";               //  作成レイヤー名
         public bool mOneLayerDisp = false;                          //  1レイヤーのみの表示
@@ -72,6 +73,7 @@ namespace CadApp
             para.mColor = mColor;
             para.mGridSize = mGridSize;
             para.mComment = mComment;
+            para.mMemo = mMemo;
             para.mDispLayerBit = mDispLayerBit;
             para.mCreateLayerName = mCreateLayerName;
             para.mOneLayerDisp = mOneLayerDisp;
@@ -102,6 +104,7 @@ namespace CadApp
             mColor = Brushes.Black;                         //  要素の色
             mGridSize = 1.0;                                //  マウス座標の丸め値
             mComment = "";                                  //  図面のコメント
+            mMemo = "";                                     //  図面のメモ
             mDispLayerBit = 0xffffffff;                     //  表示レイヤービットフィルタ
             mCreateLayerName = "BaseLayer";                 //  作成レイヤー名
             mOneLayerDisp = false;                          //  1レイヤーのみの表示
@@ -118,7 +121,7 @@ namespace CadApp
             return $"Prperty,Color,{ylib.getColorName(mColor)},PointType,{mPointType},PointSize,{mPointSize}," +
                 $"LineType,{mLineType},Thickness,{mThickness},TextSize,{mTextSize}," +
                 $"TextRotate,{mTextRotate},LinePitchRate,{mLinePitchRate},HA,{mHa},VA,{mVa}," +
-                $"ArrowSize,{mArrowSize},ArrowAngle,{mArrowAngle},GridSize,{mGridSize},DispLaerBit,{mDispLayerBit}," +
+                $"ArrowSize,{mArrowSize},ArrowAngle,{mArrowAngle},GridSize,{mGridSize},DispLayerBit,{mDispLayerBit}," +
                 $"CreateLayer,{ylib.strControlCodeCnv(mCreateLayerName)},OneLayerDisp,{mOneLayerDisp}," +
                 $"FontFamily,{mFontFamily},FontStyle,{mFontStyle},FontWeight,{mFontWeight}," +
                 $"SymbolCategoryIindex,{mSymbolCategoryIndex},BackColor,{ylib.getBrushName(mBackColor)}";
@@ -182,7 +185,7 @@ namespace CadApp
                             case "GridSize":
                                 mGridSize = double.Parse(data[++i]);
                                 break;
-                            case "DispLaerBit":
+                            case "DispLayerBit":
                                 mDispLayerBit = ulong.Parse(data[++i]);
                                 break;
                             case "CreateLayer":
@@ -224,7 +227,10 @@ namespace CadApp
         /// <returns></returns>
         public string[] commentToString()
         {
-            string[] buf = { "Comment", "Comment", ylib.strControlCodeCnv(mComment) };
+            string[] buf = { "Comment",
+                "Comment", ylib.strControlCodeCnv(mComment),
+                "Memo", ylib.strControlCodeCnv(mMemo),
+            };
             return buf;
         }
 
@@ -240,6 +246,9 @@ namespace CadApp
                         switch (data[i]) {
                             case "Comment":
                                 mComment = ylib.strControlCodeRev(data[++i]);
+                                break;
+                            case "Memo":
+                                mMemo = ylib.strControlCodeRev(data[++i]);
                                 break;
                         }
                     }
@@ -273,6 +282,7 @@ namespace CadApp
 
         public ChkListDialog mChkListDlg = null;                    //  表示レイヤー設定ダイヤログ
         public SymbolDlg mSymbolDlg = null;                         //  シンボル選択配置ダイヤログ
+        public InputBox mMemoDlg = null;
         public int mSaveOperationCount = 10;                        //  定期保存の操作回数
 
         public MainWindow mMainWindow;
@@ -499,6 +509,9 @@ namespace CadApp
                     break;
                 case OPERATION.imageTrimming:               //  クリップボードのイメージトリミング
                     imageTrimming(mMainWindow);
+                    break;
+                case OPERATION.memo:                        //  めも
+                    zumenMemo();
                     break;
                 case OPERATION.print:                       //  印刷
                     mMainWindow.print();
@@ -2303,6 +2316,33 @@ namespace CadApp
         }
 
         /// <summary>
+        /// メモデータ入力ダイヤログを開く
+        /// </summary>
+        public void zumenMemo()
+        {
+            if (mMemoDlg != null)
+                mMemoDlg.Close();
+            mMemoDlg = new InputBox();
+            mMemoDlg.Topmost = true;
+            mMemoDlg.mMultiLine = true;
+            mMemoDlg.Title = "めも";
+            mMemoDlg.mEditText = mEntityData.mPara.mMemo;
+            mMemoDlg.mCallBackOn = true;
+            mMemoDlg.callback = setMemoText;
+            mMemoDlg.Show();
+            
+        }
+
+        /// <summary>
+        /// 図面のメモデータをmParaに設定する(CallBack)
+        /// </summary>
+        public void setMemoText()
+        {
+            mEntityData.mPara.mMemo = mMemoDlg.mEditText;
+            mEntityData.mOperationCount++;
+        }
+
+        /// <summary>
         /// グリッドのサイズ(座標の丸め)の設定
         /// </summary>
         public void gridSet()
@@ -2413,6 +2453,9 @@ namespace CadApp
         /// <param name="saveonly">上書き保存</param>
         public void saveFile(bool saveonly = false)
         {
+            if (mMemoDlg != null) {
+                setMemoText();
+            }
             if (0 < mCurFilePath.Length) {
                 if (mCurFilePath.IndexOf(".csv") < 0)
                     mCurFilePath = mCurFilePath + ".csv";

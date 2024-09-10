@@ -1292,15 +1292,15 @@ namespace CadApp
         /// <param name="layerName">作成レイヤー名</param>
         private void setCreateLayer(string layerName)
         {
-            mEntityData.addDispLayer(layerName);
+            mEntityData.mLayer.addDispLayer(layerName);
             mEntityData.mPara.mCreateLayerName = layerName;
             mCommandOpe.mEntityData.mPara.mCreateLayerName = layerName;
             if (mCommandOpe.mEntityData.mPara.mOneLayerDisp) {
                 //  1レイヤー表示
-                mEntityData.mPara.mDispLayerBit &= mEntityData.getLayerBit(layerName);
+                mEntityData.mPara.mDispLayerBit &= mEntityData.mLayer.getLayerBit(layerName);
             }
             mCommandOpe.mEntityData.mPara.mDispLayerBit = mEntityData.mPara.mDispLayerBit;
-            cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
+            cbCreateLayer.ItemsSource = mEntityData.mLayer.getLayerNameList();
             cbCreateLayer.SelectedIndex = cbCreateLayer.Items.IndexOf(mCommandOpe.mEntityData.mPara.mCreateLayerName);
             if (mCommandOpe.mChkListDlg != null && mCommandOpe.mChkListDlg.IsVisible) {
                 //  表示レイヤーダイヤログ表示
@@ -1452,7 +1452,7 @@ namespace CadApp
             cbTextVertical.SelectedIndex = mCommandOpe.mEntityData.mPara.mVa == VerticalAlignment.Top ? 0 :
                                          mCommandOpe.mEntityData.mPara.mVa == VerticalAlignment.Center ? 1 : 2;
             cbTextRotate.SelectedIndex  = mTextRotateMenu.FindIndex(p => ylib.R2D(mCommandOpe.mEntityData.mPara.mTextRotate) <= p);
-            cbCreateLayer.ItemsSource   = mEntityData.getLayerNameList();
+            cbCreateLayer.ItemsSource   = mEntityData.mLayer.getLayerNameList();
             setCreateLayer(mEntityData.mPara.mCreateLayerName);
         }
 
@@ -1472,7 +1472,7 @@ namespace CadApp
         /// </summary>
         private void loadDataProperty()
         {
-            mCommandOpe.mEntityData.mPara = new DrawingPara();
+            mCommandOpe.mEntityData.mPara.init();
             mCommandOpe.mEntityData.mPara.mPointSize  = Properties.Settings.Default.PointSize;
             mCommandOpe.mEntityData.mPara.mPointType  = Properties.Settings.Default.PointType;
             mCommandOpe.mEntityData.mPara.mThickness  = Properties.Settings.Default.Thickness;

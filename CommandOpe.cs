@@ -655,7 +655,7 @@ namespace CadApp
                 mEntityData.mOperationCount--;
                 return false;
             }
-            mEntityData.updateLayerList();
+            mEntityData.mLayer.updateLayerList();
             return true;
         }
 
@@ -777,7 +777,7 @@ namespace CadApp
                 mEntityData.mOperationCount--;
                 return false;
             }
-            mEntityData.updateLayerList();
+            mEntityData.mLayer.updateLayerList();
             return true;
         }
 
@@ -876,7 +876,7 @@ namespace CadApp
                 }
             }
             mEntityData.updateData();
-            mMainWindow.cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
+            mMainWindow.cbCreateLayer.ItemsSource = mEntityData.mLayer.getLayerNameList();
             mMainWindow.cbCreateLayer.SelectedIndex = mMainWindow.cbCreateLayer.Items.IndexOf(mEntityData.mPara.mCreateLayerName);
             return true;
         }
@@ -893,8 +893,8 @@ namespace CadApp
                 dlg.Owner = mMainWindow;
                 dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
                 //  共通属性
-                mEntityData.updateLayerList();
-                dlg.mLayerNameList = mEntityData.getLayerNameList();
+                mEntityData.mLayer.updateLayerList();
+                dlg.mLayerNameList = mEntityData.mLayer.getLayerNameList();
                 Entity entity = mEntityData.mEntityList[pickNo.no];
                 dlg.mEntityId  = entity.mEntityId;
                 dlg.mColor     = entity.mColor;
@@ -969,7 +969,7 @@ namespace CadApp
                     entity.mType = dlg.mLineType;
                     entity.mThickness = dlg.mThickness;
                     entity.mLayerName = dlg.mLayerName;
-                    entity.mLayerBit = mEntityData.setLayerBit(entity.mLayerName);
+                    entity.mLayerBit = mEntityData.mLayer.setLayerBit(entity.mLayerName);
                     entity.mBackDisp = dlg.mBackDisp;
                     //  Text要素
                     if (entity.mEntityId == EntityId.Text) {
@@ -1026,7 +1026,7 @@ namespace CadApp
             if (mChkListDlg != null && mChkListDlg.IsVisible)
                 setDispLayer();
             mEntityData.updateData();
-            mMainWindow.cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
+            mMainWindow.cbCreateLayer.ItemsSource = mEntityData.mLayer.getLayerNameList();
             mMainWindow.cbCreateLayer.SelectedIndex = mMainWindow.cbCreateLayer.Items.IndexOf(mEntityData.mPara.mCreateLayerName);
             return true;
         }
@@ -1043,8 +1043,8 @@ namespace CadApp
             dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             dlg.Title = "属性一括変更";
             dlg.mShowCheckBox = true;
-            mEntityData.updateLayerList();
-            dlg.mLayerNameList = mEntityData.getLayerNameList();
+            mEntityData.mLayer.updateLayerList();
+            dlg.mLayerNameList = mEntityData.mLayer.getLayerNameList();
             if (dlg.ShowDialog() == true) {
                 mEntityData.mOperationCount++;
                 foreach ((int no, PointD pos) pickNo in pickEnt) {
@@ -1063,7 +1063,7 @@ namespace CadApp
                         entity.mThickness = dlg.mPointSize;
                     if (dlg.mLayerNameChk) {
                         entity.mLayerName = dlg.mLayerName;
-                        entity.mLayerBit = mEntityData.setLayerBit(entity.mLayerName);
+                        entity.mLayerBit = mEntityData.mLayer.setLayerBit(entity.mLayerName);
                     }
                     if (dlg.mBackDispChk)
                         entity.mBackDisp = dlg.mBackDisp;
@@ -1135,7 +1135,7 @@ namespace CadApp
                 }
             }
             mEntityData.updateData();
-            mMainWindow.cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
+            mMainWindow.cbCreateLayer.ItemsSource = mEntityData.mLayer.getLayerNameList();
             mMainWindow.cbCreateLayer.SelectedIndex = mMainWindow.cbCreateLayer.Items.IndexOf(mEntityData.mPara.mCreateLayerName);
             return true;
         }
@@ -1980,11 +1980,11 @@ namespace CadApp
             dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             dlg.Title = "作成レイヤー";
             dlg.mText = mEntityData.mPara.mCreateLayerName;
-            dlg.mTextList = mEntityData.getLayerNameList();
+            dlg.mTextList = mEntityData.mLayer.getLayerNameList();
             if (dlg.ShowDialog() == true) {
                 mEntityData.mPara.mCreateLayerName = dlg.mText;
-                mEntityData.addDispLayer(mEntityData.mPara.mCreateLayerName);
-                mMainWindow.cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
+                mEntityData.mLayer.addDispLayer(mEntityData.mPara.mCreateLayerName);
+                mMainWindow.cbCreateLayer.ItemsSource = mEntityData.mLayer.getLayerNameList();
                 mMainWindow.cbCreateLayer.SelectedIndex = mMainWindow.cbCreateLayer.Items.IndexOf(mEntityData.mPara.mCreateLayerName);
                 mEntityData.mOperationCount++;
             }
@@ -2000,7 +2000,7 @@ namespace CadApp
             mChkListDlg = new ChkListDialog();
             mChkListDlg.Topmost = true;
             mChkListDlg.mTitle = "表示レイヤー";
-            mChkListDlg.mChkList = mEntityData.getLayerChkList();
+            mChkListDlg.mChkList = mEntityData.mLayer.getLayerChkList();
             mChkListDlg.mCallBackOn = true;
             mChkListDlg.callback = setLayerChk;
             mChkListDlg.Show();
@@ -2012,8 +2012,8 @@ namespace CadApp
         /// </summary>
         public void setLayerChk()
         {
-            ulong createLayerBit = mEntityData.getLayerBit(mEntityData.mPara.mCreateLayerName);
-            mEntityData.setDispLayerBit(mChkListDlg.mChkList);
+            ulong createLayerBit = mEntityData.mLayer.getLayerBit(mEntityData.mPara.mCreateLayerName);
+            mEntityData.mLayer.setDispLayerBit(mChkListDlg.mChkList);
             if ((createLayerBit & mEntityData.mPara.mDispLayerBit) == 0) {
                 ylib.messageBox(mMainWindow, "作成レイヤーを非表示にすることはできません");
                 mChkListDlg.visibleDataSet(mEntityData.mPara.mCreateLayerName);
@@ -2044,7 +2044,7 @@ namespace CadApp
         public void setOneLayerDisp(bool oneLayer)
         {
             if (oneLayer) {
-                mEntityData.mPara.mDispLayerBit &= mEntityData.getLayerBit(mEntityData.mPara.mCreateLayerName);
+                mEntityData.mPara.mDispLayerBit &= mEntityData.mLayer.getLayerBit(mEntityData.mPara.mCreateLayerName);
                 mEntityData.mPara.mOneLayerDisp = true;
             } else {
                 mEntityData.mPara.mOneLayerDisp = true;
@@ -2063,11 +2063,11 @@ namespace CadApp
             dlg.Title = "レイヤー名の変更";
             dlg.mTitle1 = "変更前";
             dlg.mTitle2 = "変更後";
-            dlg.mSelectList = mEntityData.getLayerNameList();
+            dlg.mSelectList = mEntityData.mLayer.getLayerNameList();
             if (dlg.ShowDialog()==true) {
                 mEntityData.mOperationCount++;
                 mEntityData.changeLayerName(dlg.mSelectText, dlg.mEditText);
-                mMainWindow.cbCreateLayer.ItemsSource = mEntityData.getLayerNameList();
+                mMainWindow.cbCreateLayer.ItemsSource = mEntityData.mLayer.getLayerNameList();
                 mMainWindow.cbCreateLayer.SelectedIndex = mMainWindow.cbCreateLayer.Items.IndexOf(mEntityData.mPara.mCreateLayerName);
                 mMainWindow.btDummy.Focus();    //  ダミーフォーカス
             }
@@ -2338,8 +2338,13 @@ namespace CadApp
         /// </summary>
         public void setMemoText()
         {
-            mEntityData.mPara.mMemo = mMemoDlg.mEditText;
-            mEntityData.mOperationCount++;
+            if (mMemoDlg !=null) {
+                mMemoDlg.updateData();
+                if (mEntityData.mPara.mMemo != mMemoDlg.mEditText) {
+                    mEntityData.mPara.mMemo = mMemoDlg.mEditText;
+                    mEntityData.mOperationCount++;
+                }
+            }
         }
 
         /// <summary>
@@ -2453,9 +2458,7 @@ namespace CadApp
         /// <param name="saveonly">上書き保存</param>
         public void saveFile(bool saveonly = false)
         {
-            if (mMemoDlg != null) {
-                setMemoText();
-            }
+            setMemoText();
             if (0 < mCurFilePath.Length) {
                 if (mCurFilePath.IndexOf(".csv") < 0)
                     mCurFilePath = mCurFilePath + ".csv";

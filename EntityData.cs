@@ -11,16 +11,17 @@ namespace CadApp
     /// </summary>
     public class EntityData
     {
-        public DrawingPara mPara = new DrawingPara();
+        public DrawingPara mPara = new DrawingPara();   //  要素プロパティ
 
         public Box mArea;                       //  要素領域
         public int mOperationCount = 0;         //  操作回数
         public int mFirstEntityCount = 0;       //  編集開始時の要素数
 
-        private double mEps = 1E-8;
         public List<Entity> mEntityList;        //  要素リスト
-        public Dictionary<string, ulong> mLayerList;    //  レイヤーリスト
-        public ImageData mImageData;
+        public Layer mLayer;                    //  レイヤー管理
+        public ImageData mImageData;            //  イメージデータ管理
+
+        private double mEps = 1E-8;
         private YLib ylib = new YLib();
 
         /// <summary>
@@ -28,7 +29,7 @@ namespace CadApp
         /// </summary>
         public EntityData() {
             mEntityList = new List<Entity>();
-            mLayerList = new Dictionary<string, ulong>();
+            mLayer = new Layer(mEntityList, mPara);
         }
 
         /// <summary>
@@ -38,7 +39,7 @@ namespace CadApp
         public string getDataInfo()
         {
             string buf = "";
-            buf +=   "要素数 : " + mEntityList.Count;
+            buf += "要素数 : " + mEntityList.Count;
             buf += "\nデータ領域 : " + mArea.ToString("f2");
             return buf;
         }
@@ -1026,14 +1027,14 @@ namespace CadApp
         /// </summary>
         public void updateData()
         {
-            mLayerList.Clear();
+            mLayer.clear();
             if (mEntityList != null && 0 < mEntityList.Count) {
                 //  レイヤービットの更新
                 for (int i = 0; i < mEntityList.Count; i++) {
                     if (!mEntityList[i].mRemove && mEntityList[i].mEntityId != EntityId.Link) {
                         if (mEntityList[i].mLayerName.Length == 0)
                             mEntityList[i].mLayerName = mPara.mCreateLayerName;
-                        mEntityList[i].mLayerBit = setLayerBit(mEntityList[i].mLayerName);
+                        mEntityList[i].mLayerBit = mLayer.setLayerBit(mEntityList[i].mLayerName);
                     }
                 }
                 //  要素領域と要素番号の更新
@@ -1051,7 +1052,7 @@ namespace CadApp
                     }
                 }
             }
-            addDispLayer(mPara.mCreateLayerName);
+            mLayer.addDispLayer(mPara.mCreateLayerName);
         }
 
         /// <summary>
@@ -1110,138 +1111,6 @@ namespace CadApp
                 return ent2.intersection(ent1);
             else
                 return ent1.intersection(ent2);
-        }
-
-        /// <summary>
-        /// レイヤー名から表示ビットを取得
-        /// </summary>
-        /// <param name="layerName">レイヤー名</param>
-        /// <returns>表示ビット</returns>
-        public ulong getLayerBit(string layerName)
-        {
-            if (mLayerList.ContainsKey(layerName))
-                return mLayerList[layerName];
-            else
-                return 0;
-        }
-
-        /// <summary>
-        /// 表示ビットからレイヤー名を取得
-        /// </summary>
-        /// <param name="bit">表示ビット</param>
-        /// <returns>レイヤー名</returns>
-        public string getLayerName(ulong bit)
-        {
-            if (mLayerList.ContainsValue(bit)) {
-                foreach (KeyValuePair<string, ulong> item in mLayerList) {
-                    if (item.Value == bit)
-                        return item.Key;
-                }
-            }
-            return "";
-        }
-
-        /// <summary>
-        /// 新規レイヤー名に表示ビットを割り当てる
-        /// </summary>
-        /// <param name="layerName">レイヤー名</param>
-        /// <returns>表示ビット</returns>
-        public ulong setLayerBit(string layerName)
-        {
-            if (mLayerList.ContainsKey(layerName))
-                return mLayerList[layerName];
-            ulong layerBit = 0x1;
-            for (int i = 0; i < 64; i++) {
-                if (getLayerName(layerBit).Length ==0) {
-                    mLayerList.Add(layerName, layerBit);
-                    return layerBit;
-                }
-                layerBit <<= 1;
-            }
-            return 0;
-        }
-
-        /// <summary>
-        /// レイヤー名のリストを取得
-        /// </summary>
-        /// <returns>レイヤー名リスト</returns>
-        public List<string> getLayerNameList()
-        {
-            List<string> layerList = new List<string>();
-            updateLayerList();
-            foreach (string key in mLayerList.Keys) {
-                layerList.Add(key);
-            }
-            layerList.Sort();
-            return layerList;
-        }
-
-        /// <summary>
-        /// チェックリスト形式でレイヤー名リストを取得
-        /// </summary>
-        /// <returns>レイヤー名リスト</returns>
-        public List<CheckBoxListItem> getLayerChkList()
-        {
-            updateLayerList();
-            addDispLayer(mPara.mCreateLayerName);
-            List<CheckBoxListItem> chkList = new List<CheckBoxListItem>();
-            foreach (KeyValuePair<string, ulong> item in mLayerList) {
-                CheckBoxListItem chkItem = new CheckBoxListItem((mPara.mDispLayerBit & item.Value) != 0, item.Key);
-                chkList.Add(chkItem);
-            }
-            chkList.Sort((a,b) => a.Text.CompareTo(b.Text));
-            return chkList;
-        }
-
-        /// <summary>
-        /// チェックリスト形式でレイヤー名リストから表示ビットフィルタを作成
-        /// </summary>
-        /// <param name="chkList"></param>
-        public void setDispLayerBit(List<CheckBoxListItem> chkList)
-        {
-            mPara.mDispLayerBit = 0;
-            foreach (CheckBoxListItem chkItem in chkList) {
-                if (chkItem.Checked) {
-                    mPara.mDispLayerBit |= mLayerList[chkItem.Text];
-                }
-            }
-        }
-
-        /// <summary>
-        /// 要素全体のレイヤー名と表示ビットを更新
-        /// </summary>
-        public void updateLayerList()
-        {
-            mLayerList.Clear();
-            foreach (Entity ent in mEntityList) {
-                if (ent.mRemove == false && ent.mEntityId != EntityId.Link) {
-                    if (ent.mLayerName.Length == 0) {
-                        ent.mLayerName = mPara.mCreateLayerName;
-                    }
-                    ent.mLayerBit = setLayerBit(ent.mLayerName);
-                }
-            }
-            if (!mLayerList.ContainsKey(mPara.mCreateLayerName))
-                setLayerBit(mPara.mCreateLayerName);
-        }
-
-        /// <summary>
-        /// 表示レイヤーの追加
-        /// </summary>
-        /// <param name="layerBit"></param>
-        public void addDispLayer(ulong layerBit)
-        {
-            mPara.mDispLayerBit |= layerBit;
-        }
-
-        /// <summary>
-        /// 表示レイヤーの追加
-        /// </summary>
-        /// <param name="layerName"></param>
-        public void addDispLayer(string layerName)
-        {
-            ulong layerbit = setLayerBit(layerName);
-            addDispLayer(layerbit);
         }
 
         /// <summary>
@@ -1350,7 +1219,7 @@ namespace CadApp
         /// <param name="path">ファイルパス</param>
         public void loadData(string path)
         {
-            mEntityList = new List<Entity>();
+            mEntityList.Clear();
             mPara.init();
             List<string[]> dataList = ylib.loadCsvData(path);
             if (dataList.Count <= 0 && dataList[0][0] != "Property")
@@ -1361,7 +1230,7 @@ namespace CadApp
                     if (entity.mLayerName == "") {
                         entity.mLayerName = mPara.mCreateLayerName;
                     }
-                    entity.mLayerBit = setLayerBit(entity.mLayerName);
+                    entity.mLayerBit = mLayer.setLayerBit(entity.mLayerName);
                     mEntityList.Add(entity);
                     i++;
                 } else {

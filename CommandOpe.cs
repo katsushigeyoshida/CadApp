@@ -2272,8 +2272,6 @@ namespace CadApp
         /// <returns></returns>
         public bool infoEntityData(List<(int no, PointD pos)> pickEnt)
         {
-            mEntityData.mOperationCount++;
-
             foreach ((int no, PointD pos) entNo in pickEnt) {
                 string propertyStr = mEntityData.mEntityList[entNo.no].toString();
                 string dataStr = mEntityData.mEntityList[entNo.no].toDataString();
@@ -2310,8 +2308,10 @@ namespace CadApp
             dlg.Title = "図面のコメント";
             dlg.mEditText = mEntityData.mPara.mComment;
             if (dlg.ShowDialog() == true) {
-                mEntityData.mPara.mComment = dlg.mEditText;
-                mEntityData.mOperationCount++;
+                if (mEntityData.mPara.mComment != dlg.mEditText) {
+                    mEntityData.mPara.mComment = dlg.mEditText;
+                    mEntityData.mOperationCount++;
+                }
             }
         }
 
@@ -2450,6 +2450,20 @@ namespace CadApp
                 return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// 開いているデータファイルを保存して閉じる
+        /// </summary>
+        public void closeFile()
+        {
+            if (mMemoDlg != null)
+                mMemoDlg.Close();
+            if (mChkListDlg != null)
+                mChkListDlg.Close();
+            if (mSymbolDlg != null)
+                mSymbolDlg.Close();
+            saveFile(true);
         }
 
         /// <summary>

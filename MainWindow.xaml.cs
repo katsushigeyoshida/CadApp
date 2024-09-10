@@ -211,13 +211,7 @@ namespace CadApp
         {
             //if (ylib.messageBox(this, "終了します", "", "確認", MessageBoxButton.OKCancel) != MessageBoxResult.OK)
             //    e.Cancel = true;
-            if (mCommandOpe.mMemoDlg != null)
-                mCommandOpe.mMemoDlg.Close();
-            if (mCommandOpe.mChkListDlg != null)
-                mCommandOpe.mChkListDlg.Close();
-            if (mCommandOpe.mSymbolDlg != null)
-                mCommandOpe.mSymbolDlg.Close();
-            mCommandOpe.saveFile(true);
+            mCommandOpe.closeFile();
             if (!File.Exists(mShortCutPath))
                 mCommandData.saveShortCut(mShortCutPath);
             WindowFormSave();
@@ -679,13 +673,7 @@ namespace CadApp
         {
             int index = lbItemList.SelectedIndex;
             if (0 <= index) {
-                mCommandOpe.saveFile(true);
-                if (mCommandOpe.mMemoDlg != null)
-                    mCommandOpe.mMemoDlg.Close();
-                if (mCommandOpe.mChkListDlg != null)
-                    mCommandOpe.mChkListDlg.Close();
-                if (mCommandOpe.mSymbolDlg != null)
-                    mCommandOpe.mSymbolDlg.Close();
+                mCommandOpe.closeFile();
                 if (mCommandOpe.openFile(mFileData.getItemFilePath(lbItemList.Items[index].ToString() ?? ""))) {
                     mFileData.mDataName = lbItemList.Items[index].ToString() ?? "";
                     dispTitle();

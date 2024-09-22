@@ -11,6 +11,13 @@ namespace CadApp
     /// </summary>
     public class EntityData
     {
+        public static string[] mPointTypeMenu = new string[] {
+            "・点", "X クロス", "+ 十字", "□ 四角", "〇 円"
+        };
+        public static string[] mLineTypeMenu = new string[] {
+            "実線", "破線", "一点鎖線", "二点鎖線"
+        };
+
         public DrawingPara mPara = new DrawingPara();   //  要素プロパティ
 
         public Box mArea;                       //  要素領域
@@ -20,6 +27,7 @@ namespace CadApp
         public List<Entity> mEntityList;        //  要素リスト
         public Layer mLayer;                    //  レイヤー管理
         public ImageData mImageData;            //  イメージデータ管理
+        public Group mGroup;
 
         private double mEps = 1E-8;
         private YLib ylib = new YLib();
@@ -30,6 +38,7 @@ namespace CadApp
         public EntityData() {
             mEntityList = new List<Entity>();
             mLayer = new Layer(mEntityList, mPara);
+            mGroup = new Group();
         }
 
         /// <summary>
@@ -747,11 +756,15 @@ namespace CadApp
         /// </summary>
         /// <param name="pickList">要素リスト</param>
         /// <param name="cp">中心点</param>
-        /// <param name="mp">回転角座標</param>
+        /// <param name="sp">回転開始座標</param>
+        /// <param name="ep">回転終了座標</param>
         /// <param name="copy">コピー作成</param>
         /// <returns></returns>
-        public bool rotate(List<(int no, PointD pos)> pickList, PointD cp, PointD mp, bool copy = false)
+        public bool rotate(List<(int no, PointD pos)> pickList, PointD cp, PointD sp, PointD ep, bool copy = false)
         {
+            double ang = sp.angle(cp);
+            PointD mp = ep.toCopy();
+            mp.rotate(cp, -ang);
             foreach ((int no, PointD pos) entNo in pickList) {
                 mEntityList.Add(mEntityList[entNo.no].toCopy());
                 mEntityList[mEntityList.Count - 1].rotate(cp, mp);
@@ -1244,6 +1257,11 @@ namespace CadApp
                         if (i + 1 < dataList.Count) {
                             mPara.setCommentData(dataList[++i]);
                         }
+                    } else if (0 <= dataList[i][0].IndexOf(EntityId.Group.ToString())) {
+                        //  グループリスト
+                        if (i + 1 < dataList.Count) {
+                            mGroup.setDataList(dataList[++i]);
+                        }
                     }
                 }
             }
@@ -1272,6 +1290,11 @@ namespace CadApp
             buf = new string[] { EntityId.Comment.ToString() };
             listData.Add(buf);
             listData.Add(mPara.commentToString());
+            //  グループリスト情報
+            buf = new string[] { EntityId.Group.ToString() };
+            mGroup.squeeze(mEntityList);
+            listData.Add(buf);
+            listData.Add(mGroup.toDataList());
             //  要素データ
             foreach (Entity entity in mEntityList) {
                 if (entity != null && !entity.mRemove && 

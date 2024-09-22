@@ -145,13 +145,7 @@ namespace CadApp
         public override string entityInfo()
         {
             string buf = "";
-            buf += $"要素番号: {mNo}";
-            buf += $"\n要素種別: {mEntityId}要素";
-            buf += $"\n中心 {mArc.mCp.ToString("f4")} 半径 {mArc.mR.ToString("f4")} 開始角 {R2D(mArc.mSa).ToString("f2")} 終了角 {R2D(mArc.mEa).ToString("f2")}";
-            buf += $"\nカラー　: {getColorName(mColor)}";
-            buf += $"\n太さ　　: {mThickness}";
-            buf += $"\nレイヤー: {mLayerName}";
-
+            buf += $"中心 {mArc.mCp.ToString("f4")} 半径 {mArc.mR.ToString("f4")} 開始角 {R2D(mArc.mSa).ToString("f2")} 終了角 {R2D(mArc.mEa).ToString("f2")}";
             return buf;
         }
 

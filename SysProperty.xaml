@@ -5,11 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CadApp"
         mc:Ignorable="d"
-        Title="図面設定" Height="400" Width="400" Loaded="Window_Loaded">
+        Title="図面設定" Height="420" Width="400" Loaded="Window_Loaded">
     <Grid>
         <Label Name="lbLayerTitle" Content="レイヤー名" Margin="10,5,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
         <ComboBox Name="cbLayerName" Margin="70,5,0,0" IsEditable="True" Width="265" VerticalAlignment="Top" HorizontalAlignment="Left" />
         <CheckBox x:Name="chLayerName" Margin="340,7,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <Label Name="lbGroupTitle" Content="グループ名" Margin="10,310,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <ComboBox Name="cbGroupName" Margin="70,310,0,0" IsEditable="True" Width="265" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <CheckBox x:Name="chGroupName" Margin="340,312,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top" />
         <Label Content="色" HorizontalAlignment="Left" Margin="10,30,0,0" VerticalAlignment="Top" />
         <ComboBox Name="cbColor" ItemsSource="{Binding}" SelectedValue="{Binding Color}"
             Margin="70,30,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" >

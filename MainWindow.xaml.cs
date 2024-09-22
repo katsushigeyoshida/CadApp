@@ -456,12 +456,17 @@ namespace CadApp
             } else {
                 //  ピックモード
                 if (0 < picks.Count) {
-                    int pickNo = mLocPick.pickSelect(picks, mLocMode);
-                    if (0 <= pickNo) {
-                        //  ピック要素の登録
-                        mLocPick.addPick((pickNo, pickPos.toCopy()), true);
-                        mDataDrawing.pickDisp(mEntityData, mLocPick.mPickEnt);
+                    if (ylib.onControlKey()) {
+                        //  グループピック
+                        mLocPick.getGroup(picks, pickPos.toCopy());
+                    } else {
+                        int pickNo = mLocPick.pickSelect(picks, mLocMode);
+                        if (0 <= pickNo) {
+                            //  ピック要素の登録
+                            mLocPick.addPick((pickNo, pickPos.toCopy()), true);
+                        }
                     }
+                    mDataDrawing.pickDisp(mEntityData, mLocPick.mPickEnt);
                 }
             }
             dispMode();
@@ -1101,6 +1106,8 @@ namespace CadApp
                     default: break;
                 }
             }
+            if (mLocMode == OPEMODE.pick)
+                mDataDrawing.pickDisp(mEntityData, mLocPick.mPickEnt);
             dispMode();
         }
 
@@ -1252,9 +1259,13 @@ namespace CadApp
         /// </summary>
         private void locMenu()
         {
-            mLocPick.locMenu(mLocMode, mOperation, mDataDrawing.cnvScreen2World(new PointD(mPrevPosition)));
-            if (mCommandOpe.entityCommand(mOperation, mLocPick.mLocPos, mLocPick.mPickEnt, false))
-                commandClear();
+            if (mLocMode == OPEMODE.loc) {
+                mLocPick.locMenu(mLocMode, mOperation, mDataDrawing.cnvScreen2World(new PointD(mPrevPosition)));
+                if (mCommandOpe.entityCommand(mOperation, mLocPick.mLocPos, mLocPick.mPickEnt, false))
+                    commandClear();
+            } else if (mLocMode == OPEMODE.pick) {
+                mLocPick.groupSelectPick(mDataDrawing.cnvScreen2World(new PointD(mPrevPosition)));
+            }
         }
 
         /// <summary>

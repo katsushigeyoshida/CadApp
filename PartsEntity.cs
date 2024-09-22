@@ -321,16 +321,10 @@ namespace CadApp
         public override string entityInfo()
         {
             string buf = "";
-            buf += $"要素番号: {mNo}";
-            buf += $"\n要素種別: {mEntityId}要素";
-            buf += $"\n名称: " + mParts.mName;
+            buf += $"名称: " + mParts.mName;
             buf += $"\n領域 {mArea.ToString("f2")}";
             buf += $"\n文字高さ: {mParts.mTextSize.ToString("f4")}";
             buf += $"\nフォント: {mParts.mFontFamily} 斜体 {mParts.mFontStyle} 太さ {mParts.mFontWeight}";
-            buf += $"\nカラー: {getColorName(mColor)}";
-            buf += $"\n太さ: {mThickness}";
-            buf += $"\nレイヤー: {mLayerName}";
-
             return buf;
         }
 

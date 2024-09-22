@@ -71,6 +71,8 @@
 
         <Button x:Name="btOK" Content="OK" IsDefault="True" Height="20" Margin="0,0,80,10" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="50" Click="btOK_Click"/>
         <Button x:Name="btCancel" Content="Cancel" IsCancel="True" Height="20" Margin="0,0,20,10" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="50" Click="btCancel_Click"/>
+        <Label Name="lbGroupTitle" Content="グループ" Margin="10,285,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <ComboBox Name="cbGroupName" IsEditable="True" Height="20" Margin="70,285,10,0" VerticalAlignment="Top" />
 
     </Grid>
 </Window>

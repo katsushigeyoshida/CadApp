@@ -66,6 +66,8 @@ namespace CadApp
         public bool mFillColorOn = false;
         public double mGridSize = 1;
         public Brush mBackColor = Brushes.White;
+        public string mGroupName = "";
+        public List<string> mGroupList;
 
         public bool mShowCheckBox     = false;
         public bool mColorChk         = false;
@@ -86,6 +88,7 @@ namespace CadApp
         public bool mFontStyleChk     = false;
         public bool mFontWeightChk    = false;
         public bool mFillColorChk     = false;
+        public bool mGroupChk         = false;
 
 
         YDraw ydraw = new YDraw();
@@ -114,6 +117,7 @@ namespace CadApp
             cbArrowAngle.ItemsSource = mArrowAngleMenu;
             cbLayerName.ItemsSource  = mLayerNameList;
             cbGridSize.ItemsSource   = mGridSizeMenu;
+            cbGroupName.ItemsSource  = mGroupList;
 
             cbColor.SelectedIndex      = ydraw.mColorList.FindIndex(p => p.brush == mColor);
             chBackDisp.IsChecked       = mBackDisp;
@@ -172,6 +176,9 @@ namespace CadApp
             chFillColor.Visibility      = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
             lbBackColorTitle.Visibility = mShowCheckBox ? Visibility.Hidden : Visibility.Visible;
             cbBackColor.Visibility      = mShowCheckBox ? Visibility.Hidden : Visibility.Visible;
+            lbGroupTitle.Visibility     = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
+            cbGroupName.Visibility      = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
+            chGroupName.Visibility      = mShowCheckBox ? Visibility.Visible : Visibility.Hidden;
 
             chColor.IsChecked         = mColorChk;
             chLineType.IsChecked      = mLineTypeChk;
@@ -234,6 +241,7 @@ namespace CadApp
                 mBackColor = ylib.mBrushList[cbBackColor.SelectedIndex].brush;
                 //mBackColorName = ylib.mBrushList[cbBackColor.SelectedIndex].colorTitle;
             }
+            mGroupName = cbGroupName.Text;
 
             mBackDispChk = chBackDispChk.IsChecked   == true;
             mColorChk         = chColor.IsChecked         == true;
@@ -253,6 +261,7 @@ namespace CadApp
             mFontStyleChk     = chFontStyle.IsChecked     == true;
             mFontWeightChk    = chFontWeight.IsChecked    == true;
             mFillColorChk     = chFillColor.IsChecked     == true;
+            mGroupChk         = chGroupName.IsChecked     == true;
 
             DialogResult = true;
             Close();

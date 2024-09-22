@@ -209,16 +209,11 @@ namespace CadApp
         public override string entityInfo()
         {
             string buf = "";
-            buf += $"要素番号: {mNo}";
-            buf += $"\n要素種別: {mEntityId}要素";
-            buf += $"\nファイルパス: {mImagePath}";
+            buf += $"ファイルパス: {mImagePath}";
             buf += $"\nキャッシュ名: {mCacheName}";
             buf += $"\n元サイズ　: {mOrgSize.Width.ToString("f4")} x {mOrgSize.Height.ToString("f4")}";
             buf += $"\n位置    　: {mDispPosSize.Left.ToString("f4")} , {mDispPosSize.Top.ToString("f4")}";
             buf += $"\n表示サイズ: {mDispPosSize.Width.ToString("f4")} , {mDispPosSize.Height.ToString("f4")}";
-            buf += $"\nカラー    : {getColorName(mColor)}";
-            buf += $"\nレイヤー  : {mLayerName}";
-
             return buf;
         }
 

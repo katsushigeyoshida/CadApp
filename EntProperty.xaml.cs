@@ -57,6 +57,8 @@ namespace CadApp
         public bool mFillOn = false;
         public Brush mFillColor = Brushes.Aqua;
         public bool mFillEntity = false;
+        public List<string> mGroupList = new List<string>();
+        public string mGroupName = "";
 
         YDraw ydraw = new YDraw();
         YLib ylib = new YLib();
@@ -181,6 +183,8 @@ namespace CadApp
                 cbFillColor.SelectedIndex = ydraw.mColorList.FindIndex(p => p.brush == mFillColor);
                 chFillColor.IsChecked = mFillOn;
             }
+            cbGroupName.ItemsSource = mGroupList;
+            cbGroupName.Text = mGroupName;
         }
 
         /// <summary>
@@ -222,6 +226,7 @@ namespace CadApp
             if (0 <= cbFillColor.SelectedIndex) {
                 mFillColor = ydraw.mColorList[cbFillColor.SelectedIndex].brush;
             }
+            mGroupName = cbGroupName.Text;
 
             DialogResult = true;
             Close();

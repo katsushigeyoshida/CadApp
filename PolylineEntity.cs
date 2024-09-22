@@ -153,14 +153,9 @@ namespace CadApp
         {
             double l = mPolyline.length();
             string buf = "";
-            buf += $"要素番号: {mNo}";
-            buf += $"\n要素種別: {mEntityId}要素";
-            buf += $"\n始点 {mPolyline.mPolyline[0].ToString("f4")} 終点 {mPolyline.mPolyline[mPolyline.mPolyline.Count - 1].ToString("f4")}";
+            buf += $"始点 {mPolyline.mPolyline[0].ToString("f4")} 終点 {mPolyline.mPolyline[mPolyline.mPolyline.Count - 1].ToString("f4")}";
             buf += $"\n点数 {mPolyline.mPolyline.Count.ToString("f0")}";
             buf += $"\n長さ {l.ToString("f4")}";
-            buf += $"\nカラー　: {getColorName(mColor)}";
-            buf += $"\n太さ　　: {mThickness}";
-            buf += $"\nレイヤー: {mLayerName}";
 
             return buf;
         }

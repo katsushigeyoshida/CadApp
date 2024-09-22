@@ -431,15 +431,18 @@ namespace CadApp
         /// <param name="pickList">ピック要素リスト</param>
         private void rotateDragging(EntityData entityData, List<PointD> loc, List<(int no, PointD pos)> pickList)
         {
-            if (loc.Count < 2) return;
+            if (loc.Count < 3) return;
 
             ydraw.mBrush = mDraggingColor;
-            for (int i = 1; i< loc.Count; i++) {
+            for (int i = 2; i < loc.Count; i++) {
+                double ang = loc[1].angle(loc[0]);
+                PointD mp = loc[i].toCopy();
+                mp.rotate(loc[0], -ang);
                 foreach ((int no, PointD pos) pickEnt in pickList) {
                     if (pickEnt.no < entityData.mEntityList.Count) {
                         Entity ent = entityData.mEntityList[pickEnt.no].toCopy();
                         ent.mColor = mDraggingColor;
-                        ent.rotate(loc[0], loc[i]);
+                        ent.rotate(loc[0], mp);
                         ent.draw(ydraw);
                     }
                 }

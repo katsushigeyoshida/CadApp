@@ -182,16 +182,10 @@ namespace CadApp
         {
             double l = mPolygon.length();
             string buf = "";
-            buf += $"要素番号: {mNo}";
-            buf += $"\n要素種別: {mEntityId}要素";
-            buf += $"\n始点    : {mPolygon.mPolygon[0].ToString("f4")} 終点 {mPolygon.mPolygon[mPolygon.mPolygon.Count - 1].ToString("f4")}";
+            buf += $"始点    : {mPolygon.mPolygon[0].ToString("f4")} 終点 {mPolygon.mPolygon[mPolygon.mPolygon.Count - 1].ToString("f4")}";
             buf += $"\n点数    : {mPolygon.mPolygon.Count.ToString("f0")}";
             buf += $"\n長さ    : {l.ToString("f4")}";
             buf += $"\n塗潰し  : {(mFillOn ? "あり" : "なし")} {getColorName(mFillColor)}";
-            buf += $"\nカラー　: {getColorName(mColor)}";
-            buf += $"\n太さ　　: {mThickness}";
-            buf += $"\nレイヤー: {mLayerName}";
-
             return buf;
         }
 

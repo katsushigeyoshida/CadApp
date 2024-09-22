@@ -704,7 +704,8 @@ namespace CadApp
                         mEntityData.translate(pickEnt, vec, true);
                     } else if (operation == OPERATION.copyRotate) {
                         //  コピー回転
-                        mEntityData.rotate(pickEnt, loc[0], loc[i], true);
+                        if (2 < loc.Count)
+                            mEntityData.rotate(pickEnt, loc[0], loc[1], loc[i], true);
                     } else if (operation == OPERATION.copyOffset) {
                         //  コピーオフセット
                         mEntityData.offset(pickEnt, loc[0], loc[i], true);
@@ -718,9 +719,6 @@ namespace CadApp
                     //  移動
                     PointD vec = loc[0].vector(loc[1]);
                     mEntityData.translate(pickEnt, vec);
-                } else if (operation == OPERATION.rotate) {
-                    //  回転
-                    mEntityData.rotate(pickEnt, loc[0], loc[1]);
                 } else if (operation == OPERATION.mirror) {
                     //  ミラー
                     mEntityData.mirror(pickEnt, loc[0], loc[1]);
@@ -760,15 +758,19 @@ namespace CadApp
                     return false;
                 }
             } else if (loc.Count == 3 &&
-                (operation == OPERATION.scale || operation == OPERATION.copyScale)) {
+                (operation == OPERATION.scale || operation == OPERATION.copyScale
+                || operation == OPERATION.rotate)) {
                 if (operation == OPERATION.scale) {
                     //  拡大縮小
                     double scale = loc[0].length(loc[2]) / loc[0].length(loc[1]);
                     mEntityData.scale(pickEnt, loc[0], scale);
                 } else if (operation == OPERATION.copyScale) {
-                    //  拡大縮小
+                    //  拡大縮小(コピー)
                     double scale = loc[0].length(loc[2]) / loc[0].length(loc[1]);
                     mEntityData.scale(pickEnt, loc[0], scale, true);
+                } else if (operation == OPERATION.rotate) {
+                    //  回転
+                    mEntityData.rotate(pickEnt, loc[0], loc[1], loc[2]);
                 } else {
                     mEntityData.mOperationCount--;
                     return false;
@@ -902,6 +904,8 @@ namespace CadApp
                 dlg.mThickness = entity.mThickness;
                 dlg.mLayerName = entity.mLayerName;
                 dlg.mBackDisp  = entity.mBackDisp;
+                dlg.mGroupList = mEntityData.mGroup.getGroupNameList();
+                dlg.mGroupName = mEntityData.mGroup.getGroupName(entity.mGroup);
                 dlg.Title = entity.mEntityId + "要素属性";
                 //  Text要素
                 if (entity.mEntityId == EntityId.Text) {
@@ -971,6 +975,7 @@ namespace CadApp
                     entity.mLayerName = dlg.mLayerName;
                     entity.mLayerBit = mEntityData.mLayer.setLayerBit(entity.mLayerName);
                     entity.mBackDisp = dlg.mBackDisp;
+                    entity.mGroup = mEntityData.mGroup.add(dlg.mGroupName);
                     //  Text要素
                     if (entity.mEntityId == EntityId.Text) {
                         TextEntity text = (TextEntity)entity;
@@ -1045,6 +1050,7 @@ namespace CadApp
             dlg.mShowCheckBox = true;
             mEntityData.mLayer.updateLayerList();
             dlg.mLayerNameList = mEntityData.mLayer.getLayerNameList();
+            dlg.mGroupList = mEntityData.mGroup.getGroupNameList();
             if (dlg.ShowDialog() == true) {
                 mEntityData.mOperationCount++;
                 foreach ((int no, PointD pos) pickNo in pickEnt) {
@@ -1067,6 +1073,8 @@ namespace CadApp
                     }
                     if (dlg.mBackDispChk)
                         entity.mBackDisp = dlg.mBackDisp;
+                    if (dlg.mGroupChk)
+                        entity.mGroup = mEntityData.mGroup.add(dlg.mGroupName);
                     //  テキスト要素
                     if (entity.mEntityId == EntityId.Text) {
                         TextEntity textEnt = (TextEntity)entity;
@@ -2260,7 +2268,10 @@ namespace CadApp
         public bool infoEntity(List<(int no, PointD pos)> pickEnt)
         {
             foreach ((int no, PointD pos) entNo in pickEnt) {
-                ylib.messageBox(mMainWindow, mEntityData.mEntityList[entNo.no].entityInfo(),"", "要素情報");
+                string buf = mEntityData.mEntityList[entNo.no].propertyInfo() + "\n";
+                buf += $"グループ: {mEntityData.mGroup.getGroupName(mEntityData.mEntityList[entNo.no].mGroup)}\n";
+                buf += mEntityData.mEntityList[entNo.no].entityInfo();
+                ylib.messageBox(mMainWindow, buf,"", "要素情報");
             }
             return true;
         }

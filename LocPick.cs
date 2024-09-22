@@ -455,17 +455,18 @@ namespace CadApp
                         break;
                     case "回転角,繰返し数":
                         valstr = dlg.mEditText.Split(',');
-                        val = ycalc.expression(valstr[0]);
+                        val = ylib.D2R(ycalc.expression(valstr[0]));
                         if (1 < valstr.Length)
                             repeat = (int)ycalc.expression(valstr[1]);
                         PointD vec = new PointD(1, 0);
+                        if (mLocPos.Count < 2)
+                            mLocPos.Add(mLocPos[0] + vec);
+                        vec = mLocPos[1] - mLocPos[0];
                         for (int i = 1; i < repeat + 1; i++) {
-                            vec.rotate(ylib.D2R(val));
-                            wp = lastLoc + vec;
-                            mLocPos.Add(wp);
+                            vec.rotate(val);
+                            mLocPos.Add(mLocPos[0] + vec);
                         }
                         return true;
-                        break;
                     case "スケール":
                         valstr = dlg.mEditText.Split(',');
                         val = ycalc.expression(valstr[0]);
@@ -524,6 +525,56 @@ namespace CadApp
         public List<int> getPickNo(Box b)
         {
             return mEntityData.findIndex(b, mPickMask);
+        }
+
+        /// <summary>
+        /// グループピック(ピックした要素と同じグループ要素を登録)
+        /// </summary>
+        /// <param name="picks">ピック要素</param>
+        /// <param name="pos">ピック位置</param>
+        public void getGroup(List<int> picks, PointD pos)
+        {
+            List<(int no, PointD pos)> groupList = new List<(int no, PointD pos)>();
+            for (int i = 0; i < picks.Count; i++) {
+                int group = mEntityData.mEntityList[picks[i]].mGroup;
+                if (0 < group) {
+                    for (int j = 0; j < mEntityData.mEntityList.Count; j++) {
+                        if (group == mEntityData.mEntityList[j].mGroup &&
+                            !mEntityData.mEntityList[j].mRemove)
+                            groupList.Add((j, pos));
+                    }
+                }
+            }
+            mPickEnt.AddRange(groupList);
+        }
+
+        /// <summary>
+        /// グループピックのメニューダイヤログを開く
+        /// </summary>
+        /// <param name="pos">ピック位置</param>
+        /// <returns></returns>
+        public bool groupSelectPick(PointD pos)
+        {
+            MenuDialog dlg = new MenuDialog();
+            dlg.Title = "グループピックメニュー";
+            dlg.Owner = mMainWindow;
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.mMenuList = mEntityData.mGroup.getGroupNameList();
+            dlg.ShowDialog();
+            if (0 < dlg.mResultMenu.Length) {
+                int groupNo = mEntityData.mGroup.getGroupNo(dlg.mResultMenu);
+                if (0 < groupNo) {
+                    List<(int no, PointD pos)> groupList = new List<(int no, PointD pos)>();
+                    for (int j = 0; j < mEntityData.mEntityList.Count; j++) {
+                        if (groupNo == mEntityData.mEntityList[j].mGroup &&
+                            !mEntityData.mEntityList[j].mRemove)
+                            groupList.Add((j, pos));
+                    }
+                    mPickEnt.AddRange(groupList);
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

@@ -8,7 +8,7 @@ namespace CadApp
     public enum EntityId
     {
         Non, Link, Point, Line, Arc, Circle, Ellipse, Oval, Polyline, Polygon,
-        Text, Parts, Image, Property, Comment
+        Text, Parts, Image, Property, Comment, Group
     }
     public enum PointType { Dot, Cross, Plus, Squre, Circle }
     public enum LineType { Solid, Center, Dash }
@@ -23,7 +23,7 @@ namespace CadApp
         public EntityId mEntityId = EntityId.Non;   //  要素種別
         public Brush mColor = Brushes.Black;        //  色
         public double mThickness = 1.0;             //  線の太さ/点の大きさ
-        public int mType = 0;                       //  線種/店主
+        public int mType = 0;                       //  線種/点種
         public bool mRemove = false;                //  削除フラグ(非保存)
         public int mRemoveLink = -1;                //  削除要素番号(非保存)
         public int mOperationCount = -1;            //  操作番号(非保存)
@@ -31,6 +31,7 @@ namespace CadApp
         public ulong mLayerBit = 0x1;               //  レイヤービット(64bit非保存)
         public string mEntityName = "";             //  要素名
         public bool mBackDisp = false;              //  背面表示
+        public int mGroup = 0;                      //  グループ番号
 
         //  表示領域
         public Box mArea = new Box();
@@ -51,6 +52,7 @@ namespace CadApp
             mThickness  = ent.mThickness;
             mType       = ent.mType;
             mLayerName  = ent.mLayerName;
+            mGroup      = ent.mGroup;
             mEntityName = ent.mEntityName;
             mBackDisp   = ent.mBackDisp;
         }
@@ -84,6 +86,8 @@ namespace CadApp
                     if (mEntityId == EntityId.Image)
                         mBackDisp = true;
                 }
+                if (6 < property.Length)
+                    mGroup = int.Parse(property[6].Trim());
             } catch (Exception e) {
                 System.Diagnostics.Debug.WriteLine(e.ToString());
             }
@@ -96,7 +100,7 @@ namespace CadApp
         public string toString()
         {
             return $"{mEntityId},{ydraw.getColorName(mColor)},{mThickness}," +
-                    $"{mType},{mLayerName},{mBackDisp}";
+                    $"{mType},{mLayerName},{mBackDisp},{mGroup}";
         }
 
         /// <summary>
@@ -112,6 +116,7 @@ namespace CadApp
                 mType.ToString(),
                 mLayerName,
                 mBackDisp.ToString(),
+                mGroup.ToString(),
             };
             return propertyLis;
         }
@@ -183,10 +188,28 @@ namespace CadApp
         abstract public Entity toCopy();
 
         /// <summary>
-        /// 要素情報を文字列に変換
+        /// 共通要素情報を文字列に変換
         /// </summary>
-        /// <param name="entNo">要素番号</param>
-        /// <returns></returns>
+        /// <returns>文字列</returns>
+        public string propertyInfo()
+        {
+            string buf = "";
+            buf += $"要素番号: {mNo}";
+            buf += $"\n要素種別: {mEntityId}要素";
+            buf += $"\nカラー　: {getColorName(mColor)}";
+            buf += $"\n太さ　　: {mThickness}";
+            if (mEntityId == EntityId.Point)
+                buf += $"\n点種　　: {EntityData.mPointTypeMenu[mType]}";
+            else
+                buf += $"\n線種　　: {EntityData.mLineTypeMenu[mType]}";
+            buf += $"\nレイヤー: {mLayerName}";
+            return buf;
+        }
+
+        /// <summary>
+        /// 要素固有情報を文字列に変換
+        /// </summary>
+        /// <returns>文字列</returns>
         abstract public string entityInfo();
 
         /// <summary>

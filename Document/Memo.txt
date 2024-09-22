@@ -1,0 +1,50 @@
+﻿めも
+
+要素(Entity)の種類
+	点(Point)
+	線分(Line)
+	円弧(Arc)
+	楕円弧(Ellipse)
+	ポリライン(Polyline)
+	ポリゴン(Polygon)
+	文字(Text)
+	イメージ(Image)
+	パーツ(Parts)		矢印、ラベル、寸法線、シンボル
+	リンク(Link)
+
+要素の属性
+	要素番号(No)
+	要素種別(EntityId)
+	要素名(EntityName)
+	色(要素)(Color)
+	背面表示(BackDisp)
+	点種/線種(Type)
+	線太さ/点サイズ(Thickness)
+	レイヤー名(LayerName)
+	レイヤーBit(LayerBit)
+	グループNo(Group)
+	削除フラグ(Remove)
+	削除要素No(RemoveLink)
+	操作番号(OperationCount)
+	領域(Area)
+	ピック(Pick)
+	ピック色(PickColor)
+
+
+レイヤー	各要素に名前とbitでもち、表示/非表示を行う
+グループ	各要素にグループ属性を持ち Ctrl+マウス右ピックで同一グループ要素を
+			まとめてピック。
+			ピックした要素は普通に編集する
+			グループ名で選択(Pickモードでメニューキー)
+
+■検討事項
+マクロまたはスクリプトの組み込み
+数式の記述  Tex方式またはMarkDwon方式(InlineでTex)で元データをもち、グラフィック
+			表示を行う
+			Partsに組み込む
+グラフの作成
+表の作成
+
+■ソースの見直し
+ドラッギングとデータ作成のコードを統一(Mini3DCadと同じにする)
+データのファイル保存方法をMini3DCadと同じにする(データの種別を入れてフレキシブルにする)

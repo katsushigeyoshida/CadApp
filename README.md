@@ -4,6 +4,7 @@
 ドキュメント作成ツールとしてノートで簡単な製図をするような感覚で使える2次元の機械系CADソフト  
 使い方などは[説明書](Document/CadAppManual.pdf)を参照。  
 実行方法は[CadApp.zip](CadApp.zip)をダウンロードし適当なフォルダーに展開して CadApp.exe を実行する。  
+<img src="Image/download.png" width="80%">
 
 ### ■おもな機能
 ・図面の管理を大分類、分類、図面名の3段階に分けてシンプルに図面を管理  

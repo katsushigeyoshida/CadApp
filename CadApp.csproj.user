@@ -6,46 +6,9 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
-    <Compile Update="EntProperty.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="ImagePaste.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="SelectCategory.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="SettingDlg.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="SymbolDlg.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="SysProperty.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="EntProperty.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="ImagePaste.xaml">
-      <SubType>Designer</SubType>
-    </Page>
     <Page Update="MainWindow.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="SelectCategory.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="SettingDlg.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="SymbolDlg.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="SysProperty.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

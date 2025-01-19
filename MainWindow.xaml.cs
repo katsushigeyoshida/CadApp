@@ -36,7 +36,7 @@ namespace CadApp
             512, 768, 1024, 1536, 2048, 3072, 4096, 6144, 8192, 12288, 16384
         };
         private double[] mEntSizeMenu = {
-            1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+            0.1, 0.3, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
         };
         private List<string> mPointTypeMenu = new List<string>() {
             "・点", "X クロス", "+ 十字", "□ 四角", "〇 円", "△ 三角"
@@ -746,6 +746,9 @@ namespace CadApp
                 lbItemList.ItemsSource = mFileData.getItemFileList();
                 if (0 < lbItemList.Items.Count)
                     lbItemList.SelectedIndex = lbItemList.Items.IndexOf(item);
+            } else if (menuItem.Name.CompareTo("lbItemExportMenu") == 0 && itemName != null) {
+                //  エクスポート
+                mFileData.exportAsFile(itemName);
             } else if (menuItem.Name.CompareTo("lbItemPropertyMenu") == 0 && itemName != null) {
                 //  図面のプロパティ
                 string buf = mFileData.getItemFileProperty(itemName);

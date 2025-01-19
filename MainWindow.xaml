@@ -173,6 +173,7 @@
                             <MenuItem Name="lbItemCopyMenu" Header="コピー" Click="lbItemMenu_Click" />
                             <MenuItem Name="lbItemMoveMenu" Header="移動" Click="lbItemMenu_Click" />
                             <MenuItem Name="lbItemImportMenu" Header="インポート" Click="lbItemMenu_Click" />
+                            <MenuItem Name="lbItemExportMenu" Header="エクスポート" Click="lbItemMenu_Click" />
                             <MenuItem Name="lbItemPropertyMenu" Header="プロパティ" Click="lbItemMenu_Click" />
                         </ContextMenu>
                     </ListBox.ContextMenu>

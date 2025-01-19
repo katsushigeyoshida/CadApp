@@ -51,6 +51,7 @@
 
 
 ### 履歴
+2025/01/18  DXFのエキスポート機能追加(netDXFライブラリ使用)  
 2024/09/13  グループ機能追加  
 2024/09/08  メモ機能追加(モードレスダイヤログと計算機能)  
 2024/06/30  シンボルダイヤログに倍率を追加  
@@ -95,6 +96,6 @@ https://dotnet.microsoft.com/ja-jp/download
 開発ソフト : Microsoft Visual Studio 2022  
 開発言語　 : C# 10.0 Windows アプリケーション  
 フレームワーク　 :  .NET 7.0  
-NuGetライブラリ : なし  
+NuGetライブラリ : netDXF  
 自作ライブラリ  : CoreLib
 

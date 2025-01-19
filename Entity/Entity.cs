@@ -11,7 +11,7 @@ namespace CadApp
         Text, Parts, Image, Property, Comment, Group
     }
     public enum PointType { Dot, Cross, Plus, Squre, Circle }
-    public enum LineType { Solid, Center, Dash }
+    public enum LineType { Solid, Center, Dash, Phantom }
 
     /// <summary>
     /// 要素の抽象化クラス

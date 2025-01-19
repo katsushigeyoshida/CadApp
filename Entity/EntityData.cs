@@ -1211,7 +1211,7 @@ namespace CadApp
                         partsEntity.setProperty(property);
                         partsEntity.setData(dataStr);
                         return partsEntity;
-                    } else if (0 <= property[0].IndexOf(EntityId.Image.ToString())) {
+                    } else if (0 <= property[0].IndexOf(EntityId.Image.ToString()) && mImageData != null) {
                         //  イメージ要素
                         ImageEntity imageEntity = new ImageEntity(mImageData);
                         imageEntity.setProperty(property);

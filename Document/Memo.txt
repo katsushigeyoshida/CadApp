@@ -44,7 +44,8 @@
 			Partsに組み込む
 グラフの作成
 表の作成
-DXFの読書き	netDxf または ixmilia (NuGet)の使用を検討 (エキスポートのみnetDXF使用)
+DXFの読書き	netDxf または ixmilia (NuGet)の使用を検討
+			(エクスポートのみnetDXF使用、インポートは自前)
 
 ■ソースの見直し
 ドラッギングとデータ作成のコードを統一(Mini3DCadと同じにする)

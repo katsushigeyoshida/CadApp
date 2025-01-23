@@ -11,6 +11,11 @@ using Brushes = System.Windows.Media.Brushes;
 
 namespace CadApp
 {
+    /// <summary>
+    /// DXF 変換
+    /// DXF Import : CoreLib\DxfReader を使ってDXFデータを読み込む
+    /// DXF Export : netDxf を使って DXFファイルを出力する
+    /// </summary>
     public class DxfConv
     {
         private double mEps = 1e-8;
@@ -18,6 +23,8 @@ namespace CadApp
 
         /// <summary>
         /// CADファイルデータをDXFファイルに変換する
+        /// (netDxfを使用して図面データをDXFファイルに変換する)
+        /// netDxf : https://github.com/haplokuon/netDxf
         /// </summary>
         /// <param name="filePath">CADファイルパス</param>
         /// <param name="itemPath">DXFファイルパス</param>
@@ -27,9 +34,11 @@ namespace CadApp
             entityData.loadData(itemPath);
             //  create a new document, by default it will create an AutoCad2000 DXF version
             DxfDocument doc = new DxfDocument();
+            //  線種の登録
             doc.Linetypes.Add(netDxf.Tables.Linetype.Dashed);
             doc.Linetypes.Add(netDxf.Tables.Linetype.Center);
             doc.Linetypes.Add(netDxf.Tables.Linetype.DashDot);
+            //  データの変換
             doc = setDxfEnt(doc, entityData);
             if (File.Exists(filePath)) {
                 //if (ylib.messageBox(null, "ファイルが既に存在します。上書きしてもよいですか?", "", "確認", MessageBoxButton.OKCancel) != MessageBoxResult.OK)
@@ -94,12 +103,10 @@ namespace CadApp
                             string[] mtext = text.mText.mText.Split('\n');
                             for (int j = 0; j < mtext.Length; j++) {
                                 mtext[j] = mtext[j].Replace("\r", "");
-                                Text entityText = setDxfText(mtext[j], text.mText.mPos, text.mText.mTextSize);
-                                entityText.Rotation = ylib.R2D(text.mText.mRotate);
-                                entityText.Alignment = setTextAliment(text.mText.mHa, text.mText.mVa);
+                                Text entityText = setDxfText(mtext[j], text.mText);
                                 entityText.Color = brushes2AciColor(text.mColor);
                                 doc.Entities.Add(entityText);
-                                text.mText.mPos.y -= text.mText.mTextSize;
+                                text.mText.mPos.y -= text.mText.mTextSize * text.mText.mLinePitchRate;
                             }
                         }
                         break;
@@ -108,43 +115,6 @@ namespace CadApp
                             doc = setDxfParts(doc, parts.mParts, parts.mColor, parts.mType);
                         }
                         break;
-                }
-            }
-            return doc;
-        }
-
-        /// <summary>
-        /// Parts要素の変換
-        /// </summary>
-        /// <param name="doc">netDXF Document</param>
-        /// <param name="parts">Parts要素</param>
-        /// <param name="color">色</param>
-        /// <param name="type">線種</param>
-        /// <returns>netDXF Document</returns>
-        private DxfDocument setDxfParts(DxfDocument doc, PartsD parts, Brush color, int type)
-        {
-            foreach (var line in parts.mLines) {
-                Line entityLine = setDxfLine(line);
-                entityLine.Color = brushes2AciColor(color);
-                entityLine.Linetype = linetype2netDxf(type);
-                doc.Entities.Add(entityLine);
-            }
-            foreach (var arc in parts.mArcs) {
-                Arc entityArc = setDxfArc(arc);
-                entityArc.Color = brushes2AciColor(color);
-                entityArc.Linetype = linetype2netDxf(type);
-                doc.Entities.Add(entityArc);
-            }
-            foreach (var text in parts.mTexts) {
-                string[] mtext = text.mText.Split('\n');
-                for (int j = 0; j < mtext.Length; j++) {
-                    mtext[j] = mtext[j].Replace("\r", "");
-                    Text entityText = setDxfText(mtext[j], text.mPos, text.mTextSize);
-                    entityText.Rotation = ylib.R2D(text.mRotate);
-                    entityText.Alignment = setTextAliment(text.mHa, text.mVa);
-                    entityText.Color = brushes2AciColor(color);
-                    doc.Entities.Add(entityText);
-                    text.mPos.y -= text.mTextSize;
                 }
             }
             return doc;
@@ -226,13 +196,50 @@ namespace CadApp
         /// テキストを netDXFのTextに変換
         /// </summary>
         /// <param name="text">テキスト</param>
-        /// <param name="pos">文字位置</param>
-        /// <param name="size">文字サイズ</param>
+        /// <param name="textPara">TextD(パラメータ)</param>
         /// <returns>Text</returns>
-        private Text setDxfText(string text, PointD pos, double size)
+        private Text setDxfText(string text,　TextD textPara)
         {
             text = text.Replace("\r", "");
-            return new Text(text, new Vector2(pos.x, pos.y), size);
+            Text entText = new Text(text, new Vector2(textPara.mPos.x, textPara.mPos.y), textPara.mTextSize);
+            entText.Rotation = ylib.R2D(textPara.mRotate);
+            entText.Alignment = setTextAliment(textPara.mHa, textPara.mVa);
+            return entText;
+        }
+
+        /// <summary>
+        /// Parts要素の変換
+        /// </summary>
+        /// <param name="doc">netDXF Document</param>
+        /// <param name="parts">Parts要素</param>
+        /// <param name="color">色</param>
+        /// <param name="type">線種</param>
+        /// <returns>netDXF Document</returns>
+        private DxfDocument setDxfParts(DxfDocument doc, PartsD parts, Brush color, int type)
+        {
+            foreach (var line in parts.mLines) {
+                Line entityLine = setDxfLine(line);
+                entityLine.Color = brushes2AciColor(color);
+                entityLine.Linetype = linetype2netDxf(type);
+                doc.Entities.Add(entityLine);
+            }
+            foreach (var arc in parts.mArcs) {
+                Arc entityArc = setDxfArc(arc);
+                entityArc.Color = brushes2AciColor(color);
+                entityArc.Linetype = linetype2netDxf(type);
+                doc.Entities.Add(entityArc);
+            }
+            foreach (var text in parts.mTexts) {
+                string[] mtext = text.mText.Split('\n');
+                for (int j = 0; j < mtext.Length; j++) {
+                    mtext[j] = mtext[j].Replace("\r", "");
+                    Text entityText = setDxfText(mtext[j], text);
+                    entityText.Color = brushes2AciColor(color);
+                    doc.Entities.Add(entityText);
+                    text.mPos.y -= text.mTextSize * text.mLinePitchRate;
+                }
+            }
+            return doc;
         }
 
         /// <summary>
@@ -298,6 +305,7 @@ namespace CadApp
 
         /// <summary>
         /// DXFファイルのインポート
+        /// CoreLibの DxfReader を使ってDXFファイルを読み込む
         /// </summary>
         /// <param name="dxfPath">DXFファイルパス</param>
         /// <param name="outPath">出力ファイルパス</param>

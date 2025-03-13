@@ -23,6 +23,7 @@ namespace CadApp
         public EntityId mPickMask = EntityId.Non;
         public EntityData mEntityData;
         public Window mMainWindow;
+        private List<int> mPickStack = new();
         private YCalc ycalc = new YCalc();
         private YLib ylib = new YLib();
 
@@ -44,6 +45,16 @@ namespace CadApp
             if (ylib.onControlKey()) {
                 //  Ctrlキーでのメニュー表示で位置を選定
                 wp = locSelect(pickPos, picks);
+            } else if (ylib.onAltKey() && 0 < picks.Count) {
+                //  Altキーで2要素を別々にピックしたときの交点
+                if (mPickStack.Count == 0) {
+                    mPickStack.Add(picks[0]);
+                } else if (mPickStack.Count == 1) {
+                    wp = mEntityData.intersection(mPickStack[0], picks[0], pickPos);
+                    mPickStack.Clear();
+                } else {
+                    mPickStack.Clear();
+                }
             } else {
                 //  ピックされているときは位置を自動判断
                 if (picks.Count == 1) {

@@ -129,7 +129,7 @@ namespace CadApp
             new Command("設定",      "シンボル管理","", OPERATION.manageSymbol,         ENTITY.non),
             new Command("設定",      "戻る",        "", OPERATION.back,                 ENTITY.non),
             new Command("アンドゥ",  "アンドゥ",    "", OPERATION.undo,                 ENTITY.non),
-            //new Command("リドゥ",    "リドゥ",      "", OPERATION.redo,            ENTITY.non),
+            new Command("リドゥ",    "リドゥ",      "", OPERATION.redo,                 ENTITY.non),
             //new Command("ファイル",  "上書き保存",  "", OPERATION.save,            ENTITY.non),
             //new Command("ファイル",  "保存",        "", OPERATION.saveAs,          ENTITY.non),
             new Command("ツール",    "画面コピー",  "", OPERATION.copyScreen,           ENTITY.non),

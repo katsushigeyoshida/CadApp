@@ -497,6 +497,8 @@ namespace CadApp
                     mEntityData.updateData();
                     break;
                 case OPERATION.redo:                        //  リドゥ
+                    mEntityData.redo();
+                    mEntityData.updateData();
                     break;
                 case OPERATION.copyScreen:                  //  製図領域のイメージコピー
                     mMainWindow.screenCopy();
@@ -815,29 +817,25 @@ namespace CadApp
                     continue;
                 if (mEntityData.mEntityList[pickNo.no].mEntityId == EntityId.Text) {
                     //  文字列要素
-                    TextEntity text = (TextEntity)mEntityData.mEntityList[pickNo.no];
+                    TextEntity text = (TextEntity)mEntityData.mEntityList[pickNo.no].toCopy();
                     dlg.mEditText = text.mText.mText;
                     if (dlg.ShowDialog() == true) {
                         if (0 < dlg.mEditText.Length) {
-                            mEntityData.mEntityList.Add(mEntityData.mEntityList[pickNo.no].toCopy());
-                            text = (TextEntity)mEntityData.mEntityList[mEntityData.mEntityList.Count - 1];
                             text.mText.mText = dlg.mEditText;
-                            mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mOperationCount = mEntityData.mOperationCount;
+                            mEntityData.addEntity(text);
                             mEntityData.removeEnt(pickNo.no);
                         }
                         changeCount++;
                     }
                 } else if (mEntityData.mEntityList[pickNo.no].mEntityId == EntityId.Parts) {
                     //  パーツ要素
-                    PartsEntity parts = (PartsEntity)mEntityData.mEntityList[pickNo.no];
+                    PartsEntity parts = (PartsEntity)mEntityData.mEntityList[pickNo.no].toCopy();
                     if (0 < parts.mParts.mTexts.Count) {
                         (int no, dlg.mEditText) = parts.mParts.getPickText(pickNo.pos);
                         if (0 <= no && dlg.ShowDialog() == true) {
                             if (0 < dlg.mEditText.Length) {
-                                mEntityData.mEntityList.Add(mEntityData.mEntityList[pickNo.no].toCopy());
-                                parts = (PartsEntity)mEntityData.mEntityList[mEntityData.mEntityList.Count - 1];
                                 parts.mParts.mTexts[no].mText = dlg.mEditText;
-                                mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mOperationCount = mEntityData.mOperationCount;
+                                mEntityData.addEntity(parts);
                                 mEntityData.removeEnt(pickNo.no);
                             }
                             changeCount++;
@@ -862,17 +860,15 @@ namespace CadApp
             mEntityData.mOperationCount++;
             foreach ((int no, PointD pos) pickNo in pickEnt) {
                 if (mEntityData.mEntityList[pickNo.no].mEntityId == EntityId.Arc) {
-                    ArcEntity arc = (ArcEntity)mEntityData.mEntityList[pickNo.no];
+                    ArcEntity arc = (ArcEntity)mEntityData.mEntityList[pickNo.no].toCopy();
                     InputBox dlg = new InputBox();
                     dlg.Owner = mMainWindow;
                     dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
                     dlg.Title = "半径変更";
                     dlg.mEditText = arc.mArc.mR.ToString();
                     if (dlg.ShowDialog() == true) {
-                        mEntityData.mEntityList.Add(mEntityData.mEntityList[pickNo.no].toCopy());
-                        arc = (ArcEntity)mEntityData.mEntityList[mEntityData.mEntityList.Count - 1];
                         arc.mArc.mR = ycalc.expression(dlg.mEditText);
-                        mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mOperationCount = mEntityData.mOperationCount;
+                        mEntityData.addEntity(arc);
                         mEntityData.removeEnt(pickNo.no);
                     }
                 }
@@ -967,8 +963,7 @@ namespace CadApp
                 }
                 if (dlg.ShowDialog() == true) {
                     //  共通属性
-                    mEntityData.mEntityList.Add(mEntityData.mEntityList[pickNo.no].toCopy());
-                    entity = mEntityData.mEntityList[mEntityData.mEntityList.Count - 1];
+                    entity = mEntityData.mEntityList[pickNo.no].toCopy();
                     entity.mColor = dlg.mColor;
                     entity.mType = dlg.mLineType;
                     entity.mThickness = dlg.mThickness;
@@ -991,7 +986,6 @@ namespace CadApp
                     //  Parts要素
                     if (entity.mEntityId == EntityId.Parts) {
                         PartsEntity parts = (PartsEntity)entity;
-                        //parts.mParts.mRefValue = new List<double>() { 6, Math.PI / 6, 12, 1.2, 0 };
                         parts.mParts.mArrowSize     = dlg.mArrowSize;
                         parts.mParts.mArrowAngle    = dlg.mArrowAngle;
                         parts.mParts.mTextSize      = dlg.mTextSize;
@@ -1021,8 +1015,7 @@ namespace CadApp
                         ellipse.mFillOn = dlg.mFillOn;
                         ellipse.mFillColor = dlg.mFillColor;
                     }
-                    //  Undo処理
-                    entity.mOperationCount = mEntityData.mOperationCount;
+                    mEntityData.addEntity(entity);
                     if (!copy)
                         mEntityData.removeEnt(pickNo.no);
                 }
@@ -1054,8 +1047,7 @@ namespace CadApp
             if (dlg.ShowDialog() == true) {
                 mEntityData.mOperationCount++;
                 foreach ((int no, PointD pos) pickNo in pickEnt) {
-                    mEntityData.mEntityList.Add(mEntityData.mEntityList[pickNo.no].toCopy());
-                    Entity entity = mEntityData.mEntityList[mEntityData.mEntityList.Count - 1];
+                    Entity entity = mEntityData.mEntityList[pickNo.no].toCopy();
                     //  共通属性
                     if (dlg.mColorChk)
                        entity.mColor = dlg.mColor;
@@ -1134,7 +1126,7 @@ namespace CadApp
                         ellipse.mFillOn = dlg.mFillColorOn;
                         ellipse.mFillColor = dlg.mFillColor;
                     }
-                    entity.mOperationCount = mEntityData.mOperationCount;
+                    mEntityData.addEntity(entity);
                     mEntityData.removeEnt(pickNo.no);
                 }
                 if (dlg.mLayerNameChk) {
@@ -1174,7 +1166,6 @@ namespace CadApp
                 Entity ent2 = mEntityData.mEntityList[pickEnt[1].no];
                 PolylineD polyline2 = new PolylineD(ent2.toPointList());
                 polyline.connect(pickEnt[0].pos, polyline2, pickEnt[1].pos);
-                //polyline.connect(pickEnt[0].pos, ent2.toPointList(), pickEnt[1].pos);
                 mEntityData.addPolyline(polyline.mPolyline);
                 mEntityData.mEntityList[^1].setProperty(entity);
             } else {
@@ -1841,8 +1832,7 @@ namespace CadApp
                 string name = "__" + dlg.mEditText;
                 PartsEntity entity = new PartsEntity(name, points, lines, arcs, texts);
                 entity.setProperty(mEntityData.mPara);
-                mEntityData.mEntityList.Add(entity);
-                entity.mOperationCount = mEntityData.mOperationCount;
+                mEntityData.addEntity(entity);
                 for (int i = 0; i < pickEnt.Count; i++)
                     mEntityData.removeEnt(pickEnt[i].no);
                 mEntityData.updateData();
@@ -2297,8 +2287,7 @@ namespace CadApp
                     string[] property = propertyStr.Split(new char[] { ',' });
                     string[] data = dataStr.Split(new char[] { ',' });
                     Entity ent = mEntityData.setStringEntityData(property, data);
-                    mEntityData.mEntityList.Add(ent);
-                    mEntityData.mEntityList[mEntityData.mEntityList.Count - 1].mOperationCount = mEntityData.mOperationCount;
+                    mEntityData.addEntity(ent);
                     mEntityData.removeEnt(entNo.no);
                 }
             }

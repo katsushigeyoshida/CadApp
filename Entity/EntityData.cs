@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows;
 
 namespace CadApp
 {
@@ -54,87 +53,6 @@ namespace CadApp
         }
 
         /// <summary>
-        /// プロパティ設定値を文字列に変換
-        /// </summary>
-        /// <returns></returns>
-        public string propertyToString()
-        {
-            return $"Prperty,Color,{ylib.getColorName(mPara.mColor)},PointType,{mPara.mPointType},PointSize,{mPara.mPointSize}," +
-                $"LineType,{mPara.mLineType},Thickness,{mPara.mThickness},TextSize,{mPara.mTextSize}," +
-                $"TextRotate,{mPara.mTextRotate},LinePitchRate,{mPara.mLinePitchRate},HA,{mPara.mHa},VA,{mPara.mVa}," +
-                $"ArrowSize,{mPara.mArrowSize},ArrowAngle,{mPara.mArrowAngle},GridSize,{mPara.mGridSize}";
-        }
-
-        /// <summary>
-        /// 文字列配列をプロパティ設定値に変換
-        /// </summary>
-        /// <param name="data"></param>
-        public void setPropertyData(string[] data)
-        {
-            try {
-                if (1 < data.Length && data[0] == "Prperty") {
-                    for (int i = 1; i < data.Length; i++) {
-                        switch (data[i]) {
-                            case "Color":
-                                mPara.mColor = ylib.getColor(data[++i]);
-                                break;
-                            case "PointType":
-                                mPara.mPointType = int.Parse(data[++i]);
-                                break;
-                            case "PointSize":
-                                mPara.mPointSize = double.Parse(data[++i]);
-                                break;
-                            case "LineType":
-                                mPara.mLineType = int.Parse(data[++i]);
-                                break;
-                            case "Thickness":
-                                mPara.mThickness = double.Parse(data[++i]);
-                                break;
-                            case "TextSize":
-                                mPara.mTextSize = double.Parse(data[++i]);
-                                break;
-                            case "TextRotate":
-                                mPara.mTextRotate = double.Parse(data[++i]);
-                                break;
-                            case "LinePitchRate":
-                                mPara.mLinePitchRate = double.Parse(data[++i]);
-                                break;
-                            case "HA":
-                                mPara.mHa = (HorizontalAlignment)Enum.Parse(typeof(HorizontalAlignment), data[++i]);
-                                break;
-                            case "VA":
-                                mPara.mVa = (VerticalAlignment)Enum.Parse(typeof(VerticalAlignment), data[++i]);
-                                break;
-                            case "ArrowSize":
-                                mPara.mArrowSize = double.Parse(data[++i]);
-                                break;
-                            case "ArrowAngle":
-                                mPara.mArrowAngle = double.Parse(data[++i]);
-                                break;
-                            case "GridSize":
-                                mPara.mGridSize = double.Parse(data[++i]);
-                                break;
-                        }
-                    }
-                } else {
-                    mPara.mColor      = ylib.getColor(data[0]);
-                    mPara.mPointType  = int.Parse(data[1]);
-                    mPara.mPointSize  = double.Parse(data[2]);
-                    mPara.mLineType   = int.Parse(data[3]);
-                    mPara.mThickness  = double.Parse(data[4]);
-                    mPara.mTextSize   = double.Parse(data[5]);
-                    mPara.mArrowSize  = double.Parse(data[6]);
-                    mPara.mArrowAngle = double.Parse(data[7]);
-                    mPara.mGridSize   = double.Parse(data[8]);
-                    if (mPara.mArrowAngle == 0)
-                        mPara.mArrowAngle = 30 * Math.PI / 180;
-                }
-            } catch (Exception e) {
-                System.Diagnostics.Debug.WriteLine(e.Message);
-            }
-        }
-
-        /// <summary>
         /// 要素からプロパティ値を取得する
         /// </summary>
         /// <param name="entity">要素データ</param>
@@ -166,15 +84,7 @@ namespace CadApp
             pointEnt.setProperty(mPara);
             pointEnt.mThickness = mPara.mPointSize;
             pointEnt.mType = mPara.mPointType;
-            mEntityList.Add(pointEnt);
-            if (mArea == null) {
-                mArea = pointEnt.mArea;
-            } else {
-                mArea.extension(pointEnt.mArea);
-            }
-            pointEnt.mNo = mEntityList.Count - 1;
-            pointEnt.mOperationCount = mOperationCount;
-            return pointEnt.mNo;
+            return addEntity(pointEnt);
         }
 
         /// <summary>
@@ -199,15 +109,7 @@ namespace CadApp
                 return -1;
             Entity lineEnt = new LineEntity(pline);
             lineEnt.setProperty(mPara);
-            mEntityList.Add(lineEnt);
-            if (mArea == null) {
-                mArea = lineEnt.mArea.toCopy();
-            } else {
-                mArea.extension(lineEnt.mArea);
-            }
-            lineEnt.mNo = mEntityList.Count - 1;
-            lineEnt.mOperationCount = mOperationCount;
-            return lineEnt.mNo;
+            return addEntity(lineEnt);
         }
 
         /// <summary>
@@ -236,15 +138,7 @@ namespace CadApp
                 return -1;
             Entity polylineEnt = new PolylineEntity(polyline);
             polylineEnt.setProperty(mPara);
-            mEntityList.Add(polylineEnt);
-            if (mArea == null) {
-                mArea = polylineEnt.mArea.toCopy();
-            } else {
-                mArea.extension(polylineEnt.mArea);
-            }
-            polylineEnt.mNo = mEntityList.Count - 1;
-            polylineEnt.mOperationCount = mOperationCount;
-            return polylineEnt.mNo;
+            return addEntity(polylineEnt);
         }
 
         /// <summary>
@@ -258,15 +152,7 @@ namespace CadApp
                 return -1;
             PolygonEntity polygonEnt = new PolygonEntity(polygon);
             polygonEnt.setProperty(mPara);
-            mEntityList.Add(polygonEnt);
-            if (mArea == null) {
-                mArea = polygonEnt.mArea.toCopy();
-            } else {
-                mArea.extension(polygonEnt.mArea);
-            }
-            polygonEnt.mNo = mEntityList.Count - 1;
-            polygonEnt.mOperationCount = mOperationCount;
-            return polygonEnt.mNo;
+            return addEntity(polygonEnt);
         }
 
         /// <summary>
@@ -280,15 +166,7 @@ namespace CadApp
                 return -1;
             Entity arcEnt = new ArcEntity(arc);
             arcEnt.setProperty(mPara);
-            mEntityList.Add(arcEnt);
-            if (mArea == null) {
-                mArea = arcEnt.mArea;
-            } else {
-                mArea.extension(arcEnt.mArea);
-            }
-            arcEnt.mNo = mEntityList.Count - 1;
-            arcEnt.mOperationCount = mOperationCount;
-            return arcEnt.mNo;
+            return addEntity(arcEnt);
         }
 
         /// <summary>
@@ -303,15 +181,7 @@ namespace CadApp
                 return -1;
             Entity ellipseEnt = new EllipseEntity(ellipse);
             ellipseEnt.setProperty(mPara);
-            mEntityList.Add(ellipseEnt);
-            if (mArea == null) {
-                mArea = ellipseEnt.mArea;
-            } else {
-                mArea.extension(ellipseEnt.mArea);
-            }
-            ellipseEnt.mNo = mEntityList.Count - 1;
-            ellipseEnt.mOperationCount = mOperationCount;
-            return ellipseEnt.mNo;
+            return addEntity(ellipseEnt);
         }
 
         /// <summary>
@@ -330,15 +200,7 @@ namespace CadApp
 
             Entity textEnt = new TextEntity(text);
             textEnt.setProperty(mPara);
-            mEntityList.Add(textEnt);
-            if (mArea == null) {
-                mArea = textEnt.mArea;
-            } else {
-                mArea.extension(textEnt.mArea);
-            }
-            textEnt.mNo = mEntityList.Count - 1;
-            textEnt.mOperationCount = mOperationCount;
-            return textEnt.mNo;
+            return addEntity(textEnt);
         }
 
         /// <summary>
@@ -358,15 +220,7 @@ namespace CadApp
             partsEnt.mParts.mArrowSize = mPara.mArrowSize;
             partsEnt.mParts.createArrow(sp, ep);
             partsEnt.updateArea();
-            mEntityList.Add(partsEnt);
-            if (mArea == null) {
-                mArea = partsEnt.mArea;
-            } else {
-                mArea.extension(partsEnt.mArea);
-            }
-            partsEnt.mNo = mEntityList.Count - 1;
-            partsEnt.mOperationCount = mOperationCount;
-            return partsEnt.mNo;
+            return addEntity(partsEnt);
         }
 
         /// <summary>
@@ -389,15 +243,7 @@ namespace CadApp
             partsEnt.mParts.mFontWeight = mPara.mFontWeight;
             partsEnt.mParts.createLabel(plist, text);
             partsEnt.updateArea();
-            mEntityList.Add(partsEnt);
-            if (mArea == null) {
-                mArea = partsEnt.mArea;
-            } else {
-                mArea.extension(partsEnt.mArea);
-            }
-            partsEnt.mNo = mEntityList.Count - 1;
-            partsEnt.mOperationCount = mOperationCount;
-            return partsEnt.mNo;
+            return addEntity(partsEnt);
         }
 
         /// <summary>
@@ -422,15 +268,7 @@ namespace CadApp
             partsEnt.mParts.mFontWeight = mPara.mFontWeight;
             partsEnt.mParts.createDimension(plist);
             partsEnt.updateArea();
-            mEntityList.Add(partsEnt);
-            if (mArea == null) {
-                mArea = partsEnt.mArea;
-            } else {
-                mArea.extension(partsEnt.mArea);
-            }
-            partsEnt.mNo = mEntityList.Count - 1;
-            partsEnt.mOperationCount = mOperationCount;
-            return partsEnt.mNo;
+            return addEntity(partsEnt);
         }
 
         /// <summary>
@@ -478,15 +316,7 @@ namespace CadApp
                 List<PointD> plist = new List<PointD>() { cp, ps, pe, pos };
                 partsEnt.mParts.createAngleDimension(plist);
                 partsEnt.updateArea();
-                mEntityList.Add(partsEnt);
-                if (mArea == null) {
-                    mArea = partsEnt.mArea;
-                } else {
-                    mArea.extension(partsEnt.mArea);
-                }
-                partsEnt.mNo = mEntityList.Count - 1;
-                partsEnt.mOperationCount = mOperationCount;
-                return partsEnt.mNo;
+                return addEntity(partsEnt);
             }
             return -1;
         }
@@ -515,15 +345,7 @@ namespace CadApp
                 partsEnt.mParts.mFontWeight = mPara.mFontWeight;
                 partsEnt.mParts.createDiameterDimension(arcEnt.mArc, plist);
                 partsEnt.updateArea();
-                mEntityList.Add(partsEnt);
-                if (mArea == null) {
-                    mArea = partsEnt.mArea;
-                } else {
-                    mArea.extension(partsEnt.mArea);
-                }
-                partsEnt.mNo = mEntityList.Count - 1;
-                partsEnt.mOperationCount = mOperationCount;
-                return partsEnt.mNo;
+                return addEntity(partsEnt);
             }
             return -1;
         }
@@ -552,15 +374,7 @@ namespace CadApp
                 partsEnt.mParts.mFontWeight = mPara.mFontWeight;
                 partsEnt.mParts.createRadiusDimension(arcEnt.mArc, plist);
                 partsEnt.updateArea();
-                mEntityList.Add(partsEnt);
-                if (mArea == null) {
-                    mArea = partsEnt.mArea;
-                } else {
-                    mArea.extension(partsEnt.mArea);
-                }
-                partsEnt.mNo = mEntityList.Count - 1;
-                partsEnt.mOperationCount = mOperationCount;
-                return partsEnt.mNo;
+                return addEntity(partsEnt);
             }
             return -1;
         }
@@ -741,9 +555,9 @@ namespace CadApp
         public bool translate(List<(int no, PointD pos)> pickList, PointD vec, bool copy = false)
         {
             foreach ((int no, PointD pos) entNo in pickList) {
-                mEntityList.Add(mEntityList[entNo.no].toCopy());
-                mEntityList[mEntityList.Count - 1].translate(vec);
-                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
+                Entity entity = mEntityList[entNo.no].toCopy();
+                entity.translate(vec);
+                addEntity(entity);
                 if (!copy)
                     removeEnt(entNo.no);
             }
@@ -766,9 +580,9 @@ namespace CadApp
             PointD mp = ep.toCopy();
             mp.rotate(cp, -ang);
             foreach ((int no, PointD pos) entNo in pickList) {
-                mEntityList.Add(mEntityList[entNo.no].toCopy());
-                mEntityList[mEntityList.Count - 1].rotate(cp, mp);
-                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
+                Entity entity = mEntityList[entNo.no].toCopy();
+                entity.rotate(cp, mp);
+                addEntity(entity);
                 if (!copy)
                     removeEnt(entNo.no);
             }
@@ -787,9 +601,9 @@ namespace CadApp
         public bool mirror(List<(int no, PointD pos)> pickList, PointD sp, PointD ep, bool copy = false)
         {
             foreach ((int no, PointD pos) entNo in pickList) {
-                mEntityList.Add(mEntityList[entNo.no].toCopy());
-                mEntityList[mEntityList.Count - 1].mirror(sp, ep);
-                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
+                Entity entity = mEntityList[entNo.no].toCopy();
+                entity.mirror(sp, ep);
+                addEntity(entity);
                 if (!copy)
                     removeEnt(entNo.no);
             }
@@ -808,9 +622,9 @@ namespace CadApp
         public bool scale(List<(int no, PointD pos)> pickList, PointD cp, double scale, bool copy = false)
         {
             foreach ((int no, PointD pos) entNo in pickList) {
-                mEntityList.Add(mEntityList[entNo.no].toCopy());
-                mEntityList[mEntityList.Count - 1].scale(cp, scale);
-                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
+                Entity entity = mEntityList[entNo.no].toCopy();
+                entity.scale(cp, scale);
+                addEntity(entity);
                 if (!copy)
                     removeEnt(entNo.no);
             }
@@ -829,9 +643,9 @@ namespace CadApp
         public bool offset(List<(int no, PointD pos)> pickList, PointD sp, PointD ep, bool copy = false)
         {
             foreach ((int no, PointD pos) entNo in pickList) {
-                mEntityList.Add(mEntityList[entNo.no].toCopy());
-                mEntityList[mEntityList.Count - 1].offset(sp, ep);
-                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
+                Entity entity = mEntityList[entNo.no].toCopy();
+                entity.offset(sp, ep);
+                addEntity(entity);
                 if (!copy)
                     removeEnt(entNo.no);
             }
@@ -850,9 +664,9 @@ namespace CadApp
         public bool trim(List<(int no, PointD pos)> pickList, PointD sp, PointD ep, bool copy = false)
         {
             foreach ((int no, PointD pos) entNo in pickList) {
-                mEntityList.Add(mEntityList[entNo.no].toCopy());
-                mEntityList[mEntityList.Count - 1].trim(sp, ep);
-                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
+                Entity entity = mEntityList[entNo.no].toCopy();
+                entity.trim(sp, ep);
+                addEntity(entity);
                 if (!copy)
                     removeEnt(entNo.no);
             }
@@ -873,8 +687,7 @@ namespace CadApp
                 if (entityList == null)
                     continue;
                 foreach(Entity ent in entityList) {
-                    ent.mOperationCount = mOperationCount;
-                    mEntityList.Add(ent);
+                    addEntity(ent);
                 }
                 removeEnt(entNo.no);
             }
@@ -894,9 +707,9 @@ namespace CadApp
         public bool stretch(List<(int no, PointD pos)> pickList, PointD vec, bool arc = false, bool copy = false)
         {
             foreach ((int no, PointD pos) entNo in pickList) {
-                mEntityList.Add(mEntityList[entNo.no].toCopy());
-                mEntityList[mEntityList.Count - 1].stretch(vec, entNo.pos, arc);
-                mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
+                Entity entity = mEntityList[entNo.no].toCopy();
+                entity.stretch(vec, entNo.pos, arc);
+                addEntity(entity);
                 if (!copy)
                     removeEnt(entNo.no);
             }
@@ -922,12 +735,10 @@ namespace CadApp
                         lines = polylineEnt.mPolyline.toLineList(true);
                         foreach (var line in lines) {
                             addLine(line);
-                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                         }
                         arcs = polylineEnt.mPolyline.toArcList();
                         foreach (var arc in arcs) {
                             addArc(arc);
-                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                         }
                         break;
                     case EntityId.Polygon:
@@ -935,31 +746,25 @@ namespace CadApp
                         lines = polygonEnt.mPolygon.toLineList(true);
                         foreach (var line in lines) {
                             addLine(line);
-                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                         }
                         arcs = polygonEnt.mPolygon.toArcList();
                         foreach (var arc in arcs) {
                             addArc(arc);
-                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                         }
                         break;
                     case EntityId.Parts:
                         PartsEntity partsEnt = (PartsEntity)entity;
                         foreach (var point in partsEnt.mParts.mPoints) {
                             addPoint(point);
-                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                         }
                         foreach (var line in partsEnt.mParts.mLines) {
                             addLine(line);
-                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                         }
                         foreach (var arc in partsEnt.mParts.mArcs) {
                             addArc(arc);
-                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                         }
                         foreach (var text in partsEnt.mParts.mTexts) {
                             addText(text);
-                            mEntityList[mEntityList.Count - 1].mOperationCount = mOperationCount;
                         }
                         break;
                 }
@@ -971,14 +776,27 @@ namespace CadApp
         }
 
         /// <summary>
-        /// 要素を追加する
+        /// 要素の追加
         /// </summary>
-        /// <param name="entity">Entityデータ</param>
-        /// <returns></returns>
+        /// <param name="entity">要素</param>
+        /// <returns>要素番号</returns>
         public int addEntity(Entity entity)
         {
-            entity.updateArea();
+            //  最終有効要素以降の要素を削除
+            for (int i = mEntityList.Count - 1; 0 <= i; i--) {
+                if (mEntityList[i].mRemove)
+                    mEntityList.RemoveAt(i);
+                else
+                    break;
+            }
+            //  要素の追加
             mEntityList.Add(entity);
+            //  表示領域、リンクNo、オペレーションカウントの更新
+            if (mArea == null) {
+                mArea = entity.mArea;
+            } else {
+                mArea.extension(entity.mArea);
+            }
             entity.mNo = mEntityList.Count - 1;
             entity.mOperationCount = mOperationCount;
             return entity.mNo;
@@ -1008,7 +826,7 @@ namespace CadApp
         {
             mEntityList[entNo].mRemove = true;
             LinkEntity link = new LinkEntity();
-            link.mRemove = true;
+            link.mRemove = false;
             link.mLinkNo = entNo;
             link.mOperationCount = mOperationCount;
             mEntityList.Add(link);
@@ -1022,17 +840,49 @@ namespace CadApp
         public void undo()
         {
             if (0 < mEntityList.Count) {
-                int entNo = mEntityList.Count - 1;
+                int entNo = lastEntNo();
                 int opeNo = mEntityList[entNo].mOperationCount;
                 while (0 <= entNo && 0 <= opeNo && opeNo == mEntityList[entNo].mOperationCount) {
                     if (mEntityList[entNo].mEntityId == EntityId.Link) {
                         LinkEntity linkEnt = (LinkEntity)mEntityList[entNo];
                         mEntityList[linkEnt.mLinkNo].mRemove = false;
                     }
-                    mEntityList.RemoveAt(entNo);
+                    mEntityList[entNo].mRemove = true;
                     entNo--;
                 }
             }
+        }
+
+        /// <summary>
+        /// リドゥ処理
+        /// </summary>
+        public void redo()
+        {
+            if (0 < mEntityList.Count) {
+                int entNo = lastEntNo() + 1;
+                if (mEntityList.Count <= entNo) return;
+                int opeNo = mEntityList[entNo].mOperationCount;
+                while (entNo < mEntityList.Count && 0 <= opeNo && opeNo == mEntityList[entNo].mOperationCount) {
+                    if (mEntityList[entNo].mEntityId == EntityId.Link) {
+                        LinkEntity linkEnt = (LinkEntity)mEntityList[entNo];
+                        mEntityList[linkEnt.mLinkNo].mRemove = true;
+                    }
+                    mEntityList[entNo].mRemove = false;
+                    entNo++;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 有効要素の最終位置
+        /// </summary>
+        /// <returns>要素位置</returns>
+        private int lastEntNo()
+        {
+            for (int i = mEntityList.Count - 1; 0 <= i; i--)
+                if (!mEntityList[i].mRemove)
+                    return i;
+            return 0;
         }
 
         /// <summary>

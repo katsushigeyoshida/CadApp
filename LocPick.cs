@@ -552,7 +552,8 @@ namespace CadApp
                     for (int j = 0; j < mEntityData.mEntityList.Count; j++) {
                         if (group == mEntityData.mEntityList[j].mGroup &&
                             !mEntityData.mEntityList[j].mRemove)
-                            groupList.Add((j, pos));
+                            if (groupList.FindIndex(x => x.no == j) < 0)
+                                groupList.Add((j, pos));
                     }
                 }
             }
@@ -579,7 +580,8 @@ namespace CadApp
                     for (int j = 0; j < mEntityData.mEntityList.Count; j++) {
                         if (groupNo == mEntityData.mEntityList[j].mGroup &&
                             !mEntityData.mEntityList[j].mRemove)
-                            groupList.Add((j, pos));
+                            if (groupList.FindIndex(x => x.no == j) < 0)
+                                groupList.Add((j, pos));
                     }
                     mPickEnt.AddRange(groupList);
                     return true;

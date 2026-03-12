@@ -119,8 +119,10 @@ namespace CadApp
         private void tbDataFolder_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             string folder = ylib.folderSelect("データフォルダ", mDataFolder);
-            if (folder != null && 0 < folder.Length) 
+            if (folder != null && 0 < folder.Length) {
                 tbDataFolder.Text = folder;
+                sameFolder(cbSameFolder.IsChecked == true);
+            }
         }
 
         /// <summary>
@@ -131,8 +133,10 @@ namespace CadApp
         private void tbSymbolFolder_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             string folder = ylib.folderSelect("シンボルフォルダ", mSymbolFolder);
-            if (folder != null && 0 < folder.Length)
+            if (folder != null && 0 < folder.Length) {
                 tbSymbolFolder.Text = folder;
+                sameFolder(cbSameFolder.IsChecked == true);
+            }
         }
 
         /// <summary>
@@ -143,8 +147,10 @@ namespace CadApp
         private void tbImageFolder_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             string folder = ylib.folderSelect("イメージキャッシュフォルダ", mImageFolder);
-            if (folder != null && 0 < folder.Length)
+            if (folder != null && 0 < folder.Length) {
                 tbImageFolder.Text = folder;
+                sameFolder(cbSameFolder.IsChecked == true);
+            }
         }
 
         /// <summary>
@@ -259,6 +265,37 @@ namespace CadApp
         private void btCashClear_Click(object sender, RoutedEventArgs e)
         {
             mFileData.squeezeImageCache(mImageData.mImageFolder);
+        }
+
+        /// <summary>
+        /// [フォルダ共通化]チェックボックス
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void cbSameFolder_Click(object sender, RoutedEventArgs e)
+        {
+            sameFolder(cbSameFolder.IsChecked == true);
+        }
+
+        /// <summary>
+        /// データフォルダの共通化
+        /// </summary>
+        /// <param name="sameFolder">共通化</param>
+        private void sameFolder(bool sameFolder)
+        {
+            if (sameFolder) {
+                mDataFolder = tbDataFolder.Text;
+                string folder = Path.GetDirectoryName(mDataFolder);
+                mSymbolFolder = Path.Combine(folder, "Symbol");
+                mImageFolder = Path.Combine(folder, "ImageCache");
+                tbSymbolFolder.Text = mSymbolFolder;
+                tbImageFolder.Text = mImageFolder;
+                tbSymbolFolder.IsEnabled = false;
+                tbImageFolder.IsEnabled = false;
+            } else {
+                tbSymbolFolder.IsEnabled = true;
+                tbImageFolder.IsEnabled = true;
+            }
         }
     }
 }

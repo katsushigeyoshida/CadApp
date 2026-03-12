@@ -34,8 +34,9 @@
         <TextBox x:Name="tbGridSize" Width="30" Margin="80,135,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
 
         <TextBlock Text="データフォルダ" ToolTip="図面データを保存するフォルダ"
-                   Margin="10,178,0,0" HorizontalAlignment="Left"  VerticalAlignment="Top"/>
-        <TextBox x:Name="tbDataFolder" Margin="105,178,20,0" VerticalAlignment="Top" MouseDoubleClick="tbDataFolder_MouseDoubleClick"/>
+                   Margin="10,165,0,0" HorizontalAlignment="Left"  VerticalAlignment="Top"/>
+        <TextBox x:Name="tbDataFolder" Margin="105,165,20,0" VerticalAlignment="Top" MouseDoubleClick="tbDataFolder_MouseDoubleClick"/>
+        <CheckBox x:Name="cbSameFolder" Content="フォルダ共通化" Margin="105,185,0,0" HorizontalAlignment="Left"  VerticalAlignment="Top" Click="cbSameFolder_Click"/>
         <TextBlock Text="シンボルフォルダ" ToolTip="シンボルデータを保存するフォルダ"
                    Margin="10,200,0,0" HorizontalAlignment="Left"  VerticalAlignment="Top"/>
         <TextBox x:Name="tbSymbolFolder" ToolTip="イメージデータを保存するフォルダ"

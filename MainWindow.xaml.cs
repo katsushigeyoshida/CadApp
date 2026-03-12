@@ -463,7 +463,7 @@ namespace CadApp
                         int pickNo = mLocPick.pickSelect(picks, mLocMode);
                         if (0 <= pickNo) {
                             //  ピック要素の登録
-                            mLocPick.addPick((pickNo, pickPos.toCopy()), true);
+                            mLocPick.addPick((pickNo, pickPos.toCopy()), !ylib.onAltKey());
                         }
                     }
                     mDataDrawing.pickDisp(mEntityData, mLocPick.mPickEnt);

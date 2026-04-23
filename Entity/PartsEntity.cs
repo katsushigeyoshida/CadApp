@@ -417,8 +417,10 @@ namespace CadApp
         /// <param name="arc">Polyline/Polygonの円弧ストレッチ</param>
         public override void stretch(PointD vec, PointD pickPos, bool arc = false)
         {
-            mParts.stretch(vec, pickPos);
-            mArea = mParts.getBox();
+            if (0 < vec.length()) {
+                mParts.stretch(vec, pickPos);
+                mArea = mParts.getBox();
+            }
         }
 
         /// <summary>

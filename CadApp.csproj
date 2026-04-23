@@ -6,13 +6,17 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>False</UseWindowsForms>
-    <ApplicationIcon>CadApp.ico</ApplicationIcon>
+    <ApplicationIcon>Icon\CadApp.ico</ApplicationIcon>
     <SupportedOSPlatformVersion>8.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Icon\charactergrowfont.png" />
+    <None Remove="Icon\charactershrinkfont.png" />
     <None Remove="Icon\copy.png" />
     <None Remove="Icon\cut.png" />
+    <None Remove="Icon\Document.png" />
+    <None Remove="Icon\FolderOpened.png" />
     <None Remove="Icon\Highlighter.png" />
     <None Remove="Icon\MenuItem.png" />
     <None Remove="Icon\NoData.png" />
@@ -23,6 +27,7 @@
     <None Remove="Icon\Save.png" />
     <None Remove="Icon\SaveAs.png" />
     <None Remove="Icon\Screenshot.png" />
+    <None Remove="Icon\Search.png" />
     <None Remove="Icon\select-all.png" />
     <None Remove="Icon\Select.png" />
     <None Remove="Icon\SelectAll.png" />
@@ -42,13 +47,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="CadApp.ico" />
+    <Content Include="Icon\CadApp.ico" />
     <Content Include="Image\NoData.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
     <PackageReference Include="netDxf" Version="2023.11.10" />
   </ItemGroup>
 
@@ -72,8 +78,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Icon\charactergrowfont.png" />
+    <Resource Include="Icon\charactershrinkfont.png" />
     <Resource Include="Icon\copy.png" />
     <Resource Include="Icon\cut.png" />
+    <Resource Include="Icon\Document.png" />
+    <Resource Include="Icon\FolderOpened.png" />
     <Resource Include="Icon\Highlighter.png" />
     <Resource Include="Icon\MenuItem.png" />
     <Resource Include="Icon\OpenFile.png" />
@@ -83,6 +93,7 @@
     <Resource Include="Icon\Save.png" />
     <Resource Include="Icon\SaveAs.png" />
     <Resource Include="Icon\Screenshot.png" />
+    <Resource Include="Icon\Search.png" />
     <Resource Include="Icon\select-all.png" />
     <Resource Include="Icon\Select.png" />
     <Resource Include="Icon\SelectAll.png" />

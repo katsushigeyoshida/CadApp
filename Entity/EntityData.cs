@@ -26,7 +26,7 @@ namespace CadApp
         public List<Entity> mEntityList;        //  要素リスト
         public Layer mLayer;                    //  レイヤー管理
         public ImageData mImageData;            //  イメージデータ管理
-        public Group mGroup;
+        public Group mGroup;                    //  グループ管理
 
         private double mEps = 1E-8;
         private YLib ylib = new YLib();
@@ -206,10 +206,9 @@ namespace CadApp
         /// <summary>
         /// 矢印要素を作成
         /// </summary>
-        /// <param name="sp">始点</param>
-        /// <param name="ep">終点</param>
+        /// <param name="plist">座標点リスト</param>
         /// <returns>要素番号</returns>
-        public int addArrow(PointD sp, PointD ep)
+        public int addArrow(List<PointD> plist, double arrowSize = -1)
         {
             PartsEntity partsEnt = new PartsEntity();
             partsEnt.setProperty(mPara);
@@ -217,8 +216,11 @@ namespace CadApp
             partsEnt.mParts.mFontStyle = mPara.mFontStyle;
             partsEnt.mParts.mFontWeight = mPara.mFontWeight;
             partsEnt.mParts = new PartsD();
-            partsEnt.mParts.mArrowSize = mPara.mArrowSize;
-            partsEnt.mParts.createArrow(sp, ep);
+            if (0 < arrowSize)
+                partsEnt.mParts.mArrowSize = arrowSize;
+            else
+                partsEnt.mParts.mArrowSize = mPara.mArrowSize;
+            partsEnt.mParts.createArrow(plist);
             partsEnt.updateArea();
             return addEntity(partsEnt);
         }
@@ -226,18 +228,24 @@ namespace CadApp
         /// <summary>
         /// ラベル要素の作成
         /// </summary>
-        /// <param name="sp">始点</param>
-        /// <param name="ep">終点 </param>
+        /// <param name="plist">座標点リスト</param>
         /// <param name="text">文字列</param>
+        /// <param name="textSize">文字xサイズ</param>
+        /// <param name="arrowSize">文字xサイズ</param>
         /// <returns>要素番号</returns>
-        public int addLabel(PointD sp, PointD ep, string text)
+        public int addLabel(List<PointD> plist, string text, double textSize = 0, double arrowSize = -1)
         {
-            List<PointD> plist = new List<PointD>() { sp, ep };
             PartsEntity partsEnt = new PartsEntity();
             partsEnt.setProperty(mPara);
             partsEnt.mParts = new PartsD();
-            partsEnt.mParts.mTextSize = mPara.mTextSize;
-            partsEnt.mParts.mArrowSize = mPara.mArrowSize;
+            if (0 < textSize)
+                partsEnt.mParts.mTextSize = textSize;
+            else
+                partsEnt.mParts.mTextSize = mPara.mTextSize;
+            if (0 <= arrowSize)
+                partsEnt.mParts.mArrowSize = arrowSize;
+            else
+                partsEnt.mParts.mArrowSize = mPara.mArrowSize;
             partsEnt.mParts.mFontFamily = mPara.mFontFamily;
             partsEnt.mParts.mFontStyle = mPara.mFontStyle;
             partsEnt.mParts.mFontWeight = mPara.mFontWeight;

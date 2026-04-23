@@ -30,6 +30,7 @@ namespace CadApp
         setSymbol, manageSymbol,
 
         undo, redo,
+        secriptExec, scriptEdit, scriptExecute,
         copyScreen, saveScreen, screenCapture, imageTrimming, print, memo,
         cancel, close,
         back, save, saveAs, open,
@@ -136,6 +137,8 @@ namespace CadApp
             new Command("ツール",    "画面保存",    "", OPERATION.saveScreen,           ENTITY.non),
             new Command("ツール",    "スクリーンキャプチャ","", OPERATION.screenCapture,ENTITY.non),
             new Command("ツール",    "イメージトリミング","", OPERATION.imageTrimming,  ENTITY.non),
+            new Command("ツール",    "スクリプト編集", "", OPERATION.scriptEdit,        ENTITY.non),
+            //new Command("ツール",     "スクリプト実行", "", OPERATION.scriptExecute, ENTITY.non),
             new Command("ツール",    "メモ",        "", OPERATION.memo,                 ENTITY.non),
             new Command("ツール",    "印刷",        "", OPERATION.print,                ENTITY.non),
             new Command("ツール",    "戻る",        "", OPERATION.back,                 ENTITY.non),

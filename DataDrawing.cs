@@ -66,12 +66,14 @@ namespace CadApp
         /// <summary>
         /// 要素のプロパティデータを取り込む
         /// </summary>
-        /// <param name="ope"></param>
-        public void setEntityProperty(CommandOpe ope)
+        /// <param name="drawingPara">要素表示パラメータ</param>
+        /// <param name="copyArea">コピー要素領域</param>
+        /// <param name="copyEntityList">コピー要素リスト</param>
+        public void setEntityProperty(DrawingPara drawingPara, Box copyArea, List<Entity> copyEntityList)
         {
-            mPara = ope.mEntityData.mPara.toCopy();
-            mCopyArea = ope.mCopyArea;
-            mCopyEntityList = ope.mCopyEntityList;
+            mPara = drawingPara.toCopy();           //  要素プロパティ
+            mCopyArea = copyArea;                   //  クリップボードにコピーした要素の領域
+            mCopyEntityList = copyEntityList;       //  クリップボードにコピーした要素リスト
         }
 
         /// <summary>
@@ -162,7 +164,7 @@ namespace CadApp
                         parts = new PartsD();
                         parts.mArrowSize = mPara.mArrowSize;
                         if (1 < points.Count) {
-                            parts.createArrow(points[0], points[1]);
+                            parts.createArrow(points);
                             drawWParts(parts);
                         }
                         break;
@@ -777,7 +779,9 @@ namespace CadApp
         public void disp(EntityData entityData, List<(int no, PointD pos)> pickEnt)
         {
             disp(entityData, mMainWindow.mCommandOpe.mEntityData.mPara.mBackColor, mMainWindow.mCommandOpe.mEntityData.mPara.mGridSize);
-            pickDisp(entityData, pickEnt);
+            if (pickEnt != null && 0 < pickEnt.Count) {
+                pickDisp(entityData, pickEnt);
+            }
         }
 
         /// <summary>

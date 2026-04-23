@@ -109,7 +109,7 @@ namespace CadApp
             mSymbolData  = new SymbolData(this);
             mImageData   = new ImageData(this);
             mLocPick     = new LocPick(this, mEntityData);
-            mCommandOpe  = new CommandOpe(mEntityData, mLocPick, this);
+            mCommandOpe  = new CommandOpe(mEntityData, mDataDrawing, mLocPick, this);
 
             mCommandData.loadShortCut(mShortCutPath);
             mCommandOpe.mImageData = mImageData;
@@ -511,7 +511,7 @@ namespace CadApp
                 } else {
                     //  ドラッギング表示
                     mLocPick.mLocPos.Add(wp);
-                    mDataDrawing.setEntityProperty(mCommandOpe);
+                    mDataDrawing.setEntityProperty(mEntityData.mPara, mCommandOpe.mCopyArea, mCommandOpe.mCopyEntityList);
                     mDataDrawing.dragging(mEntityData, mLocPick.mLocPos, mLocPick.mPickEnt, mOperation);
                     mLocPick.mLocPos.RemoveAt(mLocPick.mLocPos.Count - 1);
                 }
